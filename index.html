@@ -83,6 +83,22 @@
                         </div>
                     </div>
                     
+                    <div id="phoneField" class="hidden fade-in">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Telefone/WhatsApp</label>
+                        <div class="relative">
+                            <i class="fas fa-phone absolute left-4 top-3.5 text-gray-400"></i>
+                            <input type="tel" id="authPhone" class="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition" placeholder="(00) 00000-0000">
+                        </div>
+                    </div>
+                    
+                    <div id="companyField" class="hidden fade-in">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Empresa (opcional)</label>
+                        <div class="relative">
+                            <i class="fas fa-building absolute left-4 top-3.5 text-gray-400"></i>
+                            <input type="text" id="authCompany" class="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition" placeholder="Nome da sua empresa">
+                        </div>
+                    </div>
+                    
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
                         <div class="relative">
@@ -258,14 +274,15 @@
                                 <thead class="bg-gray-100 text-gray-700 text-xs uppercase font-semibold">
                                     <tr>
                                         <th class="px-6 py-4 rounded-tl-lg">Cliente</th>
-                                        <th class="px-6 py-4">Contato (E-mail)</th>
+                                        <th class="px-6 py-4">Contato</th>
+                                        <th class="px-6 py-4">Empresa</th>
                                         <th class="px-6 py-4 text-center">Total de Pedidos</th>
                                         <th class="px-6 py-4 text-right rounded-tr-lg">Último Pedido</th>
                                     </tr>
                                 </thead>
                                 <tbody id="clientsTableBody" class="divide-y divide-gray-100">
                                     <!-- Lista gerada dinamicamente -->
-                                    <tr><td colspan="4" class="text-center py-8 text-gray-400">Carregando dados...</td></tr>
+                                    <tr><td colspan="5" class="text-center py-8 text-gray-400">Carregando dados...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -279,21 +296,36 @@
 
     <!-- Modal Admin Edição de Pedido -->
     <div id="adminEditModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all max-h-[90vh] flex flex-col">
             <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
                 <h3 class="font-bold text-gray-900">Gerenciar Pedido</h3>
                 <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-700 transition">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
-            <div class="p-6 space-y-4">
+            <div class="p-6 space-y-4 overflow-y-auto flex-1">
                 <input type="hidden" id="editOrderId">
                 
-                <div>
-                    <p class="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Cliente</p>
-                    <p id="editClientName" class="font-bold text-gray-900 text-lg"></p>
+                <!-- Informações do Cliente (Editáveis) -->
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3">
+                    <h4 class="font-semibold text-gray-900 text-sm uppercase">Informações do Cliente</h4>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Nome</label>
+                            <input type="text" id="editClientName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Telefone</label>
+                            <input type="text" id="editClientPhone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none text-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Empresa</label>
+                        <input type="text" id="editClientCompany" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none text-sm">
+                    </div>
                 </div>
                 
+                <!-- Informações do Pedido -->
                 <div class="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
                     <div>
                         <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Produto</p>
@@ -321,6 +353,14 @@
                         <option value="Média">Média</option>
                         <option value="Alta">Alta</option>
                     </select>
+                </div>
+
+                <!-- Histórico de Pedidos do Cliente -->
+                <div class="mt-4">
+                    <h4 class="font-semibold text-gray-900 text-sm uppercase mb-3">Histórico de Pedidos do Cliente</h4>
+                    <div id="clientOrderHistory" class="space-y-2 max-h-60 overflow-y-auto">
+                        <!-- Histórico carregado dinamicamente -->
+                    </div>
                 </div>
             </div>
             <div class="p-5 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
@@ -382,6 +422,8 @@
         window.toggleAuthMode = function() {
             isLoginMode = !isLoginMode;
             document.getElementById('nameField').classList.toggle('hidden', isLoginMode);
+            document.getElementById('phoneField').classList.toggle('hidden', isLoginMode);
+            document.getElementById('companyField').classList.toggle('hidden', isLoginMode);
             document.getElementById('authSubtitle').innerText = isLoginMode ? 'Faça login para continuar' : 'Crie sua conta para solicitar embalagens';
             document.getElementById('authSubmitBtn').innerText = isLoginMode ? 'Entrar' : 'Cadastrar';
             document.getElementById('authToggleText').innerText = isLoginMode ? 'Não tem uma conta?' : 'Já possui uma conta?';
@@ -403,7 +445,11 @@
                     await signInWithEmailAndPassword(auth, email, password);
                 } else {
                     const name = document.getElementById('authName').value.trim();
+                    const phone = document.getElementById('authPhone').value.trim();
+                    const company = document.getElementById('authCompany').value.trim();
+                    
                     if (!name) throw new Error("O nome é obrigatório para cadastro.");
+                    if (!phone) throw new Error("O telefone é obrigatório para cadastro.");
                     
                     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                     const user = userCredential.user;
@@ -414,9 +460,27 @@
                     await set(ref(db, 'users/' + user.uid), {
                         name: name,
                         email: email,
+                        phone: phone,
+                        company: company || '',
                         role: role,
                         createdAt: Date.now()
                     });
+                    
+                    // Configura imediatamente os dados do usuário para evitar espera
+                    currentUserData = {
+                        uid: user.uid,
+                        name: name,
+                        email: email,
+                        phone: phone,
+                        company: company || '',
+                        role: role
+                    };
+                    
+                    // Configura a UI imediatamente
+                    setupUIForUser();
+                    
+                    showToast('Conta criada com sucesso!', 'success');
+                    return; // Sai da função para evitar processamento adicional
                 }
                 showToast(isLoginMode ? 'Login realizado com sucesso!' : 'Conta criada com sucesso!', 'success');
             } catch (error) {
@@ -440,7 +504,13 @@
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // Busca dados do usuário
+                // Se já temos os dados do usuário (após cadastro rápido), usa eles
+                if (currentUserData && currentUserData.uid === user.uid) {
+                    setupUIForUser();
+                    return;
+                }
+                
+                // Busca dados do usuário para login normal
                 const userRef = ref(db, 'users/' + user.uid);
                 get(userRef).then((snapshot) => {
                     if (snapshot.exists()) {
@@ -460,6 +530,8 @@
                             uid: user.uid,
                             email: user.email,
                             name: isMaster ? 'Administrador' : 'Cliente',
+                            phone: '',
+                            company: '',
                             role: isMaster ? 'admin' : 'client'
                         };
                         setupUIForUser();
@@ -554,6 +626,8 @@
                 userId: currentUserData.uid,
                 clientName: currentUserData.name,
                 clientEmail: currentUserData.email,
+                clientPhone: currentUserData.phone || '',
+                clientCompany: currentUserData.company || '',
                 product: product,
                 quantity: quantity,
                 priority: "Média", // Prioridade fixa/oculta inserida automaticamente
@@ -606,7 +680,6 @@
             const statusText = { 'novo': 'Pendente', 'producao': 'Em Produção', 'finalizado': 'Finalizado' };
 
             list.innerHTML = orders.map(order => {
-                // Nota: removido o render da badge de prioridade para o cliente
                 return `
                 <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col gap-3 relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full ${order.status === 'finalizado' ? 'bg-green-500' : order.status === 'producao' ? 'bg-blue-500' : 'bg-gray-400'}"></div>
@@ -639,12 +712,11 @@
             } else {
                 document.getElementById('adminClientsView').classList.remove('hidden');
                 document.getElementById('tabClients').className = "px-5 py-4 text-sm font-medium border-b-2 border-gray-900 text-gray-900 whitespace-nowrap transition";
-                renderClientsList(); // Atualiza a tabela sempre que abrir a aba
+                renderClientsList();
             }
         };
 
         function initAdminListeners() {
-            // Monitora Pedidos
             const ordersRef = ref(db, 'orders');
             onValue(ordersRef, (snapshot) => {
                 globalOrders = {};
@@ -660,7 +732,6 @@
                 }
             });
 
-            // Monitora Usuários (Clientes)
             const usersRef = ref(db, 'users');
             onValue(usersRef, (snapshot) => {
                 globalUsers = {};
@@ -685,16 +756,14 @@
                 if(cols[order.status]) {
                     cols[order.status].push(order);
                 } else {
-                    cols['novo'].push(order); // fallback
+                    cols['novo'].push(order);
                 }
             });
 
-            // Ordena os cards pela data (mais antigos primeiro na fila de pendentes)
             cols.novo.sort((a,b) => a.createdAt - b.createdAt);
             cols.producao.sort((a,b) => a.createdAt - b.createdAt);
-            cols.finalizado.sort((a,b) => b.createdAt - a.createdAt); // Finalizados mais recentes primeiro
+            cols.finalizado.sort((a,b) => b.createdAt - a.createdAt);
 
-            // Atualiza contadores
             document.getElementById('countNovos').innerText = cols.novo.length;
             document.getElementById('countProducao').innerText = cols.producao.length;
             document.getElementById('countFinalizado').innerText = cols.finalizado.length;
@@ -716,7 +785,6 @@
                 'Alta': 'bg-red-100 text-red-700'
             };
             
-            // O admin continua vendo a prioridade e podendo clicar no nome do cliente
             return `
             <div id="order-${order.id}" class="draggable-card bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing transition-all relative overflow-hidden group" 
                  draggable="true" 
@@ -733,17 +801,16 @@
                 <h4 class="font-bold text-gray-900 text-sm leading-tight mb-1">${order.product}</h4>
                 <div class="text-xs text-gray-600 mb-3 flex items-center gap-1.5"><i class="fas fa-cubes text-gray-400"></i> ${order.quantity}</div>
                 
-                <div class="pt-3 border-t border-gray-100 mt-2 flex items-center justify-between">
+                <div class="pt-3 border-t border-gray-100 mt-2">
                     <button onclick="openEditModal('${order.id}')" class="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 px-2 py-1 rounded transition w-full text-left">
                         <i class="fas fa-user-circle text-gray-400 text-lg"></i> 
-                        <span class="truncate" style="max-width: 140px;">${order.clientName}</span>
-                        <i class="fas fa-edit ml-auto text-gray-300 group-hover:text-gray-600 opacity-0 group-hover:opacity-100 transition"></i>
+                        <span class="truncate flex-1">${order.clientName}</span>
+                        <i class="fas fa-edit text-gray-300 group-hover:text-gray-600 transition"></i>
                     </button>
                 </div>
             </div>`;
         }
 
-        // Funções de arrastar (Drag and Drop HTML5)
         window.drag = function(ev) {
             ev.dataTransfer.setData("text", ev.target.id);
             setTimeout(() => ev.target.classList.add('dragging'), 0);
@@ -798,14 +865,55 @@
             if(!order) return;
 
             document.getElementById('editOrderId').value = orderId;
-            document.getElementById('editClientName').innerText = order.clientName;
+            document.getElementById('editClientName').value = order.clientName || '';
+            document.getElementById('editClientPhone').value = order.clientPhone || '';
+            document.getElementById('editClientCompany').value = order.clientCompany || '';
             document.getElementById('editProduct').innerText = order.product;
             document.getElementById('editQuantity').innerText = order.quantity;
             document.getElementById('editStatus').value = order.status;
             document.getElementById('editPriority').value = order.priority || 'Média';
             
+            // Carrega histórico de pedidos do cliente
+            loadClientOrderHistory(order.userId);
+            
             document.getElementById('adminEditModal').classList.remove('hidden');
         };
+
+        function loadClientOrderHistory(userId) {
+            const historyContainer = document.getElementById('clientOrderHistory');
+            
+            // Filtra pedidos do cliente específico
+            const clientOrders = Object.values(globalOrders)
+                .filter(order => order.userId === userId)
+                .sort((a, b) => b.createdAt - a.createdAt);
+            
+            if (clientOrders.length === 0) {
+                historyContainer.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">Nenhum pedido encontrado.</p>';
+                return;
+            }
+            
+            historyContainer.innerHTML = clientOrders.map(order => {
+                const statusColors = { 
+                    'novo': 'bg-gray-100 text-gray-700', 
+                    'producao': 'bg-blue-100 text-blue-700', 
+                    'finalizado': 'bg-green-100 text-green-700' 
+                };
+                const statusText = { 'novo': 'Pendente', 'producao': 'Em Produção', 'finalizado': 'Finalizado' };
+                
+                return `
+                <div class="bg-white border border-gray-200 rounded-lg p-3 flex items-center justify-between">
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900">${order.product} - ${order.quantity}</p>
+                        <p class="text-xs text-gray-500 mt-1">
+                            <i class="fas fa-calendar-alt mr-1"></i>${formatDateTime(order.createdAt)}
+                        </p>
+                    </div>
+                    <span class="text-xs px-2 py-1 rounded-full font-medium ${statusColors[order.status]} ml-2">
+                        ${statusText[order.status]}
+                    </span>
+                </div>`;
+            }).join('');
+        }
 
         window.closeEditModal = function() {
             document.getElementById('adminEditModal').classList.add('hidden');
@@ -815,14 +923,32 @@
             const orderId = document.getElementById('editOrderId').value;
             const newStatus = document.getElementById('editStatus').value;
             const newPriority = document.getElementById('editPriority').value;
+            const newClientName = document.getElementById('editClientName').value;
+            const newClientPhone = document.getElementById('editClientPhone').value;
+            const newClientCompany = document.getElementById('editClientCompany').value;
 
             try {
                 const orderRef = ref(db, `orders/${orderId}`);
                 await update(orderRef, {
                     status: newStatus,
-                    priority: newPriority
+                    priority: newPriority,
+                    clientName: newClientName,
+                    clientPhone: newClientPhone,
+                    clientCompany: newClientCompany
                 });
-                showToast('Pedido atualizado!', 'success');
+                
+                // Atualiza também no cadastro do usuário
+                const order = globalOrders[orderId];
+                if (order && order.userId) {
+                    const userRef = ref(db, `users/${order.userId}`);
+                    await update(userRef, {
+                        name: newClientName,
+                        phone: newClientPhone,
+                        company: newClientCompany
+                    });
+                }
+                
+                showToast('Pedido e dados do cliente atualizados!', 'success');
                 closeEditModal();
             } catch(err) {
                 showToast('Erro ao salvar.', 'error');
@@ -838,6 +964,8 @@
                 clientStats[user.uid] = {
                     name: user.name,
                     email: user.email,
+                    phone: user.phone || '',
+                    company: user.company || '',
                     totalOrders: 0,
                     lastOrderDate: null
                 };
@@ -847,8 +975,14 @@
             Object.values(globalOrders).forEach(order => {
                 const uid = order.userId;
                 if(!clientStats[uid]) {
-                    // Usuário deletado ou não listado, cria placeholder
-                    clientStats[uid] = { name: order.clientName, email: order.clientEmail || 'N/A', totalOrders: 0, lastOrderDate: null };
+                    clientStats[uid] = { 
+                        name: order.clientName, 
+                        email: order.clientEmail || 'N/A',
+                        phone: order.clientPhone || '',
+                        company: order.clientCompany || '',
+                        totalOrders: 0, 
+                        lastOrderDate: null 
+                    };
                 }
                 
                 clientStats[uid].totalOrders += 1;
@@ -862,19 +996,25 @@
             document.getElementById('totalClientsCount').innerText = clientArray.length;
 
             if(clientArray.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-gray-400">Nenhum cliente registrado.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-400">Nenhum cliente registrado.</td></tr>';
                 return;
             }
 
             tbody.innerHTML = clientArray.map(client => `
                 <tr class="hover:bg-gray-50 transition">
-                    <td class="px-6 py-4 font-medium text-gray-900 flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-gray-200 flex justify-center items-center text-gray-600 text-xs font-bold uppercase">
-                            ${client.name.charAt(0)}
+                    <td class="px-6 py-4 font-medium text-gray-900">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-gray-200 flex justify-center items-center text-gray-600 text-xs font-bold uppercase">
+                                ${client.name.charAt(0)}
+                            </div>
+                            <div>
+                                <p class="font-medium">${client.name}</p>
+                                <p class="text-xs text-gray-500">${client.email}</p>
+                            </div>
                         </div>
-                        ${client.name}
                     </td>
-                    <td class="px-6 py-4 text-gray-500">${client.email}</td>
+                    <td class="px-6 py-4 text-gray-500">${client.phone || 'N/A'}</td>
+                    <td class="px-6 py-4 text-gray-500">${client.company || 'N/A'}</td>
                     <td class="px-6 py-4 text-center">
                         <span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-bold">${client.totalOrders}</span>
                     </td>
