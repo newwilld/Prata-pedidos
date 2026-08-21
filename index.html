@@ -5,42 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prata Embalagens - Gerenciador de Pedidos</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-            color: #1f2937;
-        }
-        .fade-in {
-            animation: fadeIn 0.3s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        /* Kanban Drag & Drop Styles */
-        .kanban-column {
-            min-height: 200px;
-        }
-        .draggable-card {
-            cursor: grab;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .draggable-card:active {
-            cursor: grabbing;
-            transform: scale(0.98);
-        }
-        .dragging {
-            opacity: 0.5;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
-        .drag-over {
-            background-color: #e5e7eb;
-            border: 2px dashed #9ca3af;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Drag and Drop styles */
+        .kanban-column { min-height: 200px; }
+        .draggable-card.dragging { opacity: 0.5; transform: scale(0.98); }
+        .kanban-column.drag-over { background-color: #e5e7eb; border-color: #9ca3af; }
+        
+        /* Toast Notification */
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { padding: 12px 24px; border-radius: 8px; color: white; font-weight: 500; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); animation: slideInRight 0.3s ease-out forwards; }
+        .toast.success { background-color: #10b981; }
+        .toast.error { background-color: #ef4444; }
+        .toast.info { background-color: #3b82f6; }
+        .toast-fade-out { animation: fadeOut 0.3s ease-in forwards; }
+        
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -48,125 +35,125 @@
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="antialiased min-h-screen flex flex-col">
+<body class="text-gray-800 h-screen flex flex-col overflow-hidden">
 
-    <div id="toastContainer" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
+    <!-- Container de Notificações -->
+    <div id="toast-container"></div>
 
-    <!-- Modal Base para Edição -->
-    <div id="editModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-40 fade-in p-4">
-        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md">
-            <h3 class="text-lg font-bold text-gray-900 mb-4 flex justify-between items-center">
-                Editar Pedido
-                <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
-            </h3>
-            <div id="editModalContent" class="space-y-4">
-                <!-- Preenchido via JS -->
-            </div>
-            <div class="mt-6 flex gap-3">
-                <button onclick="saveOrderEdit()" class="flex-1 bg-gray-900 text-white py-2 rounded-lg font-medium hover:bg-gray-800 transition">Salvar</button>
-                <button onclick="closeEditModal()" class="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg font-medium hover:bg-gray-300 transition">Cancelar</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="authScreen" class="flex-1 flex items-center justify-center p-4 min-h-screen">
-        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100">
-            <div class="text-center mb-8">
-                <div class="w-16 h-16 bg-gray-900 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-2xl shadow-lg">
+    <!-- Barra de Navegação -->
+    <header class="bg-gray-900 text-white shadow-md z-10 flex-shrink-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-gray-900 font-bold text-xl">
                     <i class="fas fa-box-open"></i>
                 </div>
-                <h1 class="text-2xl font-bold text-gray-900">Prata Embalagens</h1>
-                <p class="text-gray-500 mt-1 text-sm" id="authSubtitle">Acesse sua conta para continuar</p>
+                <h1 class="text-xl font-bold tracking-tight hidden sm:block">Prata Embalagens</h1>
             </div>
-
-            <form id="authForm" class="space-y-5">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
-                    <input type="email" id="authEmail" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition bg-gray-50 focus:bg-white" placeholder="seu@email.com">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
-                    <input type="password" id="authPassword" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition bg-gray-50 focus:bg-white" placeholder="••••••••">
-                </div>
-                
-                <div id="registerFields" class="hidden space-y-5 fade-in">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
-                        <input type="text" id="authName" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition bg-gray-50 focus:bg-white" placeholder="Seu nome">
-                    </div>
-                </div>
-
-                <button type="submit" id="authSubmitBtn" class="w-full bg-gray-900 text-white font-medium py-3 rounded-lg hover:bg-gray-800 transition shadow-lg shadow-gray-900/20">
-                    Entrar
-                </button>
-            </form>
-
-            <div class="mt-6 text-center">
-                <button type="button" id="toggleAuthBtn" class="text-sm text-gray-600 hover:text-gray-900 font-medium transition">
-                    Não tem conta? Criar agora
+            
+            <div id="userMenu" class="hidden items-center gap-4">
+                <span id="userNameDisplay" class="text-sm font-medium text-gray-300"></span>
+                <span id="userRoleBadge" class="text-xs px-2 py-1 bg-gray-700 rounded-md"></span>
+                <button onclick="logout()" class="text-gray-400 hover:text-white transition p-2">
+                    <i class="fas fa-sign-out-alt"></i> Sair
                 </button>
             </div>
         </div>
-    </div>
+    </header>
 
-    <div id="appScreen" class="hidden flex-col min-h-screen">
-        <!-- Header -->
-        <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-gray-900 text-white rounded-lg flex items-center justify-center shadow">
+    <!-- Conteúdo Principal -->
+    <main class="flex-1 overflow-hidden relative">
+        
+        <!-- Tela de Login / Registro -->
+        <div id="authScreen" class="absolute inset-0 z-20 bg-gray-50 flex items-center justify-center p-4 overflow-y-auto">
+            <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md my-auto">
+                <div class="text-center mb-8">
+                    <div class="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center text-white text-3xl mx-auto mb-4 shadow-lg shadow-gray-900/30">
                         <i class="fas fa-box-open"></i>
                     </div>
-                    <span class="font-bold text-lg text-gray-900 hidden sm:block">Prata Embalagens</span>
+                    <h2 class="text-2xl font-bold text-gray-900">Bem-vindo(a)</h2>
+                    <p class="text-gray-500 mt-1" id="authSubtitle">Faça login para continuar</p>
                 </div>
-                
-                <div class="flex items-center gap-4">
-                    <div class="text-right hidden sm:block">
-                        <p id="headerUserName" class="text-sm font-medium text-gray-900"></p>
-                        <p id="headerUserRole" class="text-xs text-gray-500"></p>
+
+                <form id="authForm" onsubmit="handleAuth(event)" class="space-y-5">
+                    <div id="nameField" class="hidden fade-in">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
+                        <div class="relative">
+                            <i class="fas fa-user absolute left-4 top-3.5 text-gray-400"></i>
+                            <input type="text" id="authName" class="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition" placeholder="Seu nome">
+                        </div>
                     </div>
-                    <button onclick="logout()" class="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Sair">
-                        <i class="fas fa-sign-out-alt"></i>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+                        <div class="relative">
+                            <i class="fas fa-envelope absolute left-4 top-3.5 text-gray-400"></i>
+                            <input type="email" id="authEmail" required class="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition" placeholder="seu@email.com">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+                        <div class="relative">
+                            <i class="fas fa-lock absolute left-4 top-3.5 text-gray-400"></i>
+                            <input type="password" id="authPassword" required minlength="6" class="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition" placeholder="••••••••">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-gray-900 text-white font-medium py-3.5 rounded-xl hover:bg-gray-800 transition shadow-lg shadow-gray-900/20" id="authSubmitBtn">
+                        Entrar
                     </button>
+                </form>
+
+                <div class="mt-6 text-center text-sm text-gray-600">
+                    <span id="authToggleText">Não tem uma conta?</span>
+                    <button type="button" onclick="toggleAuthMode()" class="text-gray-900 font-bold hover:underline ml-1" id="authToggleBtn">Criar agora</button>
                 </div>
             </div>
-        </header>
+        </div>
 
-        <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
-            
-            <!-- Visão do Cliente -->
-            <div id="clientView" class="hidden space-y-8">
-                <!-- Formulário de Novo Pedido -->
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8">
-                    <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                        <i class="fas fa-plus-circle text-gray-400"></i> Fazer Novo Pedido
-                    </h2>
-                    <form id="orderForm" class="space-y-6 max-w-2xl">
+        <!-- Tela do Cliente -->
+        <div id="clientScreen" class="hidden h-full flex-col md:flex-row overflow-hidden bg-gray-50">
+            <!-- Coluna de Fazer Pedido -->
+            <div class="w-full md:w-1/3 bg-white border-r border-gray-200 flex flex-col h-full z-10 shadow-sm relative">
+                <div class="p-5 border-b border-gray-100 flex-shrink-0">
+                    <h2 class="text-lg font-bold text-gray-900"><i class="fas fa-plus-circle mr-2 text-gray-500"></i>Novo Pedido</h2>
+                    <p class="text-xs text-gray-500 mt-1">Preencha os dados para solicitar.</p>
+                </div>
+                
+                <div class="p-5 overflow-y-auto flex-1">
+                    <form id="orderForm" onsubmit="submitOrder(event)" class="space-y-5">
+                        
                         <!-- Seletor de Produto -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Selecione o Produto</label>
-                            <select id="productSelect" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition bg-gray-50">
-                                <option value="" disabled selected>Escolha uma opção...</option>
-                                <option value="Caixa de Pizza">Caixa de Pizza</option>
-                                <option value="Caixa de Bolo">Caixa de Bolo</option>
-                                <option value="Caixa de Torta">Caixa de Torta</option>
-                                <option value="Caixa para Ecommerce">Caixa para Ecommerce</option>
-                            </select>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Produto</label>
+                            <div class="relative">
+                                <select id="productSelect" required onchange="handleProductChange()" class="w-full appearance-none px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition bg-gray-50">
+                                    <option value="" disabled selected>Selecione um produto...</option>
+                                    <option value="Caixa de Pizza">Caixa de Pizza</option>
+                                    <option value="Caixa de Bolo">Caixa de Bolo</option>
+                                    <option value="Caixa de Torta">Caixa de Torta</option>
+                                    <option value="Caixa para Ecommerce">Caixa para Ecommerce</option>
+                                </select>
+                                <i class="fas fa-chevron-down absolute right-4 top-4 text-gray-400 pointer-events-none"></i>
+                            </div>
                         </div>
 
                         <!-- Seletor de Quantidade (Cascata) -->
                         <div id="quantityContainer" class="hidden fade-in">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Quantidade</label>
-                            <select id="quantitySelect" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition bg-gray-50">
-                                <option value="" disabled selected>Escolha a quantidade...</option>
-                                <option value="500">500 unidades</option>
-                                <option value="1000">1.000 unidades</option>
-                                <option value="2000">2.000 unidades</option>
-                                <option value="3000">3.000 unidades</option>
-                                <option value="4000">4.000 unidades</option>
-                                <option value="5000">5.000 unidades</option>
-                                <option value="Outra">Outra quantidade (digitar)</option>
-                            </select>
+                            <div class="relative">
+                                <select id="quantitySelect" required onchange="handleQuantityChange()" class="w-full appearance-none px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition bg-gray-50">
+                                    <option value="" disabled selected>Escolha a quantidade...</option>
+                                    <option value="500">500 unidades</option>
+                                    <option value="1000">1.000 unidades</option>
+                                    <option value="2000">2.000 unidades</option>
+                                    <option value="3000">3.000 unidades</option>
+                                    <option value="4000">4.000 unidades</option>
+                                    <option value="5000">5.000 unidades</option>
+                                    <option value="Outra">Outra quantidade (Digitar aqui)</option>
+                                </select>
+                                <i class="fas fa-chevron-down absolute right-4 top-4 text-gray-400 pointer-events-none"></i>
+                            </div>
                         </div>
 
                         <!-- Campo de Quantidade Customizada -->
@@ -175,107 +162,110 @@
                             <input type="number" id="customQuantityInput" min="1" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition bg-gray-50" placeholder="Ex: 1500">
                         </div>
 
-                        <!-- Prioridade -->
-                        <div class="fade-in">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Prioridade</label>
-                            <div class="flex gap-4">
-                                <label class="flex-1 cursor-pointer">
-                                    <input type="radio" name="priority" value="Baixa" class="peer sr-only" checked>
-                                    <div class="text-center py-2 px-4 rounded-xl border border-gray-200 peer-checked:bg-blue-50 peer-checked:border-blue-500 peer-checked:text-blue-700 transition">Baixa</div>
-                                </label>
-                                <label class="flex-1 cursor-pointer">
-                                    <input type="radio" name="priority" value="Média" class="peer sr-only">
-                                    <div class="text-center py-2 px-4 rounded-xl border border-gray-200 peer-checked:bg-yellow-50 peer-checked:border-yellow-500 peer-checked:text-yellow-700 transition">Média</div>
-                                </label>
-                                <label class="flex-1 cursor-pointer">
-                                    <input type="radio" name="priority" value="Alta" class="peer sr-only">
-                                    <div class="text-center py-2 px-4 rounded-xl border border-gray-200 peer-checked:bg-red-50 peer-checked:border-red-500 peer-checked:text-red-700 transition">Alta</div>
-                                </label>
-                            </div>
-                        </div>
-
+                        <!-- Botão Enviar -->
                         <button type="submit" class="w-full bg-gray-900 text-white font-medium py-3.5 rounded-xl hover:bg-gray-800 transition shadow-lg shadow-gray-900/20 flex items-center justify-center gap-2">
                             <i class="fas fa-paper-plane"></i> Enviar Pedido
                         </button>
                     </form>
                 </div>
+            </div>
 
-                <!-- Meus Pedidos -->
-                <div>
-                    <h3 class="text-lg font-bold text-gray-900 mb-4">Meus Pedidos Recentes</h3>
-                    <div id="clientOrdersList" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        <!-- Preenchido via JS -->
+            <!-- Coluna de Histórico do Cliente -->
+            <div class="flex-1 flex flex-col h-full">
+                <div class="p-5 border-b border-gray-200 bg-white flex-shrink-0 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-900"><i class="fas fa-history mr-2 text-gray-500"></i>Meu Histórico</h2>
+                        <p class="text-xs text-gray-500 mt-1">Acompanhe seus pedidos recentes.</p>
+                    </div>
+                </div>
+                
+                <div class="p-5 flex-1 overflow-y-auto bg-gray-50">
+                    <div id="clientOrdersList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Pedidos do cliente aparecerão aqui -->
+                        <div class="col-span-full text-center text-gray-400 py-10">Carregando pedidos...</div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Visão do Admin -->
-            <div id="adminView" class="hidden space-y-6">
-                <!-- Abas -->
-                <div class="flex border-b border-gray-200">
-                    <button onclick="switchAdminTab('pedidos')" id="tabPedidos" class="px-6 py-3 font-medium text-sm text-gray-900 border-b-2 border-gray-900">
-                        <i class="fas fa-tasks mr-2"></i> Pedidos (Kanban)
-                    </button>
-                    <button onclick="switchAdminTab('clientes')" id="tabClientes" class="px-6 py-3 font-medium text-sm text-gray-500 border-b-2 border-transparent hover:text-gray-700 transition">
-                        <i class="fas fa-users mr-2"></i> Clientes
-                    </button>
-                </div>
+        <!-- Tela do Admin (Master) -->
+        <div id="adminScreen" class="hidden h-full flex-col bg-gray-100 overflow-hidden">
+            <!-- Abas Admin -->
+            <div class="bg-white border-b border-gray-200 px-4 sm:px-6 flex-shrink-0 flex overflow-x-auto no-scrollbar">
+                <button onclick="switchAdminTab('kanban')" id="tabKanban" class="px-5 py-4 text-sm font-medium border-b-2 border-gray-900 text-gray-900 whitespace-nowrap transition">
+                    <i class="fas fa-columns mr-2"></i>Quadro Kanban
+                </button>
+                <button onclick="switchAdminTab('clients')" id="tabClients" class="px-5 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap transition">
+                    <i class="fas fa-users mr-2"></i>Lista de Clientes
+                </button>
+            </div>
 
-                <!-- Aba Pedidos (Kanban) -->
-                <div id="adminTabPedidos" class="fade-in overflow-x-auto pb-4">
-                    <div class="flex flex-col md:flex-row gap-6 min-w-max md:min-w-0">
-                        
-                        <!-- Coluna: Pendente -->
-                        <div class="flex-1 bg-gray-100 rounded-xl p-4 flex flex-col min-w-[300px]">
-                            <h3 class="font-bold text-gray-700 mb-4 flex items-center justify-between">
-                                <span><i class="fas fa-inbox text-gray-400 mr-2"></i> Recebidos</span>
-                                <span id="countPendente" class="bg-gray-200 text-gray-600 text-xs px-2 py-1 rounded-full">0</span>
+            <!-- Conteúdo Abas Admin -->
+            <div class="flex-1 overflow-hidden relative">
+                
+                <!-- Aba Kanban -->
+                <div id="adminKanbanView" class="absolute inset-0 p-4 sm:p-6 overflow-x-auto flex flex-col sm:flex-row gap-6">
+                    
+                    <!-- Coluna: Novos -->
+                    <div class="flex-1 min-w-[300px] flex flex-col bg-gray-50/50 rounded-2xl border border-gray-200 shadow-sm max-h-full">
+                        <div class="p-4 border-b border-gray-200 bg-gray-100/50 rounded-t-2xl flex items-center justify-between">
+                            <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-gray-400"></span> Pendentes
                             </h3>
-                            <div id="kanban-pendente" class="kanban-column flex-1 space-y-3" data-status="pendente">
-                                <!-- Cards JS -->
-                            </div>
+                            <span id="countNovos" class="bg-gray-200 text-gray-600 text-xs font-bold px-2 py-1 rounded-full">0</span>
                         </div>
+                        <div id="kanban-novo" class="kanban-column flex-1 overflow-y-auto p-3 space-y-3 transition-colors border-2 border-transparent rounded-b-2xl" ondragover="allowDrop(event)" ondrop="drop(event, 'novo')" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                            <!-- Cards -->
+                        </div>
+                    </div>
 
-                        <!-- Coluna: Em Produção -->
-                        <div class="flex-1 bg-blue-50 rounded-xl p-4 flex flex-col min-w-[300px]">
-                            <h3 class="font-bold text-blue-800 mb-4 flex items-center justify-between">
-                                <span><i class="fas fa-cogs text-blue-400 mr-2"></i> Em Produção</span>
-                                <span id="countProducao" class="bg-blue-200 text-blue-800 text-xs px-2 py-1 rounded-full">0</span>
+                    <!-- Coluna: Produção -->
+                    <div class="flex-1 min-w-[300px] flex flex-col bg-gray-50/50 rounded-2xl border border-gray-200 shadow-sm max-h-full">
+                        <div class="p-4 border-b border-gray-200 bg-blue-50/50 rounded-t-2xl flex items-center justify-between">
+                            <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-blue-500"></span> Em Produção
                             </h3>
-                            <div id="kanban-producao" class="kanban-column flex-1 space-y-3" data-status="producao">
-                                <!-- Cards JS -->
-                            </div>
+                            <span id="countProducao" class="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded-full">0</span>
                         </div>
+                        <div id="kanban-producao" class="kanban-column flex-1 overflow-y-auto p-3 space-y-3 transition-colors border-2 border-transparent rounded-b-2xl" ondragover="allowDrop(event)" ondrop="drop(event, 'producao')" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                             <!-- Cards -->
+                        </div>
+                    </div>
 
-                        <!-- Coluna: Finalizado -->
-                        <div class="flex-1 bg-green-50 rounded-xl p-4 flex flex-col min-w-[300px]">
-                            <h3 class="font-bold text-green-800 mb-4 flex items-center justify-between">
-                                <span><i class="fas fa-check-circle text-green-400 mr-2"></i> Finalizados</span>
-                                <span id="countFinalizado" class="bg-green-200 text-green-800 text-xs px-2 py-1 rounded-full">0</span>
+                    <!-- Coluna: Finalizado -->
+                    <div class="flex-1 min-w-[300px] flex flex-col bg-gray-50/50 rounded-2xl border border-gray-200 shadow-sm max-h-full">
+                        <div class="p-4 border-b border-gray-200 bg-green-50/50 rounded-t-2xl flex items-center justify-between">
+                            <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-green-500"></span> Finalizados
                             </h3>
-                            <div id="kanban-finalizado" class="kanban-column flex-1 space-y-3" data-status="finalizado">
-                                <!-- Cards JS -->
-                            </div>
+                            <span id="countFinalizado" class="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full">0</span>
                         </div>
-
+                        <div id="kanban-finalizado" class="kanban-column flex-1 overflow-y-auto p-3 space-y-3 transition-colors border-2 border-transparent rounded-b-2xl" ondragover="allowDrop(event)" ondrop="drop(event, 'finalizado')" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                             <!-- Cards -->
+                        </div>
                     </div>
                 </div>
 
                 <!-- Aba Clientes -->
-                <div id="adminTabClientes" class="hidden fade-in">
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div id="adminClientsView" class="hidden absolute inset-0 p-4 sm:p-6 overflow-y-auto">
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="p-5 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                            <h2 class="text-lg font-bold text-gray-900">Carteira de Clientes</h2>
+                            <div class="text-sm text-gray-500">Total: <span id="totalClientsCount" class="font-bold text-gray-900">0</span></div>
+                        </div>
                         <div class="overflow-x-auto">
-                            <table class="w-full text-left text-sm">
-                                <thead class="bg-gray-50 border-b border-gray-200 text-gray-600">
+                            <table class="w-full text-left text-sm text-gray-600">
+                                <thead class="bg-gray-100 text-gray-700 text-xs uppercase font-semibold">
                                     <tr>
-                                        <th class="px-6 py-4 font-medium">Nome do Cliente</th>
-                                        <th class="px-6 py-4 font-medium">Total de Pedidos</th>
-                                        <th class="px-6 py-4 font-medium">Último Pedido</th>
-                                        <th class="px-6 py-4 font-medium">Status da Conta</th>
+                                        <th class="px-6 py-4 rounded-tl-lg">Cliente</th>
+                                        <th class="px-6 py-4">Contato (E-mail)</th>
+                                        <th class="px-6 py-4 text-center">Total de Pedidos</th>
+                                        <th class="px-6 py-4 text-right rounded-tr-lg">Último Pedido</th>
                                     </tr>
                                 </thead>
                                 <tbody id="clientsTableBody" class="divide-y divide-gray-100">
-                                    <!-- JS Content -->
+                                    <!-- Lista gerada dinamicamente -->
+                                    <tr><td colspan="4" class="text-center py-8 text-gray-400">Carregando dados...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -283,14 +273,70 @@
                 </div>
 
             </div>
-        </main>
+        </div>
+
+    </main>
+
+    <!-- Modal Admin Edição de Pedido -->
+    <div id="adminEditModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+            <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h3 class="font-bold text-gray-900">Gerenciar Pedido</h3>
+                <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-700 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <input type="hidden" id="editOrderId">
+                
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Cliente</p>
+                    <p id="editClientName" class="font-bold text-gray-900 text-lg"></p>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Produto</p>
+                        <p id="editProduct" class="font-medium text-gray-800 text-sm"></p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Quantidade</p>
+                        <p id="editQuantity" class="font-medium text-gray-800 text-sm"></p>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Status do Pedido</label>
+                    <select id="editStatus" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none bg-white">
+                        <option value="novo">Pendente</option>
+                        <option value="producao">Em Produção</option>
+                        <option value="finalizado">Finalizado</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Prioridade (Interna)</label>
+                    <select id="editPriority" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none bg-white">
+                        <option value="Baixa">Baixa</option>
+                        <option value="Média">Média</option>
+                        <option value="Alta">Alta</option>
+                    </select>
+                </div>
+            </div>
+            <div class="p-5 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
+                <button onclick="closeEditModal()" class="px-5 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 transition">Cancelar</button>
+                <button onclick="saveOrderEdit()" class="px-6 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition shadow-md shadow-gray-900/20">Salvar Alterações</button>
+            </div>
+        </div>
     </div>
 
+    <!-- Scripts e Lógica (Firebase + Aplicação) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getDatabase, ref, set, push, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getDatabase, ref, set, push, onValue, update, get } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
+        // Configuração do Firebase fornecida
         const firebaseConfig = {
             apiKey: "AIzaSyCAZJIWT5FPTshkArRs8v2U9hXAmtnlG-Q",
             authDomain: "myname22.firebaseapp.com",
@@ -298,279 +344,269 @@
             projectId: "myname22",
             storageBucket: "myname22.firebasestorage.app",
             messagingSenderId: "346543194739",
-            appId: "1:346543194739:web:bcb8fa36574ca5de552006",
-            measurementId: "G-96C1LJH3MB"
+            appId: "1:346543194739:web:bcb8fa36574ca5de552006"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // Estado Global
-        let currentUser = null;
-        let isRegistering = false;
-        let allOrders = [];
-        let allUsers = [];
-        let editingOrderId = null;
+        // O e-mail master fixado nas regras da aplicação
+        const MASTER_ADMIN_EMAIL = "lojavirtualprata@gmail.com";
 
-        function showToast(title, message, type = 'info') {
+        // Variáveis de Estado
+        let isLoginMode = true;
+        let currentUserData = null;
+        let globalOrders = {}; 
+        let globalUsers = {};
+
+        // Funções de UI Auxiliares
+        window.showToast = function(message, type = 'info') {
+            const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            const bg = type === 'error' ? 'bg-red-500' : type === 'success' ? 'bg-green-500' : 'bg-gray-900';
-            toast.className = `${bg} text-white px-6 py-4 rounded-xl shadow-xl fade-in flex flex-col gap-1 min-w-[300px] border border-white/10`;
-            toast.innerHTML = `<strong class="font-bold">${title}</strong><span class="text-sm opacity-90">${message}</span>`;
-            document.getElementById('toastContainer').appendChild(toast);
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateY(-10px)';
-                toast.style.transition = 'all 0.3s ease';
-                setTimeout(() => toast.remove(), 300);
-            }, 4000);
-        }
-
-        function formatDateTime(isoString) {
-            if(!isoString) return 'N/A';
-            const d = new Date(isoString);
-            return `${d.toLocaleDateString('pt-BR')} às ${d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}`;
-        }
-
-        window.onload = () => {
-            setupEventListeners();
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<div class="flex items-center gap-2"><i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i> ${message}</div>`;
+            container.appendChild(toast);
             
-            // Monitora o estado de autenticação em tempo real
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    // Busca os dados complementares do usuário no Realtime DB
-                    const userRef = ref(db, 'users/' + user.uid);
-                    const snapshot = await get(userRef);
-                    
-                    if (snapshot.exists()) {
-                        currentUser = { id: user.uid, ...snapshot.val() };
-                        showApp();
-                    }
-                } else {
-                    currentUser = null;
-                    showAuth();
-                }
-            });
+            setTimeout(() => {
+                toast.classList.add('toast-fade-out');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
         };
 
-        function showAuth() {
-            document.getElementById('authScreen').classList.remove('hidden');
-            document.getElementById('appScreen').classList.add('hidden');
-            document.getElementById('authScreen').classList.add('flex');
-        }
+        window.formatDateTime = function(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleDateString('pt-BR') + ' às ' + date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        };
 
-        function showApp() {
-            document.getElementById('authScreen').classList.add('hidden');
-            document.getElementById('authScreen').classList.remove('flex');
-            document.getElementById('appScreen').classList.remove('hidden');
-            document.getElementById('appScreen').classList.add('flex');
+        window.toggleAuthMode = function() {
+            isLoginMode = !isLoginMode;
+            document.getElementById('nameField').classList.toggle('hidden', isLoginMode);
+            document.getElementById('authSubtitle').innerText = isLoginMode ? 'Faça login para continuar' : 'Crie sua conta para solicitar embalagens';
+            document.getElementById('authSubmitBtn').innerText = isLoginMode ? 'Entrar' : 'Cadastrar';
+            document.getElementById('authToggleText').innerText = isLoginMode ? 'Não tem uma conta?' : 'Já possui uma conta?';
+            document.getElementById('authToggleBtn').innerText = isLoginMode ? 'Criar agora' : 'Fazer Login';
+        };
 
-            document.getElementById('headerUserName').textContent = currentUser.name;
-            document.getElementById('headerUserRole').textContent = currentUser.role === 'admin' ? 'Administrador Master' : 'Cliente';
-
-            if (currentUser.role === 'admin') {
-                document.getElementById('adminView').classList.remove('hidden');
-                document.getElementById('clientView').classList.add('hidden');
-                initAdminData();
-            } else {
-                document.getElementById('adminView').classList.add('hidden');
-                document.getElementById('clientView').classList.remove('hidden');
-                initClientData();
-            }
-        }
-
-        const authForm = document.getElementById('authForm');
-        const toggleAuthBtn = document.getElementById('toggleAuthBtn');
-        const registerFields = document.getElementById('registerFields');
-
-        toggleAuthBtn.addEventListener('click', () => {
-            isRegistering = !isRegistering;
-            if (isRegistering) {
-                registerFields.classList.remove('hidden');
-                document.getElementById('authSubmitBtn').textContent = 'Criar Conta';
-                document.getElementById('authSubtitle').textContent = 'Crie sua conta para fazer pedidos';
-                toggleAuthBtn.textContent = 'Já tem conta? Entrar';
-                document.getElementById('authName').setAttribute('required', 'true');
-            } else {
-                registerFields.classList.add('hidden');
-                document.getElementById('authSubmitBtn').textContent = 'Entrar';
-                document.getElementById('authSubtitle').textContent = 'Acesse sua conta para continuar';
-                toggleAuthBtn.textContent = 'Não tem conta? Criar agora';
-                document.getElementById('authName').removeAttribute('required');
-            }
-        });
-
-        authForm.addEventListener('submit', async (e) => {
+        window.handleAuth = async function(e) {
             e.preventDefault();
-            const email = document.getElementById('authEmail').value.trim().toLowerCase();
+            const email = document.getElementById('authEmail').value.trim();
             const password = document.getElementById('authPassword').value;
             const btn = document.getElementById('authSubmitBtn');
-            
+            const originalText = btn.innerText;
+
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Processando...';
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
 
             try {
-                if (isRegistering) {
+                if (isLoginMode) {
+                    await signInWithEmailAndPassword(auth, email, password);
+                } else {
                     const name = document.getElementById('authName').value.trim();
-                    if(!name) throw new Error("Preencha o nome");
-
-                    // Cria conta nativa no Firebase Auth
+                    if (!name) throw new Error("O nome é obrigatório para cadastro.");
+                    
                     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                     const user = userCredential.user;
                     
-                    // Regra: O e-mail lojavirtualprata@gmail.com vira Admin Master, o resto é cliente
-                    const role = email === 'lojavirtualprata@gmail.com' ? 'admin' : 'client';
-
-                    // Salva os dados extras no Realtime Database
+                    // Verifica automaticamente se é o master para definir a role no banco
+                    const role = (email.toLowerCase() === MASTER_ADMIN_EMAIL.toLowerCase()) ? 'admin' : 'client';
+                    
                     await set(ref(db, 'users/' + user.uid), {
                         name: name,
                         email: email,
                         role: role,
-                        createdAt: new Date().toISOString()
+                        createdAt: Date.now()
                     });
-                    
-                    showToast("Sucesso", "Conta criada com sucesso!", "success");
-                } else {
-                    // Login nativo Firebase Auth
-                    await signInWithEmailAndPassword(auth, email, password);
-                    showToast("Sucesso", "Bem-vindo de volta!", "success");
                 }
+                showToast(isLoginMode ? 'Login realizado com sucesso!' : 'Conta criada com sucesso!', 'success');
             } catch (error) {
-                console.error("Auth error:", error);
-                let msg = "Erro na autenticação. Verifique os dados.";
-                if(error.code === 'auth/email-already-in-use') msg = "Este e-mail já possui uma conta.";
-                if(error.code === 'auth/invalid-credential') msg = "Senha incorreta ou usuário não encontrado.";
-                if(error.message === 'Preencha o nome') msg = "Por favor, preencha seu nome completo.";
-                showToast("Erro", msg, "error");
-            } finally {
+                console.error(error);
+                let msg = 'Ocorreu um erro.';
+                if(error.code === 'auth/invalid-credential') msg = 'E-mail ou senha incorretos.';
+                else if(error.code === 'auth/email-already-in-use') msg = 'Este e-mail já está cadastrado.';
+                else if(error.message) msg = error.message;
+                showToast(msg, 'error');
+                btn.innerHTML = originalText;
                 btn.disabled = false;
-                btn.innerHTML = isRegistering ? 'Criar Conta' : 'Entrar';
-            }
-        });
-
-        window.logout = async () => {
-            try {
-                await signOut(auth);
-                showToast("Sucesso", "Você saiu da conta.", "info");
-            } catch (error) {
-                showToast("Erro", "Falha ao sair.", "error");
             }
         };
 
-        function setupEventListeners() {
-            const productSelect = document.getElementById('productSelect');
-            const quantityContainer = document.getElementById('quantityContainer');
-            const quantitySelect = document.getElementById('quantitySelect');
-            const customQuantityContainer = document.getElementById('customQuantityContainer');
-            const customQuantityInput = document.getElementById('customQuantityInput');
-
-            productSelect.addEventListener('change', (e) => {
-                if(e.target.value) {
-                    quantityContainer.classList.remove('hidden');
-                    quantitySelect.setAttribute('required', 'true');
-                }
+        window.logout = function() {
+            signOut(auth).then(() => {
+                showToast('Desconectado com sucesso', 'info');
+                resetUI();
             });
+        };
 
-            quantitySelect.addEventListener('change', (e) => {
-                if(e.target.value === 'Outra') {
-                    customQuantityContainer.classList.remove('hidden');
-                    customQuantityInput.setAttribute('required', 'true');
-                } else {
-                    customQuantityContainer.classList.add('hidden');
-                    customQuantityInput.removeAttribute('required');
-                }
-            });
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // Busca dados do usuário
+                const userRef = ref(db, 'users/' + user.uid);
+                get(userRef).then((snapshot) => {
+                    if (snapshot.exists()) {
+                        currentUserData = snapshot.val();
+                        currentUserData.uid = user.uid;
+                        
+                        // Força a atualização da role baseado no e-mail real por segurança extra local
+                        if(currentUserData.email.toLowerCase() === MASTER_ADMIN_EMAIL.toLowerCase()) {
+                            currentUserData.role = 'admin';
+                        }
+                        
+                        setupUIForUser();
+                    } else {
+                        // Trata caso onde usuário autenticou mas n tem registro no DB (ex: criados no painel)
+                        const isMaster = user.email.toLowerCase() === MASTER_ADMIN_EMAIL.toLowerCase();
+                        currentUserData = {
+                            uid: user.uid,
+                            email: user.email,
+                            name: isMaster ? 'Administrador' : 'Cliente',
+                            role: isMaster ? 'admin' : 'client'
+                        };
+                        setupUIForUser();
+                    }
+                }).catch(err => {
+                    showToast('Erro ao carregar perfil. Verifique as regras do Realtime Database.', 'error');
+                });
+            } else {
+                currentUserData = null;
+                resetUI();
+            }
+        });
 
-            document.getElementById('orderForm').addEventListener('submit', handleOrderSubmit);
+        function resetUI() {
+            document.getElementById('authScreen').classList.remove('hidden');
+            document.getElementById('clientScreen').classList.add('hidden');
+            document.getElementById('adminScreen').classList.add('hidden');
+            document.getElementById('userMenu').classList.add('hidden');
+            document.getElementById('authForm').reset();
+            if(!isLoginMode) toggleAuthMode();
+            document.getElementById('authSubmitBtn').innerText = 'Entrar';
+            document.getElementById('authSubmitBtn').disabled = false;
         }
 
-        async function handleOrderSubmit(e) {
+        function setupUIForUser() {
+            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('userMenu').classList.remove('hidden');
+            document.getElementById('userMenu').classList.add('flex');
+            
+            document.getElementById('userNameDisplay').innerText = currentUserData.name;
+            const badge = document.getElementById('userRoleBadge');
+            
+            if (currentUserData.role === 'admin') {
+                badge.innerText = 'Admin Master';
+                badge.className = 'text-xs px-2 py-1 rounded-md font-bold bg-amber-500 text-amber-950';
+                document.getElementById('adminScreen').classList.remove('hidden');
+                document.getElementById('adminScreen').classList.add('flex');
+                initAdminListeners();
+            } else {
+                badge.innerText = 'Cliente';
+                badge.className = 'text-xs px-2 py-1 rounded-md font-medium bg-gray-700 text-gray-200';
+                document.getElementById('clientScreen').classList.remove('hidden');
+                document.getElementById('clientScreen').classList.add('flex');
+                initClientListeners();
+            }
+        }
+
+        window.handleProductChange = function() {
+            const product = document.getElementById('productSelect').value;
+            const qContainer = document.getElementById('quantityContainer');
+            if (product) {
+                qContainer.classList.remove('hidden');
+                document.getElementById('quantitySelect').value = "";
+                document.getElementById('customQuantityContainer').classList.add('hidden');
+                document.getElementById('customQuantityInput').removeAttribute('required');
+            }
+        };
+
+        window.handleQuantityChange = function() {
+            const q = document.getElementById('quantitySelect').value;
+            const cContainer = document.getElementById('customQuantityContainer');
+            const cInput = document.getElementById('customQuantityInput');
+            if (q === 'Outra') {
+                cContainer.classList.remove('hidden');
+                cInput.setAttribute('required', 'true');
+                cInput.focus();
+            } else {
+                cContainer.classList.add('hidden');
+                cInput.removeAttribute('required');
+            }
+        };
+
+        window.submitOrder = async function(e) {
             e.preventDefault();
-            if(!auth.currentUser) return;
+            if (!currentUserData) return;
 
             const product = document.getElementById('productSelect').value;
             let quantity = document.getElementById('quantitySelect').value;
+            
             if(quantity === 'Outra') {
                 quantity = document.getElementById('customQuantityInput').value + ' unidades';
             } else {
                 quantity = quantity + ' unidades';
             }
-            const priority = document.querySelector('input[name="priority"]:checked').value;
+
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+            btn.disabled = true;
 
             const newOrder = {
-                clientId: currentUser.id,
-                clientName: currentUser.name,
-                product,
-                quantity,
-                priority,
-                status: 'pendente',
-                orderIndex: Date.now(),
-                createdAt: new Date().toISOString()
+                userId: currentUserData.uid,
+                clientName: currentUserData.name,
+                clientEmail: currentUserData.email,
+                product: product,
+                quantity: quantity,
+                priority: "Média", // Prioridade fixa/oculta inserida automaticamente
+                status: "novo",
+                createdAt: Date.now()
             };
 
             try {
-                const btn = e.target.querySelector('button[type="submit"]');
-                const origText = btn.innerHTML;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
-                btn.disabled = true;
-
-                // Salva no Realtime Database
-                const newOrderRef = push(ref(db, 'orders'));
+                const ordersListRef = ref(db, 'orders');
+                const newOrderRef = push(ordersListRef);
                 await set(newOrderRef, newOrder);
                 
-                showToast("Sucesso", "Pedido enviado com sucesso!", "success");
-                e.target.reset();
+                showToast('Pedido enviado com sucesso!', 'success');
+                document.getElementById('orderForm').reset();
                 document.getElementById('quantityContainer').classList.add('hidden');
                 document.getElementById('customQuantityContainer').classList.add('hidden');
-                
-                btn.innerHTML = origText;
-                btn.disabled = false;
             } catch (error) {
-                console.error("Erro ao salvar pedido:", error);
-                showToast("Erro", "Não foi possível enviar o pedido.", "error");
+                console.error(error);
+                showToast('Erro ao enviar pedido.', 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
-        }
+        };
 
-        function initClientData() {
+        function initClientListeners() {
             const ordersRef = ref(db, 'orders');
             onValue(ordersRef, (snapshot) => {
-                const orders = [];
-                snapshot.forEach(child => {
-                    const data = child.val();
-                    if(data.clientId === currentUser.id) {
-                        orders.push({id: child.key, ...data});
-                    }
-                });
-                orders.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
-                renderClientOrders(orders);
+                const data = snapshot.val();
+                const myOrders = [];
+                if (data) {
+                    Object.keys(data).forEach(key => {
+                        if (data[key].userId === currentUserData.uid) {
+                            myOrders.push({ id: key, ...data[key] });
+                        }
+                    });
+                }
+                renderClientOrders(myOrders.sort((a,b) => b.createdAt - a.createdAt));
             });
         }
 
         function renderClientOrders(orders) {
-            const container = document.getElementById('clientOrdersList');
+            const list = document.getElementById('clientOrdersList');
             if (orders.length === 0) {
-                container.innerHTML = `<div class="col-span-full text-center py-10 text-gray-500 bg-gray-50 rounded-xl border border-dashed border-gray-300">Você ainda não tem pedidos.</div>`;
+                list.innerHTML = '<div class="col-span-full text-center py-10 bg-white rounded-xl border border-dashed border-gray-300 text-gray-500"><i class="fas fa-box-open text-3xl mb-3 text-gray-300 block"></i>Nenhum pedido realizado ainda.</div>';
                 return;
             }
 
-            container.innerHTML = orders.map(order => {
-                const statusColors = {
-                    'pendente': 'bg-gray-100 text-gray-700 border-gray-200',
-                    'producao': 'bg-blue-100 text-blue-700 border-blue-200',
-                    'finalizado': 'bg-green-100 text-green-700 border-green-200'
-                };
-                const statusText = {
-                    'pendente': 'Aguardando',
-                    'producao': 'Em Produção',
-                    'finalizado': 'Finalizado'
-                };
-                const priorityIcons = {
-                    'Baixa': '<i class="fas fa-arrow-down text-blue-500"></i>',
-                    'Média': '<i class="fas fa-minus text-yellow-500"></i>',
-                    'Alta': '<i class="fas fa-arrow-up text-red-500"></i>'
-                };
+            const statusColors = { 'novo': 'bg-gray-100 text-gray-700 border-gray-200', 'producao': 'bg-blue-100 text-blue-700 border-blue-200', 'finalizado': 'bg-green-100 text-green-700 border-green-200' };
+            const statusText = { 'novo': 'Pendente', 'producao': 'Em Produção', 'finalizado': 'Finalizado' };
 
+            list.innerHTML = orders.map(order => {
+                // Nota: removido o render da badge de prioridade para o cliente
                 return `
                 <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col gap-3 relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full ${order.status === 'finalizado' ? 'bg-green-500' : order.status === 'producao' ? 'bg-blue-500' : 'bg-gray-400'}"></div>
@@ -586,277 +622,269 @@
                     <div class="text-sm text-gray-600 flex items-center gap-2">
                         <i class="fas fa-cubes text-gray-400"></i> ${order.quantity}
                     </div>
-                    <div class="text-sm text-gray-600 flex items-center gap-2">
-                        ${priorityIcons[order.priority]} Prioridade ${order.priority}
-                    </div>
                 </div>`;
             }).join('');
         }
 
-        function initAdminData() {
-            onValue(ref(db, 'orders'), (snapshot) => {
-                allOrders = [];
-                snapshot.forEach(child => {
-                    allOrders.push({id: child.key, ...child.val()});
-                });
-                renderKanban();
-                renderClientsList();
-            });
-
-            onValue(ref(db, 'users'), (snapshot) => {
-                allUsers = [];
-                snapshot.forEach(child => {
-                    allUsers.push({id: child.key, ...child.val()});
-                });
-                renderClientsList();
-            });
-        }
-
-        window.switchAdminTab = (tab) => {
-            if(tab === 'pedidos') {
-                document.getElementById('adminTabPedidos').classList.remove('hidden');
-                document.getElementById('adminTabClientes').classList.add('hidden');
-                document.getElementById('tabPedidos').className = "px-6 py-3 font-medium text-sm text-gray-900 border-b-2 border-gray-900 transition";
-                document.getElementById('tabClientes').className = "px-6 py-3 font-medium text-sm text-gray-500 border-b-2 border-transparent hover:text-gray-700 transition";
+        window.switchAdminTab = function(tab) {
+            document.getElementById('adminKanbanView').classList.add('hidden');
+            document.getElementById('adminClientsView').classList.add('hidden');
+            
+            document.getElementById('tabKanban').className = "px-5 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap transition";
+            document.getElementById('tabClients').className = "px-5 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap transition";
+            
+            if (tab === 'kanban') {
+                document.getElementById('adminKanbanView').classList.remove('hidden');
+                document.getElementById('tabKanban').className = "px-5 py-4 text-sm font-medium border-b-2 border-gray-900 text-gray-900 whitespace-nowrap transition";
             } else {
-                document.getElementById('adminTabPedidos').classList.add('hidden');
-                document.getElementById('adminTabClientes').classList.remove('hidden');
-                document.getElementById('tabPedidos').className = "px-6 py-3 font-medium text-sm text-gray-500 border-b-2 border-transparent hover:text-gray-700 transition";
-                document.getElementById('tabClientes').className = "px-6 py-3 font-medium text-sm text-gray-900 border-b-2 border-gray-900 transition";
+                document.getElementById('adminClientsView').classList.remove('hidden');
+                document.getElementById('tabClients').className = "px-5 py-4 text-sm font-medium border-b-2 border-gray-900 text-gray-900 whitespace-nowrap transition";
+                renderClientsList(); // Atualiza a tabela sempre que abrir a aba
             }
         };
 
-        function renderKanban() {
-            const cols = {
-                'pendente': document.getElementById('kanban-pendente'),
-                'producao': document.getElementById('kanban-producao'),
-                'finalizado': document.getElementById('kanban-finalizado')
-            };
-
-            Object.values(cols).forEach(col => col.innerHTML = '');
-            const counts = { 'pendente': 0, 'producao': 0, 'finalizado': 0 };
-
-            const sortedOrders = [...allOrders].sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
-
-            sortedOrders.forEach(order => {
-                if(!cols[order.status]) return;
-                
-                counts[order.status]++;
-                const card = document.createElement('div');
-                card.className = "bg-white p-4 rounded-lg shadow-sm border border-gray-200 draggable-card flex flex-col gap-2";
-                card.setAttribute('draggable', 'true');
-                card.setAttribute('data-id', order.id);
-                
-                const priorityColor = order.priority === 'Alta' ? 'text-red-600 bg-red-50' : order.priority === 'Média' ? 'text-yellow-600 bg-yellow-50' : 'text-blue-600 bg-blue-50';
-
-                card.innerHTML = `
-                    <div class="flex justify-between items-start">
-                        <button onclick="openEditModal('${order.id}')" class="font-bold text-gray-900 hover:text-blue-600 transition text-left underline decoration-dotted decoration-gray-400">
-                            ${order.clientName}
-                        </button>
-                        <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${priorityColor}">${order.priority}</span>
-                    </div>
-                    <div class="text-sm text-gray-700 font-medium">${order.product}</div>
-                    <div class="text-xs text-gray-500">${order.quantity}</div>
-                    <div class="text-xs text-gray-400 mt-2 flex justify-between items-center border-t border-gray-50 pt-2">
-                        <span>${formatDateTime(order.createdAt).split(' às')[0]}</span>
-                        <i class="fas fa-grip-lines text-gray-300"></i>
-                    </div>
-                `;
-
-                card.addEventListener('dragstart', handleDragStart);
-                card.addEventListener('dragend', handleDragEnd);
-
-                cols[order.status].appendChild(card);
-            });
-
-            document.getElementById('countPendente').textContent = counts.pendente;
-            document.getElementById('countProducao').textContent = counts.producao;
-            document.getElementById('countFinalizado').textContent = counts.finalizado;
-
-            setupDragAndDrop();
-        }
-
-        let draggedItem = null;
-
-        function handleDragStart(e) {
-            draggedItem = this;
-            setTimeout(() => this.classList.add('hidden'), 0);
-        }
-
-        function handleDragEnd(e) {
-            this.classList.remove('hidden');
-            draggedItem = null;
-        }
-
-        function setupDragAndDrop() {
-            const columns = document.querySelectorAll('.kanban-column');
-            
-            columns.forEach(col => {
-                col.addEventListener('dragover', e => {
-                    e.preventDefault();
-                    const afterElement = getDragAfterElement(col, e.clientY);
-                    const draggable = draggedItem;
-                    if (draggable) {
-                        if (afterElement == null) {
-                            col.appendChild(draggable);
-                        } else {
-                            col.insertBefore(draggable, afterElement);
-                        }
-                    }
-                });
-
-                col.addEventListener('drop', async e => {
-                    e.preventDefault();
-                    if(!draggedItem) return;
-                    
-                    const orderId = draggedItem.getAttribute('data-id');
-                    const newStatus = col.getAttribute('data-status');
-                    
-                    const cardsInColumn = [...col.querySelectorAll('.draggable-card')];
-                    const updates = {};
-
-                    // Atualiza o card arrastado e reordena os outros
-                    updates[`orders/${orderId}/status`] = newStatus;
-                    cardsInColumn.forEach((cardEl, index) => {
-                        const cId = cardEl.getAttribute('data-id');
-                        updates[`orders/${cId}/orderIndex`] = index;
+        function initAdminListeners() {
+            // Monitora Pedidos
+            const ordersRef = ref(db, 'orders');
+            onValue(ordersRef, (snapshot) => {
+                globalOrders = {};
+                const data = snapshot.val();
+                if (data) {
+                    Object.keys(data).forEach(key => {
+                        globalOrders[key] = { id: key, ...data[key] };
                     });
+                }
+                renderKanban();
+                if(!document.getElementById('adminClientsView').classList.contains('hidden')){
+                    renderClientsList();
+                }
+            });
 
-                    try {
-                        await update(ref(db), updates);
-                    } catch(err) {
-                        console.error("Erro ao reordenar", err);
-                        showToast("Erro", "Falha ao salvar a nova ordem.", "error");
-                    }
-                });
+            // Monitora Usuários (Clientes)
+            const usersRef = ref(db, 'users');
+            onValue(usersRef, (snapshot) => {
+                globalUsers = {};
+                const data = snapshot.val();
+                if(data) {
+                    Object.keys(data).forEach(key => {
+                        if(data[key].role === 'client') {
+                            globalUsers[key] = { uid: key, ...data[key] };
+                        }
+                    });
+                }
+                if(!document.getElementById('adminClientsView').classList.contains('hidden')){
+                    renderClientsList();
+                }
             });
         }
 
-        function getDragAfterElement(container, y) {
-            const draggableElements = [...container.querySelectorAll('.draggable-card:not(.hidden)')];
-
-            return draggableElements.reduce((closest, child) => {
-                const box = child.getBoundingClientRect();
-                const offset = y - box.top - box.height / 2;
-                if (offset < 0 && offset > closest.offset) {
-                    return { offset: offset, element: child };
+        function renderKanban() {
+            const cols = { novo: [], producao: [], finalizado: [] };
+            
+            Object.values(globalOrders).forEach(order => {
+                if(cols[order.status]) {
+                    cols[order.status].push(order);
                 } else {
-                    return closest;
+                    cols['novo'].push(order); // fallback
                 }
-            }, { offset: Number.NEGATIVE_INFINITY }).element;
+            });
+
+            // Ordena os cards pela data (mais antigos primeiro na fila de pendentes)
+            cols.novo.sort((a,b) => a.createdAt - b.createdAt);
+            cols.producao.sort((a,b) => a.createdAt - b.createdAt);
+            cols.finalizado.sort((a,b) => b.createdAt - a.createdAt); // Finalizados mais recentes primeiro
+
+            // Atualiza contadores
+            document.getElementById('countNovos').innerText = cols.novo.length;
+            document.getElementById('countProducao').innerText = cols.producao.length;
+            document.getElementById('countFinalizado').innerText = cols.finalizado.length;
+
+            ['novo', 'producao', 'finalizado'].forEach(status => {
+                const container = document.getElementById(`kanban-${status}`);
+                if (cols[status].length === 0) {
+                    container.innerHTML = `<div class="text-center py-6 text-sm text-gray-400 font-medium">Nenhum pedido</div>`;
+                    return;
+                }
+                container.innerHTML = cols[status].map(order => createKanbanCard(order)).join('');
+            });
         }
 
-        window.openEditModal = (orderId) => {
-            const order = allOrders.find(o => o.id === orderId);
-            if(!order) return;
-            editingOrderId = orderId;
-
-            const content = document.getElementById('editModalContent');
-            content.innerHTML = `
-                <div class="mb-2 text-sm text-gray-500">Cliente: <strong class="text-gray-900">${order.clientName}</strong></div>
-                <div class="mb-4 text-sm text-gray-500">Produto: <strong class="text-gray-900">${order.product} - ${order.quantity}</strong></div>
+        function createKanbanCard(order) {
+            const prioColors = {
+                'Baixa': 'bg-green-100 text-green-700',
+                'Média': 'bg-amber-100 text-amber-700',
+                'Alta': 'bg-red-100 text-red-700'
+            };
+            
+            // O admin continua vendo a prioridade e podendo clicar no nome do cliente
+            return `
+            <div id="order-${order.id}" class="draggable-card bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing transition-all relative overflow-hidden group" 
+                 draggable="true" 
+                 ondragstart="drag(event)" 
+                 ondragend="dragEnd(event)">
+                 
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded ${prioColors[order.priority] || prioColors['Média']}">
+                        ${order.priority || 'Média'}
+                    </span>
+                    <span class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">${formatDateTime(order.createdAt).split(' às')[0]}</span>
+                </div>
                 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                    <select id="editStatus" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:border-gray-900">
-                        <option value="pendente" ${order.status==='pendente'?'selected':''}>Pendente (Recebidos)</option>
-                        <option value="producao" ${order.status==='producao'?'selected':''}>Em Produção</option>
-                        <option value="finalizado" ${order.status==='finalizado'?'selected':''}>Finalizado</option>
-                    </select>
+                <h4 class="font-bold text-gray-900 text-sm leading-tight mb-1">${order.product}</h4>
+                <div class="text-xs text-gray-600 mb-3 flex items-center gap-1.5"><i class="fas fa-cubes text-gray-400"></i> ${order.quantity}</div>
+                
+                <div class="pt-3 border-t border-gray-100 mt-2 flex items-center justify-between">
+                    <button onclick="openEditModal('${order.id}')" class="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 px-2 py-1 rounded transition w-full text-left">
+                        <i class="fas fa-user-circle text-gray-400 text-lg"></i> 
+                        <span class="truncate" style="max-width: 140px;">${order.clientName}</span>
+                        <i class="fas fa-edit ml-auto text-gray-300 group-hover:text-gray-600 opacity-0 group-hover:opacity-100 transition"></i>
+                    </button>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Prioridade</label>
-                    <select id="editPriority" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:border-gray-900">
-                        <option value="Baixa" ${order.priority==='Baixa'?'selected':''}>Baixa</option>
-                        <option value="Média" ${order.priority==='Média'?'selected':''}>Média</option>
-                        <option value="Alta" ${order.priority==='Alta'?'selected':''}>Alta</option>
-                    </select>
-                </div>
-                <div class="mt-4 pt-4 border-t border-gray-100">
-                     <button onclick="deleteOrder('${order.id}')" class="text-sm text-red-600 hover:text-red-800 font-medium flex items-center gap-2">
-                        <i class="fas fa-trash"></i> Excluir Pedido
-                     </button>
-                </div>
-            `;
-            document.getElementById('editModal').classList.remove('hidden');
-            document.getElementById('editModal').classList.add('flex');
+            </div>`;
+        }
+
+        // Funções de arrastar (Drag and Drop HTML5)
+        window.drag = function(ev) {
+            ev.dataTransfer.setData("text", ev.target.id);
+            setTimeout(() => ev.target.classList.add('dragging'), 0);
+        };
+        
+        window.dragEnd = function(ev) {
+            ev.target.classList.remove('dragging');
+            document.querySelectorAll('.kanban-column').forEach(col => col.classList.remove('drag-over'));
         };
 
-        window.closeEditModal = () => {
-            editingOrderId = null;
-            document.getElementById('editModal').classList.add('hidden');
-            document.getElementById('editModal').classList.remove('flex');
+        window.allowDrop = function(ev) {
+            ev.preventDefault();
         };
 
-        window.saveOrderEdit = async () => {
-            if(!editingOrderId) return;
+        window.dragEnter = function(ev) {
+            ev.preventDefault();
+            if(ev.currentTarget.classList.contains('kanban-column')) {
+                ev.currentTarget.classList.add('drag-over');
+            }
+        };
+
+        window.dragLeave = function(ev) {
+            if(ev.currentTarget.classList.contains('kanban-column')) {
+                ev.currentTarget.classList.remove('drag-over');
+            }
+        };
+
+        window.drop = async function(ev, targetStatus) {
+            ev.preventDefault();
+            const columns = document.querySelectorAll('.kanban-column');
+            columns.forEach(col => col.classList.remove('drag-over'));
+
+            const cardId = ev.dataTransfer.getData("text");
+            if(!cardId) return;
+            
+            const rawId = cardId.replace('order-', '');
+            const order = globalOrders[rawId];
+            
+            if(order && order.status !== targetStatus) {
+                try {
+                    const orderRef = ref(db, `orders/${rawId}`);
+                    await update(orderRef, { status: targetStatus });
+                    showToast(`Pedido movido para ${targetStatus.toUpperCase()}`, 'success');
+                } catch(err) {
+                    showToast('Erro ao atualizar status', 'error');
+                }
+            }
+        };
+
+        window.openEditModal = function(orderId) {
+            const order = globalOrders[orderId];
+            if(!order) return;
+
+            document.getElementById('editOrderId').value = orderId;
+            document.getElementById('editClientName').innerText = order.clientName;
+            document.getElementById('editProduct').innerText = order.product;
+            document.getElementById('editQuantity').innerText = order.quantity;
+            document.getElementById('editStatus').value = order.status;
+            document.getElementById('editPriority').value = order.priority || 'Média';
+            
+            document.getElementById('adminEditModal').classList.remove('hidden');
+        };
+
+        window.closeEditModal = function() {
+            document.getElementById('adminEditModal').classList.add('hidden');
+        };
+
+        window.saveOrderEdit = async function() {
+            const orderId = document.getElementById('editOrderId').value;
             const newStatus = document.getElementById('editStatus').value;
             const newPriority = document.getElementById('editPriority').value;
 
             try {
-                await update(ref(db, `orders/${editingOrderId}`), {
+                const orderRef = ref(db, `orders/${orderId}`);
+                await update(orderRef, {
                     status: newStatus,
                     priority: newPriority
                 });
-                showToast("Sucesso", "Pedido atualizado.", "success");
+                showToast('Pedido atualizado!', 'success');
                 closeEditModal();
-            } catch (error) {
-                console.error(error);
-                showToast("Erro", "Falha ao atualizar.", "error");
-            }
-        };
-
-        window.deleteOrder = async (id) => {
-            try {
-                await remove(ref(db, `orders/${id}`));
-                showToast("Excluído", "O pedido foi deletado permanentemente.", "info");
-                closeEditModal();
-            } catch(e) {
-                showToast("Erro", "Falha ao excluir.", "error");
+            } catch(err) {
+                showToast('Erro ao salvar.', 'error');
             }
         };
 
         function renderClientsList() {
             const tbody = document.getElementById('clientsTableBody');
-            
             const clientStats = {};
-            allOrders.forEach(order => {
-                if(!clientStats[order.clientId]) {
-                    clientStats[order.clientId] = { total: 0, lastOrderDate: order.createdAt };
+            
+            // Inicializa dados dos usuários na tabela
+            Object.values(globalUsers).forEach(user => {
+                clientStats[user.uid] = {
+                    name: user.name,
+                    email: user.email,
+                    totalOrders: 0,
+                    lastOrderDate: null
+                };
+            });
+
+            // Agrega pedidos para cada cliente
+            Object.values(globalOrders).forEach(order => {
+                const uid = order.userId;
+                if(!clientStats[uid]) {
+                    // Usuário deletado ou não listado, cria placeholder
+                    clientStats[uid] = { name: order.clientName, email: order.clientEmail || 'N/A', totalOrders: 0, lastOrderDate: null };
                 }
-                clientStats[order.clientId].total++;
-                if(new Date(order.createdAt) > new Date(clientStats[order.clientId].lastOrderDate)) {
-                    clientStats[order.clientId].lastOrderDate = order.createdAt;
+                
+                clientStats[uid].totalOrders += 1;
+                
+                if(!clientStats[uid].lastOrderDate || order.createdAt > clientStats[uid].lastOrderDate) {
+                    clientStats[uid].lastOrderDate = order.createdAt;
                 }
             });
 
-            const clientsHTML = allUsers.filter(u => u.role === 'client').map(client => {
-                const stats = clientStats[client.id] || { total: 0, lastOrderDate: null };
-                
-                return `
+            const clientArray = Object.values(clientStats).sort((a,b) => b.totalOrders - a.totalOrders);
+            document.getElementById('totalClientsCount').innerText = clientArray.length;
+
+            if(clientArray.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-gray-400">Nenhum cliente registrado.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = clientArray.map(client => `
                 <tr class="hover:bg-gray-50 transition">
-                    <td class="px-6 py-4">
-                        <div class="font-medium text-gray-900">${client.name}</div>
-                        <div class="text-xs text-gray-500">${client.email}</div>
+                    <td class="px-6 py-4 font-medium text-gray-900 flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-gray-200 flex justify-center items-center text-gray-600 text-xs font-bold uppercase">
+                            ${client.name.charAt(0)}
+                        </div>
+                        ${client.name}
                     </td>
-                    <td class="px-6 py-4 text-gray-700">
-                        <span class="bg-gray-100 px-2.5 py-1 rounded-md text-xs font-bold">${stats.total}</span>
+                    <td class="px-6 py-4 text-gray-500">${client.email}</td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-bold">${client.totalOrders}</span>
                     </td>
-                    <td class="px-6 py-4 text-gray-500 text-sm">
-                        ${stats.lastOrderDate ? formatDateTime(stats.lastOrderDate).split(' às')[0] : 'Nunca comprou'}
-                    </td>
-                    <td class="px-6 py-4">
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-green-50 text-green-700 border border-green-200">
-                            <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Ativo
-                        </span>
+                    <td class="px-6 py-4 text-right text-gray-500 text-sm">
+                        ${client.lastOrderDate ? formatDateTime(client.lastOrderDate).split(' às')[0] : 'Nunca comprou'}
                     </td>
                 </tr>
-                `;
-            }).join('');
-
-            tbody.innerHTML = clientsHTML || `<tr><td colspan="4" class="px-6 py-8 text-center text-gray-500">Nenhum cliente registrado ainda.</td></tr>`;
+            `).join('');
         }
+
     </script>
 </body>
 </html>
