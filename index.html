@@ -155,6 +155,28 @@
             cursor: not-allowed;
         }
 
+        .btn-secondary {
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #f0f0f0;
+        }
+
         /* Main App */
         #main-app {
             display: none;
@@ -209,6 +231,17 @@
             background: rgba(255,255,255,0.3);
         }
 
+        .user-badge {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
         .admin-badge {
             background: #ffd700;
             color: #000;
@@ -260,6 +293,14 @@
 
         .tab-btn:hover {
             background: #f8f9fa;
+        }
+
+        .tab-btn.admin-only {
+            display: none;
+        }
+
+        .tab-btn.admin-only.show {
+            display: flex;
         }
 
         .tab-content {
@@ -811,9 +852,45 @@
                     Entrar
                 </button>
             </form>
+            <div id="register-section" style="display: none;">
+                <button type="button" class="btn-secondary" onclick="showRegister()">
+                    <i class="fas fa-user-plus"></i>
+                    Criar Conta de Cliente
+                </button>
+            </div>
             <p style="text-align: center; margin-top: 15px; font-size: 14px; color: var(--text-light);">
-                Acesso restrito à equipe Prata Embalagens
+                Acesso para clientes e equipe
             </p>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div class="modal" id="register-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Criar Conta de Cliente</h3>
+                <button class="close-modal" onclick="closeModal('register-modal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="register-form">
+                <div class="form-group">
+                    <label>Nome Completo</label>
+                    <input type="text" id="register-name" class="custom-select" required placeholder="Seu nome completo">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="register-email" class="custom-select" required placeholder="seu@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Senha</label>
+                    <input type="password" id="register-password" class="custom-select" required placeholder="Mínimo 6 caracteres" minlength="6">
+                </div>
+                <button type="button" class="btn-primary" onclick="registerClient()">
+                    <i class="fas fa-user-plus"></i>
+                    Criar Conta
+                </button>
+            </form>
         </div>
     </div>
 
@@ -830,9 +907,10 @@
                         <i class="fas fa-crown"></i>
                         Admin Master
                     </span>
-                    <button class="btn-icon" onclick="showToast('Notificações')" title="Notificações">
-                        <i class="fas fa-bell"></i>
-                    </button>
+                    <span class="user-badge" id="user-badge">
+                        <i class="fas fa-user"></i>
+                        <span id="user-name">Cliente</span>
+                    </span>
                     <button class="btn-icon" onclick="logout()" title="Sair">
                         <i class="fas fa-sign-out-alt"></i>
                     </button>
@@ -846,11 +924,11 @@
                 <i class="fas fa-plus-circle"></i>
                 Novo Pedido
             </button>
-            <button class="tab-btn" data-tab="orders">
+            <button class="tab-btn admin-only" data-tab="orders">
                 <i class="fas fa-list"></i>
                 Pedidos
             </button>
-            <button class="tab-btn" data-tab="clients">
+            <button class="tab-btn admin-only" data-tab="clients">
                 <i class="fas fa-users"></i>
                 Clientes
             </button>
@@ -985,7 +1063,7 @@
                 </div>
             </div>
 
-            <!-- Orders Tab -->
+            <!-- Orders Tab (Admin Only) -->
             <div class="tab-content" id="orders">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h2>
@@ -1013,7 +1091,7 @@
                 </div>
             </div>
 
-            <!-- Clients Tab -->
+            <!-- Clients Tab (Admin Only) -->
             <div class="tab-content" id="clients">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h2>
@@ -1126,6 +1204,7 @@
         let selectedPriority = 'media';
         let currentEditId = null;
         let draggedCard = null;
+        let isAdmin = false;
 
         // Toast Notification
         function showToast(message) {
@@ -1135,6 +1214,53 @@
             setTimeout(() => {
                 toast.classList.remove('show');
             }, 3000);
+        }
+
+        // Show Register
+        function showRegister() {
+            document.getElementById('register-modal').classList.add('active');
+        }
+
+        // Register Client
+        function registerClient() {
+            const name = document.getElementById('register-name').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            
+            if (!name || !email || !password) {
+                showToast('Preencha todos os campos!');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showToast('A senha deve ter pelo menos 6 caracteres!');
+                return;
+            }
+            
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    
+                    // Salvar dados do cliente
+                    const clientData = {
+                        name: name,
+                        email: email,
+                        createdAt: new Date().toLocaleDateString('pt-BR')
+                    };
+                    
+                    database.ref(`clients/${user.uid}`).set(clientData)
+                        .then(() => {
+                            showToast('Conta criada com sucesso!');
+                            closeModal('register-modal');
+                            document.getElementById('register-form').reset();
+                        })
+                        .catch((error) => {
+                            showToast('Erro ao salvar dados: ' + error.message);
+                        });
+                })
+                .catch((error) => {
+                    showToast('Erro ao criar conta: ' + error.message);
+                });
         }
 
         // Login System
@@ -1162,16 +1288,17 @@
             if (user) {
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-app').style.display = 'block';
-                checkAdminAccess(user);
+                checkUserType(user);
                 loadInitialData();
             } else {
                 document.getElementById('login-screen').style.display = 'flex';
                 document.getElementById('main-app').style.display = 'none';
+                document.getElementById('register-section').style.display = 'block';
             }
         });
 
-        // Check Admin Access
-        function checkAdminAccess(user) {
+        // Check User Type
+        function checkUserType(user) {
             const adminRef = database.ref(`admins/${user.uid}`);
             
             adminRef.once('value')
@@ -1179,21 +1306,40 @@
                     const adminData = snapshot.val();
                     
                     if (adminData) {
+                        isAdmin = true;
                         console.log('✅ Admin Master identificado:', adminData.name);
-                        showAdminControls();
+                        showAdminInterface(adminData.name);
                     } else {
-                        console.log('👤 Usuário comum identificado');
-                        hideAdminControls();
+                        isAdmin = false;
+                        console.log('👤 Cliente identificado');
+                        showClientInterface(user);
                     }
                 })
                 .catch((error) => {
-                    console.error('Erro ao verificar admin:', error);
+                    console.error('Erro ao verificar tipo de usuário:', error);
+                    showClientInterface(user);
                 });
         }
 
-        function showAdminControls() {
+        function showAdminInterface(adminName) {
+            // Mostrar badge de admin
             document.getElementById('admin-badge').classList.add('show');
+            document.getElementById('user-name').textContent = adminName;
+            
+            // Mostrar painel admin
             document.getElementById('admin-panel').style.display = 'block';
+            
+            // Mostrar abas de admin
+            document.querySelectorAll('.admin-only').forEach(el => {
+                el.classList.add('show');
+            });
+            
+            // Ativar aba de pedidos para admin
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('[data-tab="orders"]').classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+            document.getElementById('orders').classList.add('active');
+            
             loadAdminStats();
             
             // Atualizar estatísticas em tempo real
@@ -1206,9 +1352,33 @@
             });
         }
 
-        function hideAdminControls() {
+        function showClientInterface(user) {
+            // Esconder elementos de admin
             document.getElementById('admin-badge').classList.remove('show');
             document.getElementById('admin-panel').style.display = 'none';
+            document.querySelectorAll('.admin-only').forEach(el => {
+                el.classList.remove('show');
+            });
+            
+            // Mostrar nome do cliente
+            database.ref(`clients/${user.uid}`).once('value')
+                .then((snapshot) => {
+                    const clientData = snapshot.val();
+                    if (clientData) {
+                        document.getElementById('user-name').textContent = clientData.name;
+                    } else {
+                        document.getElementById('user-name').textContent = user.email;
+                    }
+                })
+                .catch(() => {
+                    document.getElementById('user-name').textContent = user.email;
+                });
+            
+            // Ativar aba de novo pedido
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('[data-tab="new-order"]').classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+            document.getElementById('new-order').classList.add('active');
         }
 
         function loadAdminStats() {
@@ -1283,16 +1453,19 @@
         // Load Initial Data
         function loadInitialData() {
             loadClients();
-            loadOrders();
             
-            database.ref('orders').on('value', () => {
+            if (isAdmin) {
                 loadOrders();
-            });
-            
-            database.ref('clients').on('value', () => {
-                loadClients();
-                loadClientsList();
-            });
+                
+                database.ref('orders').on('value', () => {
+                    loadOrders();
+                });
+                
+                database.ref('clients').on('value', () => {
+                    loadClients();
+                    loadClientsList();
+                });
+            }
         }
 
         // Load Clients for Select
@@ -1306,7 +1479,7 @@
                     Object.entries(clients).forEach(([id, client]) => {
                         const option = document.createElement('option');
                         option.value = id;
-                        option.textContent = client.name;
+                        option.textContent = client.name || client.email;
                         select.appendChild(option);
                     });
                 }
@@ -1375,7 +1548,7 @@
                 });
         }
 
-        // Load Orders
+        // Load Orders (Admin Only)
         function loadOrders() {
             const pendenteContainer = document.getElementById('kanban-pendente');
             const producaoContainer = document.getElementById('kanban-producao');
@@ -1532,7 +1705,7 @@
             }
         }
 
-        // Load Clients List
+        // Load Clients List (Admin Only)
         function loadClientsList() {
             const clientsList = document.getElementById('clients-list');
             database.ref('clients').on('value', (snapshot) => {
@@ -1573,7 +1746,7 @@
             });
         }
 
-        // Add Client
+        // Add Client (Admin Only)
         function showAddClientModal() {
             document.getElementById('add-client-modal').classList.add('active');
         }
@@ -1616,7 +1789,7 @@
             });
         });
 
-        // Export Data
+        // Export Data (Admin Only)
         function exportData() {
             database.ref('orders').once('value', (snapshot) => {
                 const orders = snapshot.val();
@@ -1634,7 +1807,7 @@
             });
         }
 
-        // Clear Completed Orders
+        // Clear Completed Orders (Admin Only)
         function clearCompletedOrders() {
             if (confirm('Tem certeza que deseja excluir todos os pedidos concluídos?')) {
                 database.ref('orders').orderByChild('status').equalTo('concluido').once('value', (snapshot) => {
@@ -1652,8 +1825,10 @@
             if (user) {
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-app').style.display = 'block';
-                checkAdminAccess(user);
+                checkUserType(user);
                 loadInitialData();
+            } else {
+                document.getElementById('register-section').style.display = 'block';
             }
         });
     </script>
