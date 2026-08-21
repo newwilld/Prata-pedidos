@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Prata Embalagens - Sistema de Pedidos</title>
     
     <!-- Firebase SDKs -->
@@ -46,7 +46,6 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* Mobile First */
         .container {
             width: 100%;
             max-width: 100%;
@@ -107,7 +106,7 @@
             color: var(--text);
         }
 
-        .form-group input {
+        .form-group input, .form-group select {
             width: 100%;
             padding: 12px 15px;
             border: 2px solid var(--border);
@@ -117,7 +116,7 @@
             background: #fafafa;
         }
 
-        .form-group input:focus {
+        .form-group input:focus, .form-group select:focus {
             outline: none;
             border-color: var(--accent);
             background: white;
@@ -151,13 +150,17 @@
             transform: translateY(0);
         }
 
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         /* Main App */
         #main-app {
             display: none;
             min-height: 100vh;
         }
 
-        /* Header */
         .app-header {
             background: var(--primary);
             color: white;
@@ -168,7 +171,7 @@
             box-shadow: var(--shadow);
         }
 
-        .app-header .header-content {
+        .header-content {
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -204,6 +207,22 @@
 
         .btn-icon:hover {
             background: rgba(255,255,255,0.3);
+        }
+
+        .admin-badge {
+            background: #ffd700;
+            color: #000;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            display: none;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .admin-badge.show {
+            display: flex;
         }
 
         /* Tab Navigation */
@@ -243,7 +262,6 @@
             background: #f8f9fa;
         }
 
-        /* Tab Content */
         .tab-content {
             display: none;
             padding: 20px 0;
@@ -253,7 +271,7 @@
             display: block;
         }
 
-        /* New Order Form */
+        /* Order Form */
         .order-form {
             background: white;
             border-radius: var(--radius);
@@ -266,11 +284,13 @@
             font-size: 18px;
             margin-bottom: 20px;
             color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .select-group {
             margin-bottom: 20px;
-            position: relative;
         }
 
         .select-label {
@@ -338,21 +358,10 @@
             color: white;
         }
 
-        .priority-btn[data-priority="baixa"] {
-            color: #4caf50;
-        }
-
-        .priority-btn[data-priority="media"] {
-            color: #ff9800;
-        }
-
-        .priority-btn[data-priority="alta"] {
-            color: #f44336;
-        }
-
-        .priority-btn[data-priority="urgente"] {
-            color: #9c27b0;
-        }
+        .priority-btn[data-priority="baixa"] { color: #4caf50; }
+        .priority-btn[data-priority="media"] { color: #ff9800; }
+        .priority-btn[data-priority="alta"] { color: #f44336; }
+        .priority-btn[data-priority="urgente"] { color: #9c27b0; }
 
         .custom-quantity-input {
             display: none;
@@ -389,6 +398,10 @@
             gap: 8px;
         }
 
+        .kanban-items {
+            min-height: 100px;
+        }
+
         .kanban-card {
             background: white;
             border-radius: 8px;
@@ -398,7 +411,6 @@
             cursor: move;
             transition: all 0.3s;
             border-left: 4px solid transparent;
-            position: relative;
         }
 
         .kanban-card:hover {
@@ -569,6 +581,85 @@
             text-transform: uppercase;
         }
 
+        /* Admin Panel */
+        .admin-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .admin-header {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .admin-header h3 {
+            color: #1a237e;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .admin-stats {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .admin-stat-card {
+            flex: 1;
+            min-width: 150px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .stat-icon {
+            font-size: 30px;
+            opacity: 0.9;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            display: block;
+        }
+
+        .admin-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-admin {
+            padding: 10px 20px;
+            background: #1a237e;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-admin:hover {
+            background: #0d47a1;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
         /* Modal */
         .modal {
             position: fixed;
@@ -596,7 +687,6 @@
             max-width: 500px;
             max-height: 90vh;
             overflow-y: auto;
-            position: relative;
         }
 
         .modal-header {
@@ -623,42 +713,6 @@
 
         .close-modal:hover {
             color: var(--danger);
-        }
-
-        /* Responsive */
-        @media (min-width: 768px) {
-            .container {
-                max-width: 720px;
-                padding: 20px;
-            }
-
-            .kanban-column {
-                min-width: 300px;
-            }
-
-            .client-card {
-                padding: 25px;
-            }
-        }
-
-        @media (min-width: 1024px) {
-            .container {
-                max-width: 960px;
-            }
-
-            .kanban-column {
-                min-width: 280px;
-            }
-
-            .order-form {
-                padding: 30px;
-            }
-        }
-
-        @media (min-width: 1440px) {
-            .container {
-                max-width: 1200px;
-            }
         }
 
         /* Toast Notification */
@@ -697,6 +751,34 @@
 
         @keyframes spin {
             to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (min-width: 768px) {
+            .container {
+                max-width: 720px;
+                padding: 20px;
+            }
+
+            .kanban-column {
+                min-width: 300px;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .container {
+                max-width: 960px;
+            }
+
+            .order-form {
+                padding: 30px;
+            }
+        }
+
+        @media (min-width: 1440px) {
+            .container {
+                max-width: 1200px;
+            }
         }
     </style>
 </head>
@@ -744,6 +826,10 @@
                     Prata Embalagens
                 </h1>
                 <div class="header-actions">
+                    <span class="admin-badge" id="admin-badge">
+                        <i class="fas fa-crown"></i>
+                        Admin Master
+                    </span>
                     <button class="btn-icon" onclick="showToast('Notificações')" title="Notificações">
                         <i class="fas fa-bell"></i>
                     </button>
@@ -772,6 +858,59 @@
 
         <!-- Main Content -->
         <main class="container">
+            <!-- Admin Panel -->
+            <div class="admin-panel" id="admin-panel" style="display: none;">
+                <div class="admin-header">
+                    <h3>
+                        <i class="fas fa-user-shield"></i>
+                        Painel do Admin Master
+                    </h3>
+                </div>
+                
+                <div class="admin-stats">
+                    <div class="admin-stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="admin-total-orders">0</span>
+                            <span class="stat-label">Total de Pedidos</span>
+                        </div>
+                    </div>
+                    
+                    <div class="admin-stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="admin-total-clients">0</span>
+                            <span class="stat-label">Total de Clientes</span>
+                        </div>
+                    </div>
+                    
+                    <div class="admin-stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="admin-pending-orders">0</span>
+                            <span class="stat-label">Pedidos Pendentes</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="admin-actions">
+                    <button class="btn-admin" onclick="exportData()">
+                        <i class="fas fa-download"></i>
+                        Exportar Dados
+                    </button>
+                    <button class="btn-admin" onclick="clearCompletedOrders()">
+                        <i class="fas fa-trash"></i>
+                        Limpar Concluídos
+                    </button>
+                </div>
+            </div>
+
             <!-- New Order Tab -->
             <div class="tab-content active" id="new-order">
                 <div class="order-form">
@@ -813,7 +952,7 @@
                         
                         <div class="custom-quantity-input" id="custom-quantity-input">
                             <label class="select-label">Digite a quantidade desejada</label>
-                            <input type="number" class="form-group input" id="custom-quantity" placeholder="Ex: 750, 1500, 2500..." min="1">
+                            <input type="number" class="custom-select" id="custom-quantity" placeholder="Ex: 750, 1500, 2500..." min="1">
                         </div>
                     </div>
 
@@ -1011,9 +1150,6 @@
             try {
                 await auth.signInWithEmailAndPassword(email, password);
                 showToast('Login realizado com sucesso!');
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('main-app').style.display = 'block';
-                loadInitialData();
             } catch (error) {
                 showToast('Erro: ' + error.message);
                 loginBtn.disabled = false;
@@ -1021,12 +1157,82 @@
             }
         });
 
+        // Auth State Observer
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-app').style.display = 'block';
+                checkAdminAccess(user);
+                loadInitialData();
+            } else {
+                document.getElementById('login-screen').style.display = 'flex';
+                document.getElementById('main-app').style.display = 'none';
+            }
+        });
+
+        // Check Admin Access
+        function checkAdminAccess(user) {
+            const adminRef = database.ref(`admins/${user.uid}`);
+            
+            adminRef.once('value')
+                .then((snapshot) => {
+                    const adminData = snapshot.val();
+                    
+                    if (adminData) {
+                        console.log('✅ Admin Master identificado:', adminData.name);
+                        showAdminControls();
+                    } else {
+                        console.log('👤 Usuário comum identificado');
+                        hideAdminControls();
+                    }
+                })
+                .catch((error) => {
+                    console.error('Erro ao verificar admin:', error);
+                });
+        }
+
+        function showAdminControls() {
+            document.getElementById('admin-badge').classList.add('show');
+            document.getElementById('admin-panel').style.display = 'block';
+            loadAdminStats();
+            
+            // Atualizar estatísticas em tempo real
+            database.ref('orders').on('value', () => {
+                loadAdminStats();
+            });
+            
+            database.ref('clients').on('value', () => {
+                loadAdminStats();
+            });
+        }
+
+        function hideAdminControls() {
+            document.getElementById('admin-badge').classList.remove('show');
+            document.getElementById('admin-panel').style.display = 'none';
+        }
+
+        function loadAdminStats() {
+            database.ref('orders').once('value', (snapshot) => {
+                const orders = snapshot.val();
+                const totalOrders = orders ? Object.keys(orders).length : 0;
+                const pendingOrders = orders ? 
+                    Object.values(orders).filter(o => o.status === 'pendente').length : 0;
+                
+                document.getElementById('admin-total-orders').textContent = totalOrders;
+                document.getElementById('admin-pending-orders').textContent = pendingOrders;
+            });
+            
+            database.ref('clients').once('value', (snapshot) => {
+                const clients = snapshot.val();
+                const totalClients = clients ? Object.keys(clients).length : 0;
+                document.getElementById('admin-total-clients').textContent = totalClients;
+            });
+        }
+
         // Logout
         function logout() {
             auth.signOut().then(() => {
                 showToast('Logout realizado!');
-                document.getElementById('main-app').style.display = 'none';
-                document.getElementById('login-screen').style.display = 'flex';
             }).catch((error) => {
                 showToast('Erro ao fazer logout: ' + error.message);
             });
@@ -1037,11 +1243,9 @@
             btn.addEventListener('click', () => {
                 const tabId = btn.dataset.tab;
                 
-                // Update buttons
                 document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 
-                // Update content
                 document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
                 document.getElementById(tabId).classList.add('active');
             });
@@ -1081,12 +1285,11 @@
             loadClients();
             loadOrders();
             
-            // Real-time listeners
-            database.ref('orders').on('value', (snapshot) => {
+            database.ref('orders').on('value', () => {
                 loadOrders();
             });
             
-            database.ref('clients').on('value', (snapshot) => {
+            database.ref('clients').on('value', () => {
                 loadClients();
                 loadClientsList();
             });
@@ -1156,7 +1359,6 @@
             database.ref('orders').push(orderData)
                 .then(() => {
                     showToast('Pedido enviado com sucesso!');
-                    // Reset form
                     productType.value = '';
                     quantity.value = '';
                     customQuantity.value = '';
@@ -1182,7 +1384,6 @@
             database.ref('orders').on('value', (snapshot) => {
                 const orders = snapshot.val();
                 
-                // Clear containers
                 pendenteContainer.innerHTML = '';
                 producaoContainer.innerHTML = '';
                 concluidoContainer.innerHTML = '';
@@ -1237,7 +1438,6 @@
                 </div>
             `;
             
-            // Drag and Drop
             card.addEventListener('dragstart', handleDragStart);
             card.addEventListener('dragend', handleDragEnd);
             
@@ -1256,7 +1456,6 @@
             draggedCard = null;
         }
 
-        // Allow drops on containers
         document.querySelectorAll('.kanban-items').forEach(container => {
             container.addEventListener('dragover', (e) => {
                 e.preventDefault();
@@ -1270,7 +1469,6 @@
                     const newStatus = targetContainer.dataset.column;
                     const orderId = draggedCard.dataset.id;
                     
-                    // Update order status
                     database.ref(`orders/${orderId}`).update({
                         status: newStatus
                     }).then(() => {
@@ -1343,7 +1541,6 @@
                 
                 if (clients) {
                     Object.entries(clients).forEach(([id, client]) => {
-                        // Get client's orders
                         database.ref('orders').orderByChild('clientId').equalTo(id).on('value', (ordersSnapshot) => {
                             const orders = ordersSnapshot.val();
                             const orderCount = orders ? Object.keys(orders).length : 0;
@@ -1365,12 +1562,6 @@
                                     <div class="stat-item">
                                         <div class="stat-value">${orderCount}</div>
                                         <div class="stat-label">Pedidos</div>
-                                    </div>
-                                    <div class="stat-item">
-                                        <div class="stat-value">
-                                            <i class="fas fa-box"></i>
-                                        </div>
-                                        <div class="stat-label">Histórico</div>
                                     </div>
                                 </div>
                             `;
@@ -1425,25 +1616,43 @@
             });
         });
 
-        // Auth State Observer
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('main-app').style.display = 'block';
-                loadInitialData();
-            } else {
-                document.getElementById('login-screen').style.display = 'flex';
-                document.getElementById('main-app').style.display = 'none';
+        // Export Data
+        function exportData() {
+            database.ref('orders').once('value', (snapshot) => {
+                const orders = snapshot.val();
+                const dataStr = JSON.stringify(orders, null, 2);
+                const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+                
+                const exportFileDefaultName = 'pedidos-prata-embalagens.json';
+                
+                const linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click();
+                
+                showToast('Dados exportados com sucesso!');
+            });
+        }
+
+        // Clear Completed Orders
+        function clearCompletedOrders() {
+            if (confirm('Tem certeza que deseja excluir todos os pedidos concluídos?')) {
+                database.ref('orders').orderByChild('status').equalTo('concluido').once('value', (snapshot) => {
+                    snapshot.forEach((childSnapshot) => {
+                        childSnapshot.ref.remove();
+                    });
+                    showToast('Pedidos concluídos removidos!');
+                });
             }
-        });
+        }
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', () => {
-            // Check if user is logged in
             const user = auth.currentUser;
             if (user) {
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-app').style.display = 'block';
+                checkAdminAccess(user);
                 loadInitialData();
             }
         });
