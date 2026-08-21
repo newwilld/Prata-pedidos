@@ -2,1835 +2,882 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Prata Embalagens - Sistema de Pedidos</title>
-    
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prata Embalagens - Gerenciador de Pedidos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        :root {
-            --primary: #1a237e;
-            --secondary: #0d47a1;
-            --accent: #2962ff;
-            --success: #00c853;
-            --warning: #ffd600;
-            --danger: #d50000;
-            --bg: #f5f6fa;
-            --card: #ffffff;
-            --text: #212121;
-            --text-light: #757575;
-            --border: #e0e0e0;
-            --shadow: 0 2px 10px rgba(0,0,0,0.1);
-            --shadow-lg: 0 4px 20px rgba(0,0,0,0.15);
-            --radius: 12px;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.6;
-            min-height: 100vh;
-            -webkit-tap-highlight-color: transparent;
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
         }
-
-        .container {
-            width: 100%;
-            max-width: 100%;
-            margin: 0 auto;
-            padding: 15px;
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
         }
-
-        /* Login Screen */
-        #login-screen {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 20px;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-
-        .login-card {
-            background: white;
-            border-radius: var(--radius);
-            padding: 30px 20px;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: var(--shadow-lg);
-        }
-
-        .login-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .login-header i {
-            font-size: 48px;
-            color: var(--primary);
-            margin-bottom: 15px;
-        }
-
-        .login-header h1 {
-            font-size: 24px;
-            color: var(--primary);
-            margin-bottom: 5px;
-        }
-
-        .login-header p {
-            color: var(--text-light);
-            font-size: 14px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            font-size: 14px;
-            color: var(--text);
-        }
-
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            font-size: 16px;
-            transition: all 0.3s;
-            background: #fafafa;
-        }
-
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: var(--accent);
-            background: white;
-            box-shadow: 0 0 0 3px rgba(41, 98, 255, 0.1);
-        }
-
-        .btn-primary {
-            width: 100%;
-            padding: 14px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .btn-primary:hover {
-            background: var(--secondary);
-            transform: translateY(-1px);
-            box-shadow: var(--shadow);
-        }
-
-        .btn-primary:active {
-            transform: translateY(0);
-        }
-
-        .btn-primary:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .btn-secondary {
-            width: 100%;
-            padding: 12px;
-            background: transparent;
-            color: var(--primary);
-            border: 2px solid var(--primary);
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .btn-secondary:hover {
-            background: #f0f0f0;
-        }
-
-        /* Main App */
-        #main-app {
-            display: none;
-            min-height: 100vh;
-        }
-
-        .app-header {
-            background: var(--primary);
-            color: white;
-            padding: 15px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: var(--shadow);
-        }
-
-        .header-content {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .app-header h1 {
-            font-size: 20px;
-            font-weight: 600;
-        }
-
-        .header-actions {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .btn-icon {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-            font-size: 18px;
-        }
-
-        .btn-icon:hover {
-            background: rgba(255,255,255,0.3);
-        }
-
-        .user-badge {
-            background: rgba(255,255,255,0.2);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .admin-badge {
-            background: #ffd700;
-            color: #000;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            display: none;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .admin-badge.show {
-            display: flex;
-        }
-
-        /* Tab Navigation */
-        .tab-nav {
-            display: flex;
-            background: white;
-            border-bottom: 2px solid var(--border);
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .tab-btn {
-            flex: 1;
-            padding: 15px 20px;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--text-light);
-            white-space: nowrap;
-            transition: all 0.3s;
-            border-bottom: 3px solid transparent;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .tab-btn.active {
-            color: var(--primary);
-            border-bottom-color: var(--primary);
-            font-weight: 600;
-        }
-
-        .tab-btn:hover {
-            background: #f8f9fa;
-        }
-
-        .tab-btn.admin-only {
-            display: none;
-        }
-
-        .tab-btn.admin-only.show {
-            display: flex;
-        }
-
-        .tab-content {
-            display: none;
-            padding: 20px 0;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        /* Order Form */
-        .order-form {
-            background: white;
-            border-radius: var(--radius);
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: var(--shadow);
-        }
-
-        .order-form h2 {
-            font-size: 18px;
-            margin-bottom: 20px;
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .select-group {
-            margin-bottom: 20px;
-        }
-
-        .select-label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            font-size: 14px;
-            color: var(--text);
-        }
-
-        .custom-select {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            font-size: 16px;
-            background: white;
-            cursor: pointer;
-            transition: all 0.3s;
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 15px center;
-        }
-
-        .custom-select:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(41, 98, 255, 0.1);
-        }
-
-        .custom-select:disabled {
-            background-color: #f5f5f5;
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-
-        /* Priority Selector */
-        .priority-selector {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-        }
-
-        .priority-btn {
-            flex: 1;
-            min-width: 80px;
-            padding: 12px;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 14px;
-            transition: all 0.3s;
-            text-align: center;
-            background: white;
-        }
-
-        .priority-btn.active {
-            border-color: currentColor;
-            background: currentColor;
-            color: white;
-        }
-
-        .priority-btn[data-priority="baixa"] { color: #4caf50; }
-        .priority-btn[data-priority="media"] { color: #ff9800; }
-        .priority-btn[data-priority="alta"] { color: #f44336; }
-        .priority-btn[data-priority="urgente"] { color: #9c27b0; }
-
-        .custom-quantity-input {
-            display: none;
-            margin-top: 10px;
-        }
-
-        .custom-quantity-input.active {
-            display: block;
-        }
-
-        /* Kanban Board */
-        .kanban-board {
-            display: flex;
-            gap: 15px;
-            overflow-x: auto;
-            padding: 10px 0;
-            -webkit-overflow-scrolling: touch;
-        }
-
+        /* Kanban Drag & Drop Styles */
         .kanban-column {
-            min-width: 280px;
-            background: #f0f0f0;
-            border-radius: var(--radius);
-            padding: 15px;
-            flex-shrink: 0;
+            min-height: 200px;
         }
-
-        .kanban-column h3 {
-            font-size: 14px;
-            margin-bottom: 15px;
-            color: var(--text);
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        .draggable-card {
+            cursor: grab;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
-
-        .kanban-items {
-            min-height: 100px;
-        }
-
-        .kanban-card {
-            background: white;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 10px;
-            box-shadow: var(--shadow);
-            cursor: move;
-            transition: all 0.3s;
-            border-left: 4px solid transparent;
-        }
-
-        .kanban-card:hover {
-            box-shadow: var(--shadow-lg);
-            transform: translateY(-2px);
-        }
-
-        .kanban-card.dragging {
-            opacity: 0.5;
+        .draggable-card:active {
             cursor: grabbing;
+            transform: scale(0.98);
         }
-
-        .card-priority-baixa { border-left-color: #4caf50; }
-        .card-priority-media { border-left-color: #ff9800; }
-        .card-priority-alta { border-left-color: #f44336; }
-        .card-priority-urgente { border-left-color: #9c27b0; }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
+        .dragging {
+            opacity: 0.5;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
-
-        .card-title {
-            font-weight: 600;
-            font-size: 16px;
-            cursor: pointer;
-            transition: color 0.3s;
+        .drag-over {
+            background-color: #e5e7eb;
+            border: 2px dashed #9ca3af;
         }
-
-        .card-title:hover {
-            color: var(--accent);
-        }
-
-        .card-priority-badge {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .badge-baixa { background: #e8f5e9; color: #4caf50; }
-        .badge-media { background: #fff3e0; color: #ff9800; }
-        .badge-alta { background: #ffebee; color: #f44336; }
-        .badge-urgente { background: #f3e5f5; color: #9c27b0; }
-
-        .card-details {
-            font-size: 14px;
-            color: var(--text-light);
-        }
-
-        .card-details p {
-            margin-bottom: 5px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .card-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid var(--border);
-        }
-
-        .btn-edit {
-            flex: 1;
-            padding: 8px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 500;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-        }
-
-        .btn-edit-edit {
-            background: #e3f2fd;
-            color: #1976d2;
-        }
-
-        .btn-edit-delete {
-            background: #ffebee;
-            color: #d32f2f;
-        }
-
-        .btn-edit:hover {
-            opacity: 0.8;
-            transform: translateY(-1px);
-        }
-
-        /* Clients List */
-        .client-card {
-            background: white;
-            border-radius: var(--radius);
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: var(--shadow);
-            transition: all 0.3s;
-        }
-
-        .client-card:hover {
-            box-shadow: var(--shadow-lg);
-            transform: translateY(-2px);
-        }
-
-        .client-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .client-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: var(--primary);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            font-weight: bold;
-        }
-
-        .client-details {
-            flex: 1;
-        }
-
-        .client-name {
-            font-weight: 600;
-            font-size: 16px;
-        }
-
-        .client-stats {
-            display: flex;
-            gap: 15px;
-            margin-top: 10px;
-            flex-wrap: wrap;
-        }
-
-        .stat-item {
-            flex: 1;
-            min-width: 80px;
-            text-align: center;
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 8px;
-        }
-
-        .stat-value {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--primary);
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: var(--text-light);
-            text-transform: uppercase;
-        }
-
-        /* Admin Panel */
-        .admin-panel {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin: 20px 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .admin-header {
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #f0f0f0;
-        }
-
-        .admin-header h3 {
-            color: #1a237e;
-            font-size: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .admin-stats {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-        }
-
-        .admin-stat-card {
-            flex: 1;
-            min-width: 150px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .stat-icon {
-            font-size: 30px;
-            opacity: 0.9;
-        }
-
-        .stat-number {
-            font-size: 24px;
-            font-weight: bold;
-            display: block;
-        }
-
-        .admin-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .btn-admin {
-            padding: 10px 20px;
-            background: #1a237e;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s;
-        }
-
-        .btn-admin:hover {
-            background: #0d47a1;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        }
-
-        /* Modal */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 20px;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: var(--radius);
-            padding: 25px;
-            width: 100%;
-            max-width: 500px;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .modal-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: var(--primary);
-        }
-
-        .close-modal {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: var(--text-light);
-            transition: color 0.3s;
-        }
-
-        .close-modal:hover {
-            color: var(--danger);
-        }
-
-        /* Toast Notification */
-        .toast {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            background: var(--success);
-            color: white;
-            border-radius: 8px;
-            box-shadow: var(--shadow-lg);
-            transform: translateX(120%);
-            transition: transform 0.3s ease-in-out;
-            z-index: 2000;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .toast.show {
-            transform: translateX(0);
-        }
-
-        /* Loading Spinner */
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 0.6s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Responsive */
-        @media (min-width: 768px) {
-            .container {
-                max-width: 720px;
-                padding: 20px;
-            }
-
-            .kanban-column {
-                min-width: 300px;
-            }
-        }
-
-        @media (min-width: 1024px) {
-            .container {
-                max-width: 960px;
-            }
-
-            .order-form {
-                padding: 30px;
-            }
-        }
-
-        @media (min-width: 1440px) {
-            .container {
-                max-width: 1200px;
-            }
-        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body>
-    <!-- Toast Notification -->
-    <div id="toast" class="toast">
-        <i class="fas fa-check-circle"></i>
-        <span id="toast-message"></span>
+<body class="antialiased min-h-screen flex flex-col">
+
+    <div id="toastContainer" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
+
+    <!-- Modal Base para Edição -->
+    <div id="editModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-40 fade-in p-4">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md">
+            <h3 class="text-lg font-bold text-gray-900 mb-4 flex justify-between items-center">
+                Editar Pedido
+                <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+            </h3>
+            <div id="editModalContent" class="space-y-4">
+                <!-- Preenchido via JS -->
+            </div>
+            <div class="mt-6 flex gap-3">
+                <button onclick="saveOrderEdit()" class="flex-1 bg-gray-900 text-white py-2 rounded-lg font-medium hover:bg-gray-800 transition">Salvar</button>
+                <button onclick="closeEditModal()" class="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg font-medium hover:bg-gray-300 transition">Cancelar</button>
+            </div>
+        </div>
     </div>
 
-    <!-- Login Screen -->
-    <div id="login-screen">
-        <div class="login-card">
-            <div class="login-header">
-                <i class="fas fa-box"></i>
-                <h1>Prata Embalagens</h1>
-                <p>Sistema de Gerenciamento de Pedidos</p>
+    <div id="authScreen" class="flex-1 flex items-center justify-center p-4 min-h-screen">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-gray-900 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-2xl shadow-lg">
+                    <i class="fas fa-box-open"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-900">Prata Embalagens</h1>
+                <p class="text-gray-500 mt-1 text-sm" id="authSubtitle">Acesse sua conta para continuar</p>
             </div>
-            <form id="login-form">
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" required placeholder="seu@email.com">
+
+            <form id="authForm" class="space-y-5">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+                    <input type="email" id="authEmail" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition bg-gray-50 focus:bg-white" placeholder="seu@email.com">
                 </div>
-                <div class="form-group">
-                    <label for="password">Senha</label>
-                    <input type="password" id="password" required placeholder="Sua senha">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+                    <input type="password" id="authPassword" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition bg-gray-50 focus:bg-white" placeholder="••••••••">
                 </div>
-                <button type="submit" class="btn-primary" id="login-btn">
-                    <i class="fas fa-sign-in-alt"></i>
+                
+                <div id="registerFields" class="hidden space-y-5 fade-in">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
+                        <input type="text" id="authName" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition bg-gray-50 focus:bg-white" placeholder="Seu nome">
+                    </div>
+                </div>
+
+                <button type="submit" id="authSubmitBtn" class="w-full bg-gray-900 text-white font-medium py-3 rounded-lg hover:bg-gray-800 transition shadow-lg shadow-gray-900/20">
                     Entrar
                 </button>
             </form>
-            <div id="register-section" style="display: none;">
-                <button type="button" class="btn-secondary" onclick="showRegister()">
-                    <i class="fas fa-user-plus"></i>
-                    Criar Conta de Cliente
+
+            <div class="mt-6 text-center">
+                <button type="button" id="toggleAuthBtn" class="text-sm text-gray-600 hover:text-gray-900 font-medium transition">
+                    Não tem conta? Criar agora
                 </button>
             </div>
-            <p style="text-align: center; margin-top: 15px; font-size: 14px; color: var(--text-light);">
-                Acesso para clientes e equipe
-            </p>
         </div>
     </div>
 
-    <!-- Register Modal -->
-    <div class="modal" id="register-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Criar Conta de Cliente</h3>
-                <button class="close-modal" onclick="closeModal('register-modal')">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <form id="register-form">
-                <div class="form-group">
-                    <label>Nome Completo</label>
-                    <input type="text" id="register-name" class="custom-select" required placeholder="Seu nome completo">
+    <div id="appScreen" class="hidden flex-col min-h-screen">
+        <!-- Header -->
+        <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gray-900 text-white rounded-lg flex items-center justify-center shadow">
+                        <i class="fas fa-box-open"></i>
+                    </div>
+                    <span class="font-bold text-lg text-gray-900 hidden sm:block">Prata Embalagens</span>
                 </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="register-email" class="custom-select" required placeholder="seu@email.com">
-                </div>
-                <div class="form-group">
-                    <label>Senha</label>
-                    <input type="password" id="register-password" class="custom-select" required placeholder="Mínimo 6 caracteres" minlength="6">
-                </div>
-                <button type="button" class="btn-primary" onclick="registerClient()">
-                    <i class="fas fa-user-plus"></i>
-                    Criar Conta
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Main App -->
-    <div id="main-app">
-        <header class="app-header">
-            <div class="header-content">
-                <h1>
-                    <i class="fas fa-box"></i>
-                    Prata Embalagens
-                </h1>
-                <div class="header-actions">
-                    <span class="admin-badge" id="admin-badge">
-                        <i class="fas fa-crown"></i>
-                        Admin Master
-                    </span>
-                    <span class="user-badge" id="user-badge">
-                        <i class="fas fa-user"></i>
-                        <span id="user-name">Cliente</span>
-                    </span>
-                    <button class="btn-icon" onclick="logout()" title="Sair">
+                
+                <div class="flex items-center gap-4">
+                    <div class="text-right hidden sm:block">
+                        <p id="headerUserName" class="text-sm font-medium text-gray-900"></p>
+                        <p id="headerUserRole" class="text-xs text-gray-500"></p>
+                    </div>
+                    <button onclick="logout()" class="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Sair">
                         <i class="fas fa-sign-out-alt"></i>
                     </button>
                 </div>
             </div>
         </header>
 
-        <!-- Tab Navigation -->
-        <nav class="tab-nav">
-            <button class="tab-btn active" data-tab="new-order">
-                <i class="fas fa-plus-circle"></i>
-                Novo Pedido
-            </button>
-            <button class="tab-btn admin-only" data-tab="orders">
-                <i class="fas fa-list"></i>
-                Pedidos
-            </button>
-            <button class="tab-btn admin-only" data-tab="clients">
-                <i class="fas fa-users"></i>
-                Clientes
-            </button>
-        </nav>
+        <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+            
+            <!-- Visão do Cliente -->
+            <div id="clientView" class="hidden space-y-8">
+                <!-- Formulário de Novo Pedido -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                        <i class="fas fa-plus-circle text-gray-400"></i> Fazer Novo Pedido
+                    </h2>
+                    <form id="orderForm" class="space-y-6 max-w-2xl">
+                        <!-- Seletor de Produto -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Selecione o Produto</label>
+                            <select id="productSelect" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition bg-gray-50">
+                                <option value="" disabled selected>Escolha uma opção...</option>
+                                <option value="Caixa de Pizza">Caixa de Pizza</option>
+                                <option value="Caixa de Bolo">Caixa de Bolo</option>
+                                <option value="Caixa de Torta">Caixa de Torta</option>
+                                <option value="Caixa para Ecommerce">Caixa para Ecommerce</option>
+                            </select>
+                        </div>
 
-        <!-- Main Content -->
-        <main class="container">
-            <!-- Admin Panel -->
-            <div class="admin-panel" id="admin-panel" style="display: none;">
-                <div class="admin-header">
-                    <h3>
-                        <i class="fas fa-user-shield"></i>
-                        Painel do Admin Master
-                    </h3>
+                        <!-- Seletor de Quantidade (Cascata) -->
+                        <div id="quantityContainer" class="hidden fade-in">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Quantidade</label>
+                            <select id="quantitySelect" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition bg-gray-50">
+                                <option value="" disabled selected>Escolha a quantidade...</option>
+                                <option value="500">500 unidades</option>
+                                <option value="1000">1.000 unidades</option>
+                                <option value="2000">2.000 unidades</option>
+                                <option value="3000">3.000 unidades</option>
+                                <option value="4000">4.000 unidades</option>
+                                <option value="5000">5.000 unidades</option>
+                                <option value="Outra">Outra quantidade (digitar)</option>
+                            </select>
+                        </div>
+
+                        <!-- Campo de Quantidade Customizada -->
+                        <div id="customQuantityContainer" class="hidden fade-in">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Digite a Quantidade Específica</label>
+                            <input type="number" id="customQuantityInput" min="1" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition bg-gray-50" placeholder="Ex: 1500">
+                        </div>
+
+                        <!-- Prioridade -->
+                        <div class="fade-in">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Prioridade</label>
+                            <div class="flex gap-4">
+                                <label class="flex-1 cursor-pointer">
+                                    <input type="radio" name="priority" value="Baixa" class="peer sr-only" checked>
+                                    <div class="text-center py-2 px-4 rounded-xl border border-gray-200 peer-checked:bg-blue-50 peer-checked:border-blue-500 peer-checked:text-blue-700 transition">Baixa</div>
+                                </label>
+                                <label class="flex-1 cursor-pointer">
+                                    <input type="radio" name="priority" value="Média" class="peer sr-only">
+                                    <div class="text-center py-2 px-4 rounded-xl border border-gray-200 peer-checked:bg-yellow-50 peer-checked:border-yellow-500 peer-checked:text-yellow-700 transition">Média</div>
+                                </label>
+                                <label class="flex-1 cursor-pointer">
+                                    <input type="radio" name="priority" value="Alta" class="peer sr-only">
+                                    <div class="text-center py-2 px-4 rounded-xl border border-gray-200 peer-checked:bg-red-50 peer-checked:border-red-500 peer-checked:text-red-700 transition">Alta</div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-gray-900 text-white font-medium py-3.5 rounded-xl hover:bg-gray-800 transition shadow-lg shadow-gray-900/20 flex items-center justify-center gap-2">
+                            <i class="fas fa-paper-plane"></i> Enviar Pedido
+                        </button>
+                    </form>
                 </div>
-                
-                <div class="admin-stats">
-                    <div class="admin-stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-shopping-cart"></i>
-                        </div>
-                        <div class="stat-info">
-                            <span class="stat-number" id="admin-total-orders">0</span>
-                            <span class="stat-label">Total de Pedidos</span>
-                        </div>
+
+                <!-- Meus Pedidos -->
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Meus Pedidos Recentes</h3>
+                    <div id="clientOrdersList" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        <!-- Preenchido via JS -->
                     </div>
-                    
-                    <div class="admin-stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-users"></i>
-                        </div>
-                        <div class="stat-info">
-                            <span class="stat-number" id="admin-total-clients">0</span>
-                            <span class="stat-label">Total de Clientes</span>
-                        </div>
-                    </div>
-                    
-                    <div class="admin-stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="stat-info">
-                            <span class="stat-number" id="admin-pending-orders">0</span>
-                            <span class="stat-label">Pedidos Pendentes</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="admin-actions">
-                    <button class="btn-admin" onclick="exportData()">
-                        <i class="fas fa-download"></i>
-                        Exportar Dados
-                    </button>
-                    <button class="btn-admin" onclick="clearCompletedOrders()">
-                        <i class="fas fa-trash"></i>
-                        Limpar Concluídos
-                    </button>
                 </div>
             </div>
 
-            <!-- New Order Tab -->
-            <div class="tab-content active" id="new-order">
-                <div class="order-form">
-                    <h2>
-                        <i class="fas fa-shopping-cart"></i>
-                        Realizar Pedido
-                    </h2>
-                    
-                    <div class="select-group">
-                        <label class="select-label">Nome do Cliente</label>
-                        <select class="custom-select" id="client-name" required>
-                            <option value="">Selecione o cliente...</option>
-                        </select>
-                    </div>
+            <!-- Visão do Admin -->
+            <div id="adminView" class="hidden space-y-6">
+                <!-- Abas -->
+                <div class="flex border-b border-gray-200">
+                    <button onclick="switchAdminTab('pedidos')" id="tabPedidos" class="px-6 py-3 font-medium text-sm text-gray-900 border-b-2 border-gray-900">
+                        <i class="fas fa-tasks mr-2"></i> Pedidos (Kanban)
+                    </button>
+                    <button onclick="switchAdminTab('clientes')" id="tabClientes" class="px-6 py-3 font-medium text-sm text-gray-500 border-b-2 border-transparent hover:text-gray-700 transition">
+                        <i class="fas fa-users mr-2"></i> Clientes
+                    </button>
+                </div>
 
-                    <div class="select-group">
-                        <label class="select-label">Tipo de Produto</label>
-                        <select class="custom-select" id="product-type" required>
-                            <option value="">Selecione o tipo...</option>
-                            <option value="caixa-pizza">Caixa de Pizza</option>
-                            <option value="caixa-bolo">Caixa de Bolo</option>
-                            <option value="caixa-torta">Caixa de Torta</option>
-                            <option value="caixa-ecommerce">Caixa para E-commerce</option>
-                        </select>
-                    </div>
-
-                    <div class="select-group" id="quantity-group" style="display: none;">
-                        <label class="select-label">Quantidade</label>
-                        <select class="custom-select" id="quantity" required>
-                            <option value="">Selecione a quantidade...</option>
-                            <option value="500">500 Unidades</option>
-                            <option value="1000">1.000 Unidades</option>
-                            <option value="2000">2.000 Unidades</option>
-                            <option value="3000">3.000 Unidades</option>
-                            <option value="4000">4.000 Unidades</option>
-                            <option value="5000">5.000 Unidades</option>
-                            <option value="custom">Outra quantidade...</option>
-                        </select>
+                <!-- Aba Pedidos (Kanban) -->
+                <div id="adminTabPedidos" class="fade-in overflow-x-auto pb-4">
+                    <div class="flex flex-col md:flex-row gap-6 min-w-max md:min-w-0">
                         
-                        <div class="custom-quantity-input" id="custom-quantity-input">
-                            <label class="select-label">Digite a quantidade desejada</label>
-                            <input type="number" class="custom-select" id="custom-quantity" placeholder="Ex: 750, 1500, 2500..." min="1">
+                        <!-- Coluna: Pendente -->
+                        <div class="flex-1 bg-gray-100 rounded-xl p-4 flex flex-col min-w-[300px]">
+                            <h3 class="font-bold text-gray-700 mb-4 flex items-center justify-between">
+                                <span><i class="fas fa-inbox text-gray-400 mr-2"></i> Recebidos</span>
+                                <span id="countPendente" class="bg-gray-200 text-gray-600 text-xs px-2 py-1 rounded-full">0</span>
+                            </h3>
+                            <div id="kanban-pendente" class="kanban-column flex-1 space-y-3" data-status="pendente">
+                                <!-- Cards JS -->
+                            </div>
+                        </div>
+
+                        <!-- Coluna: Em Produção -->
+                        <div class="flex-1 bg-blue-50 rounded-xl p-4 flex flex-col min-w-[300px]">
+                            <h3 class="font-bold text-blue-800 mb-4 flex items-center justify-between">
+                                <span><i class="fas fa-cogs text-blue-400 mr-2"></i> Em Produção</span>
+                                <span id="countProducao" class="bg-blue-200 text-blue-800 text-xs px-2 py-1 rounded-full">0</span>
+                            </h3>
+                            <div id="kanban-producao" class="kanban-column flex-1 space-y-3" data-status="producao">
+                                <!-- Cards JS -->
+                            </div>
+                        </div>
+
+                        <!-- Coluna: Finalizado -->
+                        <div class="flex-1 bg-green-50 rounded-xl p-4 flex flex-col min-w-[300px]">
+                            <h3 class="font-bold text-green-800 mb-4 flex items-center justify-between">
+                                <span><i class="fas fa-check-circle text-green-400 mr-2"></i> Finalizados</span>
+                                <span id="countFinalizado" class="bg-green-200 text-green-800 text-xs px-2 py-1 rounded-full">0</span>
+                            </h3>
+                            <div id="kanban-finalizado" class="kanban-column flex-1 space-y-3" data-status="finalizado">
+                                <!-- Cards JS -->
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Aba Clientes -->
+                <div id="adminTabClientes" class="hidden fade-in">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-gray-50 border-b border-gray-200 text-gray-600">
+                                    <tr>
+                                        <th class="px-6 py-4 font-medium">Nome do Cliente</th>
+                                        <th class="px-6 py-4 font-medium">Total de Pedidos</th>
+                                        <th class="px-6 py-4 font-medium">Último Pedido</th>
+                                        <th class="px-6 py-4 font-medium">Status da Conta</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="clientsTableBody" class="divide-y divide-gray-100">
+                                    <!-- JS Content -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-
-                    <div class="select-group">
-                        <label class="select-label">Prioridade</label>
-                        <div class="priority-selector">
-                            <button type="button" class="priority-btn" data-priority="baixa">
-                                <i class="fas fa-arrow-down"></i>
-                                Baixa
-                            </button>
-                            <button type="button" class="priority-btn active" data-priority="media">
-                                <i class="fas fa-arrow-right"></i>
-                                Média
-                            </button>
-                            <button type="button" class="priority-btn" data-priority="alta">
-                                <i class="fas fa-arrow-up"></i>
-                                Alta
-                            </button>
-                            <button type="button" class="priority-btn" data-priority="urgente">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                Urgente
-                            </button>
-                        </div>
-                    </div>
-
-                    <button class="btn-primary" onclick="submitOrder()">
-                        <i class="fas fa-paper-plane"></i>
-                        Enviar Pedido
-                    </button>
                 </div>
-            </div>
 
-            <!-- Orders Tab (Admin Only) -->
-            <div class="tab-content" id="orders">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2>
-                        <i class="fas fa-tasks"></i>
-                        Pedidos em Andamento
-                    </h2>
-                    <button class="btn-icon" onclick="showToast('Organize arrastando os cards')" title="Ajuda">
-                        <i class="fas fa-question-circle"></i>
-                    </button>
-                </div>
-                
-                <div class="kanban-board" id="kanban-board">
-                    <div class="kanban-column" data-column="pendente">
-                        <h3><i class="fas fa-clock" style="color: #ff9800;"></i> Pendente</h3>
-                        <div class="kanban-items" id="kanban-pendente"></div>
-                    </div>
-                    <div class="kanban-column" data-column="producao">
-                        <h3><i class="fas fa-industry" style="color: #2196f3;"></i> Em Produção</h3>
-                        <div class="kanban-items" id="kanban-producao"></div>
-                    </div>
-                    <div class="kanban-column" data-column="concluido">
-                        <h3><i class="fas fa-check-circle" style="color: #4caf50;"></i> Concluído</h3>
-                        <div class="kanban-items" id="kanban-concluido"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Clients Tab (Admin Only) -->
-            <div class="tab-content" id="clients">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2>
-                        <i class="fas fa-users"></i>
-                        Clientes
-                    </h2>
-                    <button class="btn-primary" style="width: auto; padding: 10px 20px;" onclick="showAddClientModal()">
-                        <i class="fas fa-user-plus"></i>
-                        Novo Cliente
-                    </button>
-                </div>
-                <div id="clients-list"></div>
             </div>
         </main>
     </div>
 
-    <!-- Edit Order Modal -->
-    <div class="modal" id="edit-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Editar Pedido</h3>
-                <button class="close-modal" onclick="closeModal('edit-modal')">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <form id="edit-form">
-                <div class="form-group">
-                    <label>Cliente</label>
-                    <input type="text" id="edit-client" class="custom-select" readonly>
-                </div>
-                <div class="form-group">
-                    <label>Produto</label>
-                    <select id="edit-product" class="custom-select">
-                        <option value="caixa-pizza">Caixa de Pizza</option>
-                        <option value="caixa-bolo">Caixa de Bolo</option>
-                        <option value="caixa-torta">Caixa de Torta</option>
-                        <option value="caixa-ecommerce">Caixa para E-commerce</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Quantidade</label>
-                    <input type="text" id="edit-quantity" class="custom-select">
-                </div>
-                <div class="form-group">
-                    <label>Prioridade</label>
-                    <select id="edit-priority" class="custom-select">
-                        <option value="baixa">Baixa</option>
-                        <option value="media">Média</option>
-                        <option value="alta">Alta</option>
-                        <option value="urgente">Urgente</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Status</label>
-                    <select id="edit-status" class="custom-select">
-                        <option value="pendente">Pendente</option>
-                        <option value="producao">Em Produção</option>
-                        <option value="concluido">Concluído</option>
-                    </select>
-                </div>
-                <button type="button" class="btn-primary" onclick="saveEdit()">
-                    <i class="fas fa-save"></i>
-                    Salvar Alterações
-                </button>
-            </form>
-        </div>
-    </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, onSnapshot, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    <!-- Add Client Modal -->
-    <div class="modal" id="add-client-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Novo Cliente</h3>
-                <button class="close-modal" onclick="closeModal('add-client-modal')">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <form id="add-client-form">
-                <div class="form-group">
-                    <label>Nome do Cliente</label>
-                    <input type="text" id="new-client-name" class="custom-select" required placeholder="Digite o nome...">
-                </div>
-                <button type="button" class="btn-primary" onclick="addClient()">
-                    <i class="fas fa-plus"></i>
-                    Adicionar Cliente
-                </button>
-            </form>
-        </div>
-    </div>
+        // Configuração segura do Firebase via Environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'prata-embalagens-app';
+        let firebaseConfig;
+        try {
+            firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+                apiKey: "mock-key", authDomain: "mock.firebaseapp.com", projectId: "mock-project"
+            };
+        } catch (e) { console.error("Erro no config do firebase", e); }
 
-    <script>
-        // Firebase Configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyCAZJIWT5FPTshkArRs8v2U9hXAmtnlG-Q",
-            authDomain: "myname22.firebaseapp.com",
-            databaseURL: "https://myname22-default-rtdb.firebaseio.com",
-            projectId: "myname22",
-            storageBucket: "myname22.firebasestorage.app",
-            messagingSenderId: "346543194739",
-            appId: "1:346543194739:web:bcb8fa36574ca5de552006",
-            measurementId: "G-96C1LJH3MB"
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // Estado Global
+        let currentUser = null;
+        let isRegistering = false;
+        let allOrders = [];
+        let allUsers = [];
+        let editingOrderId = null;
+        let unsubscribeOrders = null;
+        let unsubscribeUsers = null;
+
+        // Caminhos Restritos Firestore (Regra 1)
+        const usersCollection = collection(db, 'artifacts', appId, 'public', 'data', 'users');
+        const ordersCollection = collection(db, 'artifacts', appId, 'public', 'data', 'orders');
+
+        function showToast(title, message, type = 'info') {
+            const toast = document.createElement('div');
+            const bg = type === 'error' ? 'bg-red-500' : type === 'success' ? 'bg-green-500' : 'bg-gray-900';
+            toast.className = `${bg} text-white px-6 py-4 rounded-xl shadow-xl fade-in flex flex-col gap-1 min-w-[300px] border border-white/10`;
+            toast.innerHTML = `<strong class="font-bold">${title}</strong><span class="text-sm opacity-90">${message}</span>`;
+            document.getElementById('toastContainer').appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-10px)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        function formatDateTime(isoString) {
+            if(!isoString) return 'N/A';
+            const d = new Date(isoString);
+            return `${d.toLocaleDateString('pt-BR')} às ${d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}`;
+        }
+
+        window.onload = async () => {
+            try {
+                // Regra 3: Auth Before Queries
+                await signInAnonymously(auth);
+                checkSession();
+                setupEventListeners();
+            } catch (error) {
+                console.error("Erro na auth inicial:", error);
+                showToast("Erro", "Falha de conexão. Tente recarregar a página.", "error");
+            }
         };
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const database = firebase.database();
+        function checkSession() {
+            const saved = sessionStorage.getItem('prataUser');
+            if (saved) {
+                currentUser = JSON.parse(saved);
+                
+                // Trava de segurança extra no carregamento da sessão
+                if(currentUser.email === 'lojavirtualprata@gmail.com') {
+                    currentUser.role = 'admin';
+                }
 
-        // Global Variables
-        let selectedPriority = 'media';
-        let currentEditId = null;
-        let draggedCard = null;
-        let isAdmin = false;
-
-        // Toast Notification
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toast-message').textContent = message;
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
-        }
-
-        // Show Register
-        function showRegister() {
-            document.getElementById('register-modal').classList.add('active');
-        }
-
-        // Register Client
-        function registerClient() {
-            const name = document.getElementById('register-name').value;
-            const email = document.getElementById('register-email').value;
-            const password = document.getElementById('register-password').value;
-            
-            if (!name || !email || !password) {
-                showToast('Preencha todos os campos!');
-                return;
+                showApp();
+            } else {
+                showAuth();
             }
-            
-            if (password.length < 6) {
-                showToast('A senha deve ter pelo menos 6 caracteres!');
-                return;
-            }
-            
-            auth.createUserWithEmailAndPassword(email, password)
-                .then((userCredential) => {
-                    const user = userCredential.user;
-                    
-                    // Salvar dados do cliente
-                    const clientData = {
-                        name: name,
-                        email: email,
-                        createdAt: new Date().toLocaleDateString('pt-BR')
-                    };
-                    
-                    database.ref(`clients/${user.uid}`).set(clientData)
-                        .then(() => {
-                            showToast('Conta criada com sucesso!');
-                            closeModal('register-modal');
-                            document.getElementById('register-form').reset();
-                        })
-                        .catch((error) => {
-                            showToast('Erro ao salvar dados: ' + error.message);
-                        });
-                })
-                .catch((error) => {
-                    showToast('Erro ao criar conta: ' + error.message);
-                });
         }
 
-        // Login System
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
+        function showAuth() {
+            document.getElementById('authScreen').classList.remove('hidden');
+            document.getElementById('appScreen').classList.add('hidden');
+            document.getElementById('authScreen').classList.add('flex');
+            
+            if(unsubscribeOrders) unsubscribeOrders();
+            if(unsubscribeUsers) unsubscribeUsers();
+        }
+
+        function showApp() {
+            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('authScreen').classList.remove('flex');
+            document.getElementById('appScreen').classList.remove('hidden');
+            document.getElementById('appScreen').classList.add('flex');
+
+            document.getElementById('headerUserName').textContent = currentUser.name;
+            document.getElementById('headerUserRole').textContent = currentUser.role === 'admin' ? 'Administrador Master' : 'Cliente';
+
+            if (currentUser.role === 'admin') {
+                document.getElementById('adminView').classList.remove('hidden');
+                document.getElementById('clientView').classList.add('hidden');
+                initAdminData();
+            } else {
+                document.getElementById('adminView').classList.add('hidden');
+                document.getElementById('clientView').classList.remove('hidden');
+                initClientData();
+            }
+        }
+
+        window.logout = () => {
+            currentUser = null;
+            sessionStorage.removeItem('prataUser');
+            showAuth();
+            showToast("Sucesso", "Logout realizado com sucesso.", "success");
+        };
+
+        const authForm = document.getElementById('authForm');
+        const toggleAuthBtn = document.getElementById('toggleAuthBtn');
+        const registerFields = document.getElementById('registerFields');
+
+        toggleAuthBtn.addEventListener('click', () => {
+            isRegistering = !isRegistering;
+            if (isRegistering) {
+                registerFields.classList.remove('hidden');
+                document.getElementById('authSubmitBtn').textContent = 'Criar Conta';
+                document.getElementById('authSubtitle').textContent = 'Crie sua conta para fazer pedidos';
+                toggleAuthBtn.textContent = 'Já tem conta? Entrar';
+                document.getElementById('authName').setAttribute('required', 'true');
+            } else {
+                registerFields.classList.add('hidden');
+                document.getElementById('authSubmitBtn').textContent = 'Entrar';
+                document.getElementById('authSubtitle').textContent = 'Acesse sua conta para continuar';
+                toggleAuthBtn.textContent = 'Não tem conta? Criar agora';
+                document.getElementById('authName').removeAttribute('required');
+            }
+        });
+
+        authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const loginBtn = document.getElementById('login-btn');
-            
-            loginBtn.disabled = true;
-            loginBtn.innerHTML = '<span class="loading"></span> Entrando...';
+            const email = document.getElementById('authEmail').value.trim().toLowerCase();
+            const password = document.getElementById('authPassword').value;
+            const userDocId = email.replace(/[^a-zA-Z0-9]/g, '_'); // Simples ID baseado em email
+
+            if(!auth.currentUser) return showToast("Aguarde", "Conectando ao servidor...", "info");
+
+            const docRef = doc(usersCollection, userDocId);
             
             try {
-                await auth.signInWithEmailAndPassword(email, password);
-                showToast('Login realizado com sucesso!');
-            } catch (error) {
-                showToast('Erro: ' + error.message);
-                loginBtn.disabled = false;
-                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Entrar';
-            }
-        });
+                if (isRegistering) {
+                    const name = document.getElementById('authName').value.trim();
+                    if(!name) return showToast("Atenção", "Preencha seu nome.", "error");
 
-        // Auth State Observer
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('main-app').style.display = 'block';
-                checkUserType(user);
-                loadInitialData();
-            } else {
-                document.getElementById('login-screen').style.display = 'flex';
-                document.getElementById('main-app').style.display = 'none';
-                document.getElementById('register-section').style.display = 'block';
-            }
-        });
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) return showToast("Erro", "E-mail já registrado.", "error");
 
-        // Check User Type
-        function checkUserType(user) {
-            const adminRef = database.ref(`admins/${user.uid}`);
-            
-            adminRef.once('value')
-                .then((snapshot) => {
-                    const adminData = snapshot.val();
+                    // REGRA DE OURO: Apenas este e-mail vira Admin. O resto é client.
+                    const role = email === 'lojavirtualprata@gmail.com' ? 'admin' : 'client';
+
+                    const userData = { email, password, name, role, createdAt: new Date().toISOString() };
+                    await setDoc(docRef, userData);
                     
-                    if (adminData) {
-                        isAdmin = true;
-                        console.log('✅ Admin Master identificado:', adminData.name);
-                        showAdminInterface(adminData.name);
-                    } else {
-                        isAdmin = false;
-                        console.log('👤 Cliente identificado');
-                        showClientInterface(user);
+                    currentUser = { id: userDocId, ...userData };
+                    sessionStorage.setItem('prataUser', JSON.stringify(currentUser));
+                    showToast("Sucesso", "Conta criada!", "success");
+                    showApp();
+
+                } else {
+                    const docSnap = await getDoc(docRef);
+                    if (!docSnap.exists() || docSnap.data().password !== password) {
+                        return showToast("Erro", "Credenciais inválidas.", "error");
                     }
-                })
-                .catch((error) => {
-                    console.error('Erro ao verificar tipo de usuário:', error);
-                    showClientInterface(user);
-                });
-        }
-
-        function showAdminInterface(adminName) {
-            // Mostrar badge de admin
-            document.getElementById('admin-badge').classList.add('show');
-            document.getElementById('user-name').textContent = adminName;
-            
-            // Mostrar painel admin
-            document.getElementById('admin-panel').style.display = 'block';
-            
-            // Mostrar abas de admin
-            document.querySelectorAll('.admin-only').forEach(el => {
-                el.classList.add('show');
-            });
-            
-            // Ativar aba de pedidos para admin
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelector('[data-tab="orders"]').classList.add('active');
-            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
-            document.getElementById('orders').classList.add('active');
-            
-            loadAdminStats();
-            
-            // Atualizar estatísticas em tempo real
-            database.ref('orders').on('value', () => {
-                loadAdminStats();
-            });
-            
-            database.ref('clients').on('value', () => {
-                loadAdminStats();
-            });
-        }
-
-        function showClientInterface(user) {
-            // Esconder elementos de admin
-            document.getElementById('admin-badge').classList.remove('show');
-            document.getElementById('admin-panel').style.display = 'none';
-            document.querySelectorAll('.admin-only').forEach(el => {
-                el.classList.remove('show');
-            });
-            
-            // Mostrar nome do cliente
-            database.ref(`clients/${user.uid}`).once('value')
-                .then((snapshot) => {
-                    const clientData = snapshot.val();
-                    if (clientData) {
-                        document.getElementById('user-name').textContent = clientData.name;
-                    } else {
-                        document.getElementById('user-name').textContent = user.email;
+                    
+                    let userData = docSnap.data();
+                    
+                    // Trava de segurança redundante no login
+                    if(userData.email === 'lojavirtualprata@gmail.com' && userData.role !== 'admin') {
+                        userData.role = 'admin'; 
+                        await updateDoc(docRef, { role: 'admin' }); // Força atualização no banco se necessário
                     }
-                })
-                .catch(() => {
-                    document.getElementById('user-name').textContent = user.email;
-                });
-            
-            // Ativar aba de novo pedido
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelector('[data-tab="new-order"]').classList.add('active');
-            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
-            document.getElementById('new-order').classList.add('active');
-        }
 
-        function loadAdminStats() {
-            database.ref('orders').once('value', (snapshot) => {
-                const orders = snapshot.val();
-                const totalOrders = orders ? Object.keys(orders).length : 0;
-                const pendingOrders = orders ? 
-                    Object.values(orders).filter(o => o.status === 'pendente').length : 0;
-                
-                document.getElementById('admin-total-orders').textContent = totalOrders;
-                document.getElementById('admin-pending-orders').textContent = pendingOrders;
-            });
-            
-            database.ref('clients').once('value', (snapshot) => {
-                const clients = snapshot.val();
-                const totalClients = clients ? Object.keys(clients).length : 0;
-                document.getElementById('admin-total-clients').textContent = totalClients;
-            });
-        }
-
-        // Logout
-        function logout() {
-            auth.signOut().then(() => {
-                showToast('Logout realizado!');
-            }).catch((error) => {
-                showToast('Erro ao fazer logout: ' + error.message);
-            });
-        }
-
-        // Tab Navigation
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const tabId = btn.dataset.tab;
-                
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                
-                document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
-                document.getElementById(tabId).classList.add('active');
-            });
+                    currentUser = { id: userDocId, ...userData };
+                    sessionStorage.setItem('prataUser', JSON.stringify(currentUser));
+                    showApp();
+                }
+            } catch (error) {
+                console.error("Auth error:", error);
+                showToast("Erro", "Houve um problema de comunicação com o servidor.", "error");
+            }
         });
 
-        // Product Type Change
-        document.getElementById('product-type').addEventListener('change', function() {
-            const quantityGroup = document.getElementById('quantity-group');
-            if (this.value) {
-                quantityGroup.style.display = 'block';
+        function setupEventListeners() {
+            const productSelect = document.getElementById('productSelect');
+            const quantityContainer = document.getElementById('quantityContainer');
+            const quantitySelect = document.getElementById('quantitySelect');
+            const customQuantityContainer = document.getElementById('customQuantityContainer');
+            const customQuantityInput = document.getElementById('customQuantityInput');
+
+            productSelect.addEventListener('change', (e) => {
+                if(e.target.value) {
+                    quantityContainer.classList.remove('hidden');
+                    quantitySelect.setAttribute('required', 'true');
+                }
+            });
+
+            quantitySelect.addEventListener('change', (e) => {
+                if(e.target.value === 'Outra') {
+                    customQuantityContainer.classList.remove('hidden');
+                    customQuantityInput.setAttribute('required', 'true');
+                } else {
+                    customQuantityContainer.classList.add('hidden');
+                    customQuantityInput.removeAttribute('required');
+                }
+            });
+
+            document.getElementById('orderForm').addEventListener('submit', handleOrderSubmit);
+        }
+
+        async function handleOrderSubmit(e) {
+            e.preventDefault();
+            if(!auth.currentUser) return;
+
+            const product = document.getElementById('productSelect').value;
+            let quantity = document.getElementById('quantitySelect').value;
+            if(quantity === 'Outra') {
+                quantity = document.getElementById('customQuantityInput').value + ' unidades';
             } else {
-                quantityGroup.style.display = 'none';
+                quantity = quantity + ' unidades';
             }
-        });
+            const priority = document.querySelector('input[name="priority"]:checked').value;
 
-        // Quantity Change
-        document.getElementById('quantity').addEventListener('change', function() {
-            const customInput = document.getElementById('custom-quantity-input');
-            if (this.value === 'custom') {
-                customInput.classList.add('active');
+            const newOrder = {
+                clientId: currentUser.id,
+                clientName: currentUser.name,
+                product,
+                quantity,
+                priority,
+                status: 'pendente', // pendente, producao, finalizado
+                orderIndex: Date.now(), // Para ordenação kanban
+                createdAt: new Date().toISOString()
+            };
+
+            try {
+                const btn = e.target.querySelector('button[type="submit"]');
+                const origText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+                btn.disabled = true;
+
+                await addDoc(ordersCollection, newOrder);
+                
+                showToast("Sucesso", "Pedido enviado com sucesso!", "success");
+                e.target.reset();
+                document.getElementById('quantityContainer').classList.add('hidden');
+                document.getElementById('customQuantityContainer').classList.add('hidden');
+                
+                btn.innerHTML = origText;
+                btn.disabled = false;
+            } catch (error) {
+                console.error("Erro ao salvar pedido:", error);
+                showToast("Erro", "Não foi possível enviar o pedido.", "error");
+            }
+        }
+
+        function initClientData() {
+            unsubscribeOrders = onSnapshot(ordersCollection, (snapshot) => {
+                const orders = [];
+                snapshot.forEach(doc => orders.push({id: doc.id, ...doc.data()}));
+                // Filtra em memória para o cliente atual
+                const myOrders = orders.filter(o => o.clientId === currentUser.id)
+                                       .sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+                renderClientOrders(myOrders);
+            }, (error) => { console.error(error); showToast("Erro", "Falha ao carregar pedidos.", "error"); });
+        }
+
+        function initAdminData() {
+            unsubscribeOrders = onSnapshot(ordersCollection, (snapshot) => {
+                allOrders = [];
+                snapshot.forEach(doc => allOrders.push({id: doc.id, ...doc.data()}));
+                renderKanban();
+                renderClientsList(); // Atualiza lista de clientes caso haja pedidos novos
+            }, (error) => console.error(error));
+
+            unsubscribeUsers = onSnapshot(usersCollection, (snapshot) => {
+                allUsers = [];
+                snapshot.forEach(doc => allUsers.push({id: doc.id, ...doc.data()}));
+                renderClientsList();
+            }, (error) => console.error(error));
+        }
+
+        function renderClientOrders(orders) {
+            const container = document.getElementById('clientOrdersList');
+            if (orders.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center py-10 text-gray-500 bg-gray-50 rounded-xl border border-dashed border-gray-300">Você ainda não tem pedidos.</div>`;
+                return;
+            }
+
+            container.innerHTML = orders.map(order => {
+                const statusColors = {
+                    'pendente': 'bg-gray-100 text-gray-700 border-gray-200',
+                    'producao': 'bg-blue-100 text-blue-700 border-blue-200',
+                    'finalizado': 'bg-green-100 text-green-700 border-green-200'
+                };
+                const statusText = {
+                    'pendente': 'Aguardando',
+                    'producao': 'Em Produção',
+                    'finalizado': 'Finalizado'
+                };
+                const priorityIcons = {
+                    'Baixa': '<i class="fas fa-arrow-down text-blue-500"></i>',
+                    'Média': '<i class="fas fa-minus text-yellow-500"></i>',
+                    'Alta': '<i class="fas fa-arrow-up text-red-500"></i>'
+                };
+
+                return `
+                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col gap-3 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full ${order.status === 'finalizado' ? 'bg-green-500' : order.status === 'producao' ? 'bg-blue-500' : 'bg-gray-400'}"></div>
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">${formatDateTime(order.createdAt).split(' às')[0]}</span>
+                            <h4 class="font-bold text-gray-900 leading-tight mt-1">${order.product}</h4>
+                        </div>
+                        <span class="text-xs px-2.5 py-1 rounded-md font-medium border ${statusColors[order.status]}">
+                            ${statusText[order.status]}
+                        </span>
+                    </div>
+                    <div class="text-sm text-gray-600 flex items-center gap-2">
+                        <i class="fas fa-cubes text-gray-400"></i> ${order.quantity}
+                    </div>
+                    <div class="text-sm text-gray-600 flex items-center gap-2">
+                        ${priorityIcons[order.priority]} Prioridade ${order.priority}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        window.switchAdminTab = (tab) => {
+            if(tab === 'pedidos') {
+                document.getElementById('adminTabPedidos').classList.remove('hidden');
+                document.getElementById('adminTabClientes').classList.add('hidden');
+                document.getElementById('tabPedidos').className = "px-6 py-3 font-medium text-sm text-gray-900 border-b-2 border-gray-900 transition";
+                document.getElementById('tabClientes').className = "px-6 py-3 font-medium text-sm text-gray-500 border-b-2 border-transparent hover:text-gray-700 transition";
             } else {
-                customInput.classList.remove('active');
+                document.getElementById('adminTabPedidos').classList.add('hidden');
+                document.getElementById('adminTabClientes').classList.remove('hidden');
+                document.getElementById('tabPedidos').className = "px-6 py-3 font-medium text-sm text-gray-500 border-b-2 border-transparent hover:text-gray-700 transition";
+                document.getElementById('tabClientes').className = "px-6 py-3 font-medium text-sm text-gray-900 border-b-2 border-gray-900 transition";
             }
-        });
+        };
 
-        // Priority Selection
-        document.querySelectorAll('.priority-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.priority-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                selectedPriority = btn.dataset.priority;
-            });
-        });
-
-        // Load Initial Data
-        function loadInitialData() {
-            loadClients();
-            
-            if (isAdmin) {
-                loadOrders();
-                
-                database.ref('orders').on('value', () => {
-                    loadOrders();
-                });
-                
-                database.ref('clients').on('value', () => {
-                    loadClients();
-                    loadClientsList();
-                });
-            }
-        }
-
-        // Load Clients for Select
-        function loadClients() {
-            const select = document.getElementById('client-name');
-            database.ref('clients').on('value', (snapshot) => {
-                const clients = snapshot.val();
-                select.innerHTML = '<option value="">Selecione o cliente...</option>';
-                
-                if (clients) {
-                    Object.entries(clients).forEach(([id, client]) => {
-                        const option = document.createElement('option');
-                        option.value = id;
-                        option.textContent = client.name || client.email;
-                        select.appendChild(option);
-                    });
-                }
-            });
-        }
-
-        // Submit Order
-        function submitOrder() {
-            const clientName = document.getElementById('client-name');
-            const productType = document.getElementById('product-type');
-            const quantity = document.getElementById('quantity');
-            const customQuantity = document.getElementById('custom-quantity');
-            
-            if (!clientName.value) {
-                showToast('Selecione o cliente!');
-                return;
-            }
-            
-            if (!productType.value) {
-                showToast('Selecione o tipo de produto!');
-                return;
-            }
-            
-            if (!quantity.value) {
-                showToast('Selecione a quantidade!');
-                return;
-            }
-            
-            let finalQuantity = quantity.value;
-            if (quantity.value === 'custom') {
-                if (!customQuantity.value) {
-                    showToast('Digite a quantidade personalizada!');
-                    return;
-                }
-                finalQuantity = customQuantity.value;
-            }
-            
-            const orderData = {
-                clientId: clientName.value,
-                clientName: clientName.options[clientName.selectedIndex].text,
-                productType: productType.value,
-                productName: productType.options[productType.selectedIndex].text,
-                quantity: finalQuantity,
-                priority: selectedPriority,
-                status: 'pendente',
-                createdAt: firebase.database.ServerValue.TIMESTAMP,
-                dateTime: new Date().toLocaleString('pt-BR')
+        function renderKanban() {
+            const cols = {
+                'pendente': document.getElementById('kanban-pendente'),
+                'producao': document.getElementById('kanban-producao'),
+                'finalizado': document.getElementById('kanban-finalizado')
             };
-            
-            database.ref('orders').push(orderData)
-                .then(() => {
-                    showToast('Pedido enviado com sucesso!');
-                    productType.value = '';
-                    quantity.value = '';
-                    customQuantity.value = '';
-                    document.getElementById('quantity-group').style.display = 'none';
-                    document.getElementById('custom-quantity-input').classList.remove('active');
-                    selectedPriority = 'media';
-                    document.querySelectorAll('.priority-btn').forEach(b => {
-                        b.classList.remove('active');
-                        if (b.dataset.priority === 'media') b.classList.add('active');
-                    });
-                })
-                .catch((error) => {
-                    showToast('Erro ao enviar pedido: ' + error.message);
-                });
-        }
 
-        // Load Orders (Admin Only)
-        function loadOrders() {
-            const pendenteContainer = document.getElementById('kanban-pendente');
-            const producaoContainer = document.getElementById('kanban-producao');
-            const concluidoContainer = document.getElementById('kanban-concluido');
-            
-            database.ref('orders').on('value', (snapshot) => {
-                const orders = snapshot.val();
+            // Limpa as colunas
+            Object.values(cols).forEach(col => col.innerHTML = '');
+
+            const counts = { 'pendente': 0, 'producao': 0, 'finalizado': 0 };
+
+            // Ordena pela propriedade orderIndex ascendente
+            const sortedOrders = [...allOrders].sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+
+            sortedOrders.forEach(order => {
+                if(!cols[order.status]) return; // Fallback
                 
-                pendenteContainer.innerHTML = '';
-                producaoContainer.innerHTML = '';
-                concluidoContainer.innerHTML = '';
+                counts[order.status]++;
+                const card = document.createElement('div');
+                card.className = "bg-white p-4 rounded-lg shadow-sm border border-gray-200 draggable-card flex flex-col gap-2";
+                card.setAttribute('draggable', 'true');
+                card.setAttribute('data-id', order.id);
                 
-                if (orders) {
-                    Object.entries(orders).forEach(([id, order]) => {
-                        const card = createKanbanCard(id, order);
-                        const targetContainer = order.status === 'producao' ? producaoContainer :
-                                              order.status === 'concluido' ? concluidoContainer :
-                                              pendenteContainer;
-                        targetContainer.appendChild(card);
-                    });
-                }
+                const priorityColor = order.priority === 'Alta' ? 'text-red-600 bg-red-50' : order.priority === 'Média' ? 'text-yellow-600 bg-yellow-50' : 'text-blue-600 bg-blue-50';
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <button onclick="openEditModal('${order.id}')" class="font-bold text-gray-900 hover:text-blue-600 transition text-left underline decoration-dotted decoration-gray-400">
+                            ${order.clientName}
+                        </button>
+                        <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${priorityColor}">${order.priority}</span>
+                    </div>
+                    <div class="text-sm text-gray-700 font-medium">${order.product}</div>
+                    <div class="text-xs text-gray-500">${order.quantity}</div>
+                    <div class="text-xs text-gray-400 mt-2 flex justify-between items-center border-t border-gray-50 pt-2">
+                        <span>${formatDateTime(order.createdAt).split(' às')[0]}</span>
+                        <i class="fas fa-grip-lines text-gray-300"></i>
+                    </div>
+                `;
+
+                // Eventos de Drag & Drop
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragend', handleDragEnd);
+
+                cols[order.status].appendChild(card);
             });
+
+            document.getElementById('countPendente').textContent = counts.pendente;
+            document.getElementById('countProducao').textContent = counts.producao;
+            document.getElementById('countFinalizado').textContent = counts.finalizado;
+
+            setupDragAndDrop();
         }
 
-        // Create Kanban Card
-        function createKanbanCard(id, order) {
-            const card = document.createElement('div');
-            card.className = `kanban-card card-priority-${order.priority || 'media'}`;
-            card.draggable = true;
-            card.dataset.id = id;
-            
-            const priorityLabels = {
-                baixa: 'Baixa',
-                media: 'Média',
-                alta: 'Alta',
-                urgente: 'Urgente'
-            };
-            
-            card.innerHTML = `
-                <div class="card-header">
-                    <span class="card-title" onclick="editOrder('${id}')">
-                        ${order.clientName || 'Cliente'}
-                    </span>
-                    <span class="card-priority-badge badge-${order.priority || 'media'}">
-                        ${priorityLabels[order.priority] || 'Média'}
-                    </span>
-                </div>
-                <div class="card-details">
-                    <p><i class="fas fa-box"></i> ${order.productName || 'Produto'}</p>
-                    <p><i class="fas fa-hashtag"></i> ${order.quantity} Unidades</p>
-                    <p><i class="fas fa-clock"></i> ${order.dateTime || 'Data indisponível'}</p>
-                </div>
-                <div class="card-actions">
-                    <button class="btn-edit btn-edit-edit" onclick="editOrder('${id}')">
-                        <i class="fas fa-edit"></i> Editar
-                    </button>
-                    <button class="btn-edit btn-edit-delete" onclick="deleteOrder('${id}')">
-                        <i class="fas fa-trash"></i> Excluir
-                    </button>
-                </div>
-            `;
-            
-            card.addEventListener('dragstart', handleDragStart);
-            card.addEventListener('dragend', handleDragEnd);
-            
-            return card;
-        }
+        let draggedItem = null;
 
-        // Drag and Drop Handlers
         function handleDragStart(e) {
-            draggedCard = this;
-            this.classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'move';
+            draggedItem = this;
+            setTimeout(() => this.classList.add('hidden'), 0); // Hide original
         }
 
         function handleDragEnd(e) {
-            this.classList.remove('dragging');
-            draggedCard = null;
+            this.classList.remove('hidden');
+            draggedItem = null;
         }
 
-        document.querySelectorAll('.kanban-items').forEach(container => {
-            container.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'move';
-            });
+        function setupDragAndDrop() {
+            const columns = document.querySelectorAll('.kanban-column');
             
-            container.addEventListener('drop', (e) => {
-                e.preventDefault();
-                if (draggedCard) {
-                    const targetContainer = container.closest('.kanban-column');
-                    const newStatus = targetContainer.dataset.column;
-                    const orderId = draggedCard.dataset.id;
+            columns.forEach(col => {
+                col.addEventListener('dragover', e => {
+                    e.preventDefault();
+                    const afterElement = getDragAfterElement(col, e.clientY);
+                    const draggable = draggedItem;
+                    if (draggable) {
+                        if (afterElement == null) {
+                            col.appendChild(draggable);
+                        } else {
+                            col.insertBefore(draggable, afterElement);
+                        }
+                    }
+                });
+
+                col.addEventListener('drop', async e => {
+                    e.preventDefault();
+                    if(!draggedItem) return;
                     
-                    database.ref(`orders/${orderId}`).update({
-                        status: newStatus
-                    }).then(() => {
-                        showToast('Pedido atualizado!');
-                        container.appendChild(draggedCard);
-                    }).catch((error) => {
-                        showToast('Erro ao atualizar: ' + error.message);
+                    const orderId = draggedItem.getAttribute('data-id');
+                    const newStatus = col.getAttribute('data-status');
+                    
+                    // Reordenar os index visuais baseados no DOM atual
+                    const cardsInColumn = [...col.querySelectorAll('.draggable-card')];
+                    const updates = [];
+
+                    // Atualiza o card arrastado primeiro
+                    updates.push(updateDoc(doc(ordersCollection, orderId), { 
+                        status: newStatus 
+                    }));
+
+                    // Atualiza a prioridade/ordem de todos na coluna se necessário
+                    // Simplificação: vamos atualizar o orderIndex apenas para manter a ordem visual
+                    cardsInColumn.forEach((cardEl, index) => {
+                        const cId = cardEl.getAttribute('data-id');
+                        updates.push(updateDoc(doc(ordersCollection, cId), { orderIndex: index }));
                     });
-                }
-            });
-        });
 
-        // Edit Order
-        function editOrder(id) {
-            currentEditId = id;
-            database.ref(`orders/${id}`).once('value', (snapshot) => {
-                const order = snapshot.val();
-                if (order) {
-                    document.getElementById('edit-client').value = order.clientName || '';
-                    document.getElementById('edit-product').value = order.productType || '';
-                    document.getElementById('edit-quantity').value = order.quantity || '';
-                    document.getElementById('edit-priority').value = order.priority || 'media';
-                    document.getElementById('edit-status').value = order.status || 'pendente';
-                    document.getElementById('edit-modal').classList.add('active');
-                }
-            });
-        }
-
-        // Save Edit
-        function saveEdit() {
-            if (!currentEditId) return;
-            
-            const updatedData = {
-                productType: document.getElementById('edit-product').value,
-                productName: document.getElementById('edit-product').options[document.getElementById('edit-product').selectedIndex].text,
-                quantity: document.getElementById('edit-quantity').value,
-                priority: document.getElementById('edit-priority').value,
-                status: document.getElementById('edit-status').value
-            };
-            
-            database.ref(`orders/${currentEditId}`).update(updatedData)
-                .then(() => {
-                    showToast('Pedido atualizado com sucesso!');
-                    closeModal('edit-modal');
-                })
-                .catch((error) => {
-                    showToast('Erro ao atualizar: ' + error.message);
+                    try {
+                        await Promise.all(updates);
+                    } catch(err) {
+                        console.error("Erro ao reordenar", err);
+                        showToast("Erro", "Falha ao salvar a nova ordem.", "error");
+                    }
                 });
+            });
         }
 
-        // Delete Order
-        function deleteOrder(id) {
-            if (confirm('Tem certeza que deseja excluir este pedido?')) {
-                database.ref(`orders/${id}`).remove()
-                    .then(() => {
-                        showToast('Pedido excluído!');
-                    })
-                    .catch((error) => {
-                        showToast('Erro ao excluir: ' + error.message);
-                    });
-            }
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.draggable-card:not(.hidden)')];
+
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
 
-        // Load Clients List (Admin Only)
-        function loadClientsList() {
-            const clientsList = document.getElementById('clients-list');
-            database.ref('clients').on('value', (snapshot) => {
-                const clients = snapshot.val();
-                clientsList.innerHTML = '';
+        window.openEditModal = (orderId) => {
+            const order = allOrders.find(o => o.id === orderId);
+            if(!order) return;
+            editingOrderId = orderId;
+
+            const content = document.getElementById('editModalContent');
+            content.innerHTML = `
+                <div class="mb-2 text-sm text-gray-500">Cliente: <strong class="text-gray-900">${order.clientName}</strong></div>
+                <div class="mb-4 text-sm text-gray-500">Produto: <strong class="text-gray-900">${order.product} - ${order.quantity}</strong></div>
                 
-                if (clients) {
-                    Object.entries(clients).forEach(([id, client]) => {
-                        database.ref('orders').orderByChild('clientId').equalTo(id).on('value', (ordersSnapshot) => {
-                            const orders = ordersSnapshot.val();
-                            const orderCount = orders ? Object.keys(orders).length : 0;
-                            
-                            const clientCard = document.createElement('div');
-                            clientCard.className = 'client-card';
-                            
-                            const initial = client.name ? client.name.charAt(0).toUpperCase() : 'C';
-                            
-                            clientCard.innerHTML = `
-                                <div class="client-info">
-                                    <div class="client-avatar">${initial}</div>
-                                    <div class="client-details">
-                                        <div class="client-name">${client.name || 'Cliente'}</div>
-                                        <small style="color: var(--text-light);">Cliente desde ${client.createdAt || 'N/A'}</small>
-                                    </div>
-                                </div>
-                                <div class="client-stats">
-                                    <div class="stat-item">
-                                        <div class="stat-value">${orderCount}</div>
-                                        <div class="stat-label">Pedidos</div>
-                                    </div>
-                                </div>
-                            `;
-                            
-                            clientsList.appendChild(clientCard);
-                        });
-                    });
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select id="editStatus" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:border-gray-900">
+                        <option value="pendente" ${order.status==='pendente'?'selected':''}>Pendente (Recebidos)</option>
+                        <option value="producao" ${order.status==='producao'?'selected':''}>Em Produção</option>
+                        <option value="finalizado" ${order.status==='finalizado'?'selected':''}>Finalizado</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Prioridade</label>
+                    <select id="editPriority" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:border-gray-900">
+                        <option value="Baixa" ${order.priority==='Baixa'?'selected':''}>Baixa</option>
+                        <option value="Média" ${order.priority==='Média'?'selected':''}>Média</option>
+                        <option value="Alta" ${order.priority==='Alta'?'selected':''}>Alta</option>
+                    </select>
+                </div>
+                <div class="mt-4 pt-4 border-t border-gray-100">
+                     <button onclick="deleteOrder('${order.id}')" class="text-sm text-red-600 hover:text-red-800 font-medium flex items-center gap-2">
+                        <i class="fas fa-trash"></i> Excluir Pedido
+                     </button>
+                </div>
+            `;
+            document.getElementById('editModal').classList.remove('hidden');
+            document.getElementById('editModal').classList.add('flex');
+        };
+
+        window.closeEditModal = () => {
+            editingOrderId = null;
+            document.getElementById('editModal').classList.add('hidden');
+            document.getElementById('editModal').classList.remove('flex');
+        };
+
+        window.saveOrderEdit = async () => {
+            if(!editingOrderId) return;
+            const newStatus = document.getElementById('editStatus').value;
+            const newPriority = document.getElementById('editPriority').value;
+
+            try {
+                await updateDoc(doc(ordersCollection, editingOrderId), {
+                    status: newStatus,
+                    priority: newPriority
+                });
+                showToast("Sucesso", "Pedido atualizado.", "success");
+                closeEditModal();
+            } catch (error) {
+                console.error(error);
+                showToast("Erro", "Falha ao atualizar.", "error");
+            }
+        };
+
+        window.deleteOrder = async (id) => {
+            // Em vez de alert/confirm usamos lógica direta, mas num app real teria modal de confirmação.
+            // Para cumprir a regra de não usar alert/confirm, excluímos direto após clique (que já está dentro de um modal).
+            try {
+                await deleteDoc(doc(ordersCollection, id));
+                showToast("Excluído", "O pedido foi deletado permanentemente.", "info");
+                closeEditModal();
+            } catch(e) {
+                showToast("Erro", "Falha ao excluir.", "error");
+            }
+        };
+
+        function renderClientsList() {
+            const tbody = document.getElementById('clientsTableBody');
+            
+            // Agrupar pedidos por cliente
+            const clientStats = {};
+            allOrders.forEach(order => {
+                if(!clientStats[order.clientId]) {
+                    clientStats[order.clientId] = { total: 0, lastOrderDate: order.createdAt };
+                }
+                clientStats[order.clientId].total++;
+                if(new Date(order.createdAt) > new Date(clientStats[order.clientId].lastOrderDate)) {
+                    clientStats[order.clientId].lastOrderDate = order.createdAt;
                 }
             });
-        }
 
-        // Add Client (Admin Only)
-        function showAddClientModal() {
-            document.getElementById('add-client-modal').classList.add('active');
-        }
-
-        function addClient() {
-            const clientName = document.getElementById('new-client-name').value;
-            
-            if (!clientName.trim()) {
-                showToast('Digite o nome do cliente!');
-                return;
-            }
-            
-            const clientData = {
-                name: clientName,
-                createdAt: new Date().toLocaleDateString('pt-BR')
-            };
-            
-            database.ref('clients').push(clientData)
-                .then(() => {
-                    showToast('Cliente adicionado com sucesso!');
-                    document.getElementById('new-client-name').value = '';
-                    closeModal('add-client-modal');
-                })
-                .catch((error) => {
-                    showToast('Erro ao adicionar cliente: ' + error.message);
-                });
-        }
-
-        // Close Modal
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.remove('active');
-        }
-
-        // Close modals on outside click
-        document.querySelectorAll('.modal').forEach(modal => {
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    modal.classList.remove('active');
-                }
-            });
-        });
-
-        // Export Data (Admin Only)
-        function exportData() {
-            database.ref('orders').once('value', (snapshot) => {
-                const orders = snapshot.val();
-                const dataStr = JSON.stringify(orders, null, 2);
-                const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+            // Gerar tabela juntando usuários (clientes) e seus stats
+            const clientsHTML = allUsers.filter(u => u.role === 'client').map(client => {
+                const stats = clientStats[client.id] || { total: 0, lastOrderDate: null };
                 
-                const exportFileDefaultName = 'pedidos-prata-embalagens.json';
-                
-                const linkElement = document.createElement('a');
-                linkElement.setAttribute('href', dataUri);
-                linkElement.setAttribute('download', exportFileDefaultName);
-                linkElement.click();
-                
-                showToast('Dados exportados com sucesso!');
-            });
-        }
+                return `
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="px-6 py-4">
+                        <div class="font-medium text-gray-900">${client.name}</div>
+                        <div class="text-xs text-gray-500">${client.email}</div>
+                    </td>
+                    <td class="px-6 py-4 text-gray-700">
+                        <span class="bg-gray-100 px-2.5 py-1 rounded-md text-xs font-bold">${stats.total}</span>
+                    </td>
+                    <td class="px-6 py-4 text-gray-500 text-sm">
+                        ${stats.lastOrderDate ? formatDateTime(stats.lastOrderDate).split(' às')[0] : 'Nunca comprou'}
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-green-50 text-green-700 border border-green-200">
+                            <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Ativo
+                        </span>
+                    </td>
+                </tr>
+                `;
+            }).join('');
 
-        // Clear Completed Orders (Admin Only)
-        function clearCompletedOrders() {
-            if (confirm('Tem certeza que deseja excluir todos os pedidos concluídos?')) {
-                database.ref('orders').orderByChild('status').equalTo('concluido').once('value', (snapshot) => {
-                    snapshot.forEach((childSnapshot) => {
-                        childSnapshot.ref.remove();
-                    });
-                    showToast('Pedidos concluídos removidos!');
-                });
-            }
+            tbody.innerHTML = clientsHTML || `<tr><td colspan="4" class="px-6 py-8 text-center text-gray-500">Nenhum cliente registrado ainda.</td></tr>`;
         }
-
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            const user = auth.currentUser;
-            if (user) {
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('main-app').style.display = 'block';
-                checkUserType(user);
-                loadInitialData();
-            } else {
-                document.getElementById('register-section').style.display = 'block';
-            }
-        });
     </script>
 </body>
 </html>
