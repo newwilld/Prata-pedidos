@@ -288,21 +288,23 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, onSnapshot, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getDatabase, ref, set, push, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
-        // Configuração segura do Firebase via Environment
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'prata-embalagens-app';
-        let firebaseConfig;
-        try {
-            firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-                apiKey: "mock-key", authDomain: "mock.firebaseapp.com", projectId: "mock-project"
-            };
-        } catch (e) { console.error("Erro no config do firebase", e); }
+        const firebaseConfig = {
+            apiKey: "AIzaSyCAZJIWT5FPTshkArRs8v2U9hXAmtnlG-Q",
+            authDomain: "myname22.firebaseapp.com",
+            databaseURL: "https://myname22-default-rtdb.firebaseio.com",
+            projectId: "myname22",
+            storageBucket: "myname22.firebasestorage.app",
+            messagingSenderId: "346543194739",
+            appId: "1:346543194739:web:bcb8fa36574ca5de552006",
+            measurementId: "G-96C1LJH3MB"
+        };
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
         const auth = getAuth(app);
+        const db = getDatabase(app);
 
         // Estado Global
         let currentUser = null;
@@ -310,12 +312,6 @@
         let allOrders = [];
         let allUsers = [];
         let editingOrderId = null;
-        let unsubscribeOrders = null;
-        let unsubscribeUsers = null;
-
-        // Caminhos Restritos Firestore (Regra 1)
-        const usersCollection = collection(db, 'artifacts', appId, 'public', 'data', 'users');
-        const ordersCollection = collection(db, 'artifacts', appId, 'public', 'data', 'orders');
 
         function showToast(title, message, type = 'info') {
             const toast = document.createElement('div');
@@ -337,41 +333,31 @@
             return `${d.toLocaleDateString('pt-BR')} às ${d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}`;
         }
 
-        window.onload = async () => {
-            try {
-                // Regra 3: Auth Before Queries
-                await signInAnonymously(auth);
-                checkSession();
-                setupEventListeners();
-            } catch (error) {
-                console.error("Erro na auth inicial:", error);
-                showToast("Erro", "Falha de conexão. Tente recarregar a página.", "error");
-            }
-        };
-
-        function checkSession() {
-            const saved = sessionStorage.getItem('prataUser');
-            if (saved) {
-                currentUser = JSON.parse(saved);
-                
-                // Trava de segurança extra no carregamento da sessão
-                if(currentUser.email === 'lojavirtualprata@gmail.com') {
-                    currentUser.role = 'admin';
+        window.onload = () => {
+            setupEventListeners();
+            
+            // Monitora o estado de autenticação em tempo real
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    // Busca os dados complementares do usuário no Realtime DB
+                    const userRef = ref(db, 'users/' + user.uid);
+                    const snapshot = await get(userRef);
+                    
+                    if (snapshot.exists()) {
+                        currentUser = { id: user.uid, ...snapshot.val() };
+                        showApp();
+                    }
+                } else {
+                    currentUser = null;
+                    showAuth();
                 }
-
-                showApp();
-            } else {
-                showAuth();
-            }
-        }
+            });
+        };
 
         function showAuth() {
             document.getElementById('authScreen').classList.remove('hidden');
             document.getElementById('appScreen').classList.add('hidden');
             document.getElementById('authScreen').classList.add('flex');
-            
-            if(unsubscribeOrders) unsubscribeOrders();
-            if(unsubscribeUsers) unsubscribeUsers();
         }
 
         function showApp() {
@@ -393,13 +379,6 @@
                 initClientData();
             }
         }
-
-        window.logout = () => {
-            currentUser = null;
-            sessionStorage.removeItem('prataUser');
-            showAuth();
-            showToast("Sucesso", "Logout realizado com sucesso.", "success");
-        };
 
         const authForm = document.getElementById('authForm');
         const toggleAuthBtn = document.getElementById('toggleAuthBtn');
@@ -426,54 +405,58 @@
             e.preventDefault();
             const email = document.getElementById('authEmail').value.trim().toLowerCase();
             const password = document.getElementById('authPassword').value;
-            const userDocId = email.replace(/[^a-zA-Z0-9]/g, '_'); // Simples ID baseado em email
-
-            if(!auth.currentUser) return showToast("Aguarde", "Conectando ao servidor...", "info");
-
-            const docRef = doc(usersCollection, userDocId);
+            const btn = document.getElementById('authSubmitBtn');
             
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
+
             try {
                 if (isRegistering) {
                     const name = document.getElementById('authName').value.trim();
-                    if(!name) return showToast("Atenção", "Preencha seu nome.", "error");
+                    if(!name) throw new Error("Preencha o nome");
 
-                    const docSnap = await getDoc(docRef);
-                    if (docSnap.exists()) return showToast("Erro", "E-mail já registrado.", "error");
-
-                    // REGRA DE OURO: Apenas este e-mail vira Admin. O resto é client.
+                    // Cria conta nativa no Firebase Auth
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    const user = userCredential.user;
+                    
+                    // Regra: O e-mail lojavirtualprata@gmail.com vira Admin Master, o resto é cliente
                     const role = email === 'lojavirtualprata@gmail.com' ? 'admin' : 'client';
 
-                    const userData = { email, password, name, role, createdAt: new Date().toISOString() };
-                    await setDoc(docRef, userData);
+                    // Salva os dados extras no Realtime Database
+                    await set(ref(db, 'users/' + user.uid), {
+                        name: name,
+                        email: email,
+                        role: role,
+                        createdAt: new Date().toISOString()
+                    });
                     
-                    currentUser = { id: userDocId, ...userData };
-                    sessionStorage.setItem('prataUser', JSON.stringify(currentUser));
-                    showToast("Sucesso", "Conta criada!", "success");
-                    showApp();
-
+                    showToast("Sucesso", "Conta criada com sucesso!", "success");
                 } else {
-                    const docSnap = await getDoc(docRef);
-                    if (!docSnap.exists() || docSnap.data().password !== password) {
-                        return showToast("Erro", "Credenciais inválidas.", "error");
-                    }
-                    
-                    let userData = docSnap.data();
-                    
-                    // Trava de segurança redundante no login
-                    if(userData.email === 'lojavirtualprata@gmail.com' && userData.role !== 'admin') {
-                        userData.role = 'admin'; 
-                        await updateDoc(docRef, { role: 'admin' }); // Força atualização no banco se necessário
-                    }
-
-                    currentUser = { id: userDocId, ...userData };
-                    sessionStorage.setItem('prataUser', JSON.stringify(currentUser));
-                    showApp();
+                    // Login nativo Firebase Auth
+                    await signInWithEmailAndPassword(auth, email, password);
+                    showToast("Sucesso", "Bem-vindo de volta!", "success");
                 }
             } catch (error) {
                 console.error("Auth error:", error);
-                showToast("Erro", "Houve um problema de comunicação com o servidor.", "error");
+                let msg = "Erro na autenticação. Verifique os dados.";
+                if(error.code === 'auth/email-already-in-use') msg = "Este e-mail já possui uma conta.";
+                if(error.code === 'auth/invalid-credential') msg = "Senha incorreta ou usuário não encontrado.";
+                if(error.message === 'Preencha o nome') msg = "Por favor, preencha seu nome completo.";
+                showToast("Erro", msg, "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = isRegistering ? 'Criar Conta' : 'Entrar';
             }
         });
+
+        window.logout = async () => {
+            try {
+                await signOut(auth);
+                showToast("Sucesso", "Você saiu da conta.", "info");
+            } catch (error) {
+                showToast("Erro", "Falha ao sair.", "error");
+            }
+        };
 
         function setupEventListeners() {
             const productSelect = document.getElementById('productSelect');
@@ -521,8 +504,8 @@
                 product,
                 quantity,
                 priority,
-                status: 'pendente', // pendente, producao, finalizado
-                orderIndex: Date.now(), // Para ordenação kanban
+                status: 'pendente',
+                orderIndex: Date.now(),
                 createdAt: new Date().toISOString()
             };
 
@@ -532,7 +515,9 @@
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
                 btn.disabled = true;
 
-                await addDoc(ordersCollection, newOrder);
+                // Salva no Realtime Database
+                const newOrderRef = push(ref(db, 'orders'));
+                await set(newOrderRef, newOrder);
                 
                 showToast("Sucesso", "Pedido enviado com sucesso!", "success");
                 e.target.reset();
@@ -548,29 +533,18 @@
         }
 
         function initClientData() {
-            unsubscribeOrders = onSnapshot(ordersCollection, (snapshot) => {
+            const ordersRef = ref(db, 'orders');
+            onValue(ordersRef, (snapshot) => {
                 const orders = [];
-                snapshot.forEach(doc => orders.push({id: doc.id, ...doc.data()}));
-                // Filtra em memória para o cliente atual
-                const myOrders = orders.filter(o => o.clientId === currentUser.id)
-                                       .sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
-                renderClientOrders(myOrders);
-            }, (error) => { console.error(error); showToast("Erro", "Falha ao carregar pedidos.", "error"); });
-        }
-
-        function initAdminData() {
-            unsubscribeOrders = onSnapshot(ordersCollection, (snapshot) => {
-                allOrders = [];
-                snapshot.forEach(doc => allOrders.push({id: doc.id, ...doc.data()}));
-                renderKanban();
-                renderClientsList(); // Atualiza lista de clientes caso haja pedidos novos
-            }, (error) => console.error(error));
-
-            unsubscribeUsers = onSnapshot(usersCollection, (snapshot) => {
-                allUsers = [];
-                snapshot.forEach(doc => allUsers.push({id: doc.id, ...doc.data()}));
-                renderClientsList();
-            }, (error) => console.error(error));
+                snapshot.forEach(child => {
+                    const data = child.val();
+                    if(data.clientId === currentUser.id) {
+                        orders.push({id: child.key, ...data});
+                    }
+                });
+                orders.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+                renderClientOrders(orders);
+            });
         }
 
         function renderClientOrders(orders) {
@@ -619,6 +593,25 @@
             }).join('');
         }
 
+        function initAdminData() {
+            onValue(ref(db, 'orders'), (snapshot) => {
+                allOrders = [];
+                snapshot.forEach(child => {
+                    allOrders.push({id: child.key, ...child.val()});
+                });
+                renderKanban();
+                renderClientsList();
+            });
+
+            onValue(ref(db, 'users'), (snapshot) => {
+                allUsers = [];
+                snapshot.forEach(child => {
+                    allUsers.push({id: child.key, ...child.val()});
+                });
+                renderClientsList();
+            });
+        }
+
         window.switchAdminTab = (tab) => {
             if(tab === 'pedidos') {
                 document.getElementById('adminTabPedidos').classList.remove('hidden');
@@ -640,16 +633,13 @@
                 'finalizado': document.getElementById('kanban-finalizado')
             };
 
-            // Limpa as colunas
             Object.values(cols).forEach(col => col.innerHTML = '');
-
             const counts = { 'pendente': 0, 'producao': 0, 'finalizado': 0 };
 
-            // Ordena pela propriedade orderIndex ascendente
             const sortedOrders = [...allOrders].sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
 
             sortedOrders.forEach(order => {
-                if(!cols[order.status]) return; // Fallback
+                if(!cols[order.status]) return;
                 
                 counts[order.status]++;
                 const card = document.createElement('div');
@@ -674,7 +664,6 @@
                     </div>
                 `;
 
-                // Eventos de Drag & Drop
                 card.addEventListener('dragstart', handleDragStart);
                 card.addEventListener('dragend', handleDragEnd);
 
@@ -692,7 +681,7 @@
 
         function handleDragStart(e) {
             draggedItem = this;
-            setTimeout(() => this.classList.add('hidden'), 0); // Hide original
+            setTimeout(() => this.classList.add('hidden'), 0);
         }
 
         function handleDragEnd(e) {
@@ -724,24 +713,18 @@
                     const orderId = draggedItem.getAttribute('data-id');
                     const newStatus = col.getAttribute('data-status');
                     
-                    // Reordenar os index visuais baseados no DOM atual
                     const cardsInColumn = [...col.querySelectorAll('.draggable-card')];
-                    const updates = [];
+                    const updates = {};
 
-                    // Atualiza o card arrastado primeiro
-                    updates.push(updateDoc(doc(ordersCollection, orderId), { 
-                        status: newStatus 
-                    }));
-
-                    // Atualiza a prioridade/ordem de todos na coluna se necessário
-                    // Simplificação: vamos atualizar o orderIndex apenas para manter a ordem visual
+                    // Atualiza o card arrastado e reordena os outros
+                    updates[`orders/${orderId}/status`] = newStatus;
                     cardsInColumn.forEach((cardEl, index) => {
                         const cId = cardEl.getAttribute('data-id');
-                        updates.push(updateDoc(doc(ordersCollection, cId), { orderIndex: index }));
+                        updates[`orders/${cId}/orderIndex`] = index;
                     });
 
                     try {
-                        await Promise.all(updates);
+                        await update(ref(db), updates);
                     } catch(err) {
                         console.error("Erro ao reordenar", err);
                         showToast("Erro", "Falha ao salvar a nova ordem.", "error");
@@ -812,7 +795,7 @@
             const newPriority = document.getElementById('editPriority').value;
 
             try {
-                await updateDoc(doc(ordersCollection, editingOrderId), {
+                await update(ref(db, `orders/${editingOrderId}`), {
                     status: newStatus,
                     priority: newPriority
                 });
@@ -825,10 +808,8 @@
         };
 
         window.deleteOrder = async (id) => {
-            // Em vez de alert/confirm usamos lógica direta, mas num app real teria modal de confirmação.
-            // Para cumprir a regra de não usar alert/confirm, excluímos direto após clique (que já está dentro de um modal).
             try {
-                await deleteDoc(doc(ordersCollection, id));
+                await remove(ref(db, `orders/${id}`));
                 showToast("Excluído", "O pedido foi deletado permanentemente.", "info");
                 closeEditModal();
             } catch(e) {
@@ -839,7 +820,6 @@
         function renderClientsList() {
             const tbody = document.getElementById('clientsTableBody');
             
-            // Agrupar pedidos por cliente
             const clientStats = {};
             allOrders.forEach(order => {
                 if(!clientStats[order.clientId]) {
@@ -851,7 +831,6 @@
                 }
             });
 
-            // Gerar tabela juntando usuários (clientes) e seus stats
             const clientsHTML = allUsers.filter(u => u.role === 'client').map(client => {
                 const stats = clientStats[client.id] || { total: 0, lastOrderDate: null };
                 
