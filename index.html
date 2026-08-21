@@ -373,7 +373,7 @@
     <!-- Scripts e Lógica (Firebase + Aplicação) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getDatabase, ref, set, push, onValue, update, get } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
         // Configuração do Firebase fornecida
@@ -391,6 +391,12 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
+        // Configura persistência para funcionar com navegadores que bloqueiam storage
+        setPersistence(auth, browserLocalPersistence)
+            .catch((error) => {
+                console.warn("Erro ao configurar persistência:", error);
+            });
+
         // O e-mail master fixado nas regras da aplicação
         const MASTER_ADMIN_EMAIL = "lojavirtualprata@gmail.com";
 
@@ -399,6 +405,7 @@
         let currentUserData = null;
         let globalOrders = {}; 
         let globalUsers = {};
+        let listenersInitialized = false;
 
         // Funções de UI Auxiliares
         window.showToast = function(message, type = 'info') {
@@ -524,7 +531,7 @@
                         
                         setupUIForUser();
                     } else {
-                        // Trata caso onde usuário autenticou mas n tem registro no DB (ex: criados no painel)
+                        // Trata caso onde usuário autenticou mas não tem registro no DB
                         const isMaster = user.email.toLowerCase() === MASTER_ADMIN_EMAIL.toLowerCase();
                         currentUserData = {
                             uid: user.uid,
@@ -554,6 +561,7 @@
             if(!isLoginMode) toggleAuthMode();
             document.getElementById('authSubmitBtn').innerText = 'Entrar';
             document.getElementById('authSubmitBtn').disabled = false;
+            listenersInitialized = false;
         }
 
         function setupUIForUser() {
@@ -569,13 +577,27 @@
                 badge.className = 'text-xs px-2 py-1 rounded-md font-bold bg-amber-500 text-amber-950';
                 document.getElementById('adminScreen').classList.remove('hidden');
                 document.getElementById('adminScreen').classList.add('flex');
-                initAdminListeners();
+                document.getElementById('clientScreen').classList.add('hidden');
+                document.getElementById('clientScreen').classList.remove('flex');
+                
+                // Remove listeners antigos para evitar duplicação
+                if (!listenersInitialized) {
+                    initAdminListeners();
+                    listenersInitialized = true;
+                }
             } else {
                 badge.innerText = 'Cliente';
                 badge.className = 'text-xs px-2 py-1 rounded-md font-medium bg-gray-700 text-gray-200';
                 document.getElementById('clientScreen').classList.remove('hidden');
                 document.getElementById('clientScreen').classList.add('flex');
-                initClientListeners();
+                document.getElementById('adminScreen').classList.add('hidden');
+                document.getElementById('adminScreen').classList.remove('flex');
+                
+                // Remove listeners antigos para evitar duplicação
+                if (!listenersInitialized) {
+                    initClientListeners();
+                    listenersInitialized = true;
+                }
             }
         }
 
@@ -630,7 +652,7 @@
                 clientCompany: currentUserData.company || '',
                 product: product,
                 quantity: quantity,
-                priority: "Média", // Prioridade fixa/oculta inserida automaticamente
+                priority: "Média",
                 status: "novo",
                 createdAt: Date.now()
             };
@@ -666,6 +688,9 @@
                     });
                 }
                 renderClientOrders(myOrders.sort((a,b) => b.createdAt - a.createdAt));
+            }, (error) => {
+                console.error("Erro ao carregar pedidos:", error);
+                document.getElementById('clientOrdersList').innerHTML = '<div class="col-span-full text-center py-10 text-red-500">Erro ao carregar pedidos. Verifique as regras do banco de dados.</div>';
             });
         }
 
@@ -730,6 +755,8 @@
                 if(!document.getElementById('adminClientsView').classList.contains('hidden')){
                     renderClientsList();
                 }
+            }, (error) => {
+                console.error("Erro ao carregar pedidos:", error);
             });
 
             const usersRef = ref(db, 'users');
@@ -746,6 +773,8 @@
                 if(!document.getElementById('adminClientsView').classList.contains('hidden')){
                     renderClientsList();
                 }
+            }, (error) => {
+                console.error("Erro ao carregar usuários:", error);
             });
         }
 
