@@ -17,6 +17,9 @@
         .draggable-card.dragging { opacity: 0.5; transform: scale(0.98); }
         .kanban-column.drag-over { background-color: #e5e7eb; border-color: #9ca3af; }
         
+        /* Mobile touch support */
+        .draggable-card { touch-action: none; -webkit-user-select: none; user-select: none; }
+        
         /* Toast Notification */
         #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
         .toast { padding: 12px 24px; border-radius: 8px; color: white; font-weight: 500; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); animation: slideInRight 0.3s ease-out forwards; }
@@ -33,6 +36,11 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Mobile touch styling */
+        @media (max-width: 768px) {
+            .draggable-card.dragging-touch { opacity: 0.7; transform: scale(0.95); }
+        }
     </style>
 </head>
 <body class="text-gray-800 h-screen flex flex-col overflow-hidden">
@@ -208,19 +216,23 @@
         <div id="adminScreen" class="hidden h-full flex-col bg-gray-100 overflow-hidden">
             <!-- Abas Admin -->
             <div class="bg-white border-b border-gray-200 px-4 sm:px-6 flex-shrink-0 flex overflow-x-auto no-scrollbar">
-                <button onclick="switchAdminTab('kanban')" id="tabKanban" class="px-5 py-4 text-sm font-medium border-b-2 border-gray-900 text-gray-900 whitespace-nowrap transition">
-                    <i class="fas fa-columns mr-2"></i>Quadro Kanban
+                <button onclick="switchAdminTab('pedidos')" id="tabPedidos" class="px-5 py-4 text-sm font-medium border-b-2 border-gray-900 text-gray-900 whitespace-nowrap transition">
+                    <i class="fas fa-tasks mr-2"></i>Quadro de Pedidos
                 </button>
                 <button onclick="switchAdminTab('clients')" id="tabClients" class="px-5 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap transition">
                     <i class="fas fa-users mr-2"></i>Lista de Clientes
+                </button>
+                <button onclick="switchAdminTab('notifications')" id="tabNotifications" class="px-5 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap transition">
+                    <i class="fas fa-bell mr-2"></i>Notificações
+                    <span id="notificationBadge" class="hidden ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">0</span>
                 </button>
             </div>
 
             <!-- Conteúdo Abas Admin -->
             <div class="flex-1 overflow-hidden relative">
                 
-                <!-- Aba Kanban -->
-                <div id="adminKanbanView" class="absolute inset-0 p-4 sm:p-6 overflow-x-auto flex flex-col sm:flex-row gap-6">
+                <!-- Aba Quadro de Pedidos -->
+                <div id="adminPedidosView" class="absolute inset-0 p-4 sm:p-6 overflow-x-auto flex flex-col sm:flex-row gap-6">
                     
                     <!-- Coluna: Novos -->
                     <div class="flex-1 min-w-[300px] flex flex-col bg-gray-50/50 rounded-2xl border border-gray-200 shadow-sm max-h-full">
@@ -289,22 +301,38 @@
                     </div>
                 </div>
 
+                <!-- Aba Notificações -->
+                <div id="adminNotificationsView" class="hidden absolute inset-0 p-4 sm:p-6 overflow-y-auto">
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200">
+                        <div class="p-5 border-b border-gray-200 bg-gray-50">
+                            <h2 class="text-lg font-bold text-gray-900">
+                                <i class="fas fa-bell mr-2 text-gray-500"></i>Notificações do Sistema
+                            </h2>
+                        </div>
+                        <div id="notificationsList" class="divide-y divide-gray-100">
+                            <!-- Notificações carregadas dinamicamente -->
+                            <div class="text-center py-8 text-gray-400">Carregando notificações...</div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
 
     </main>
 
-    <!-- Modal Admin Edição de Pedido -->
+    <!-- Modal Admin Edição de Cliente/Pedido -->
     <div id="adminEditModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all max-h-[90vh] flex flex-col">
             <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                <h3 class="font-bold text-gray-900">Gerenciar Pedido</h3>
+                <h3 class="font-bold text-gray-900">Gerenciar Cliente e Pedidos</h3>
                 <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-700 transition">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
             <div class="p-6 space-y-4 overflow-y-auto flex-1">
                 <input type="hidden" id="editOrderId">
+                <input type="hidden" id="editClientUid">
                 
                 <!-- Informações do Cliente (Editáveis) -->
                 <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3">
@@ -320,6 +348,10 @@
                         </div>
                     </div>
                     <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">E-mail</label>
+                        <input type="email" id="editClientEmail" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none text-sm">
+                    </div>
+                    <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">Empresa</label>
                         <input type="text" id="editClientCompany" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none text-sm">
                     </div>
@@ -328,12 +360,12 @@
                 <!-- Informações do Pedido -->
                 <div class="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
                     <div>
-                        <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Produto</p>
-                        <p id="editProduct" class="font-medium text-gray-800 text-sm"></p>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Produto</label>
+                        <input type="text" id="editProduct" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none text-sm bg-white">
                     </div>
                     <div>
-                        <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Quantidade</p>
-                        <p id="editQuantity" class="font-medium text-gray-800 text-sm"></p>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Quantidade</label>
+                        <input type="text" id="editQuantity" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none text-sm bg-white">
                     </div>
                 </div>
 
@@ -362,10 +394,17 @@
                         <!-- Histórico carregado dinamicamente -->
                     </div>
                 </div>
+
+                <!-- Botão Excluir Cliente -->
+                <div class="mt-4 border-t border-gray-200 pt-4">
+                    <button onclick="deleteClient()" class="w-full bg-red-50 text-red-600 font-medium py-3 rounded-xl hover:bg-red-100 transition flex items-center justify-center gap-2">
+                        <i class="fas fa-trash"></i> Excluir Cliente
+                    </button>
+                </div>
             </div>
             <div class="p-5 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
                 <button onclick="closeEditModal()" class="px-5 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 transition">Cancelar</button>
-                <button onclick="saveOrderEdit()" class="px-6 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition shadow-md shadow-gray-900/20">Salvar Alterações</button>
+                <button onclick="saveClientEdit()" class="px-6 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition shadow-md shadow-gray-900/20">Salvar Alterações</button>
             </div>
         </div>
     </div>
@@ -374,7 +413,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getDatabase, ref, set, push, onValue, update, get } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+        import { getDatabase, ref, set, push, onValue, update, get, remove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
         // Configuração do Firebase fornecida
         const firebaseConfig = {
@@ -405,6 +444,7 @@
         let currentUserData = null;
         let globalOrders = {}; 
         let globalUsers = {};
+        let globalNotifications = {};
         let listenersInitialized = false;
 
         // Funções de UI Auxiliares
@@ -725,19 +765,26 @@
         }
 
         window.switchAdminTab = function(tab) {
-            document.getElementById('adminKanbanView').classList.add('hidden');
+            document.getElementById('adminPedidosView').classList.add('hidden');
             document.getElementById('adminClientsView').classList.add('hidden');
+            document.getElementById('adminNotificationsView').classList.add('hidden');
             
-            document.getElementById('tabKanban').className = "px-5 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap transition";
+            document.getElementById('tabPedidos').className = "px-5 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap transition";
             document.getElementById('tabClients').className = "px-5 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap transition";
+            document.getElementById('tabNotifications').className = "px-5 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap transition";
             
-            if (tab === 'kanban') {
-                document.getElementById('adminKanbanView').classList.remove('hidden');
-                document.getElementById('tabKanban').className = "px-5 py-4 text-sm font-medium border-b-2 border-gray-900 text-gray-900 whitespace-nowrap transition";
-            } else {
+            if (tab === 'pedidos') {
+                document.getElementById('adminPedidosView').classList.remove('hidden');
+                document.getElementById('tabPedidos').className = "px-5 py-4 text-sm font-medium border-b-2 border-gray-900 text-gray-900 whitespace-nowrap transition";
+            } else if (tab === 'clients') {
                 document.getElementById('adminClientsView').classList.remove('hidden');
                 document.getElementById('tabClients').className = "px-5 py-4 text-sm font-medium border-b-2 border-gray-900 text-gray-900 whitespace-nowrap transition";
                 renderClientsList();
+            } else if (tab === 'notifications') {
+                document.getElementById('adminNotificationsView').classList.remove('hidden');
+                document.getElementById('tabNotifications').className = "px-5 py-4 text-sm font-medium border-b-2 border-gray-900 text-gray-900 whitespace-nowrap transition";
+                renderNotifications();
+                clearNotificationBadge();
             }
         };
 
@@ -775,6 +822,23 @@
                 }
             }, (error) => {
                 console.error("Erro ao carregar usuários:", error);
+            });
+
+            const notificationsRef = ref(db, 'notifications');
+            onValue(notificationsRef, (snapshot) => {
+                globalNotifications = {};
+                const data = snapshot.val();
+                if(data) {
+                    Object.keys(data).forEach(key => {
+                        globalNotifications[key] = { id: key, ...data[key] };
+                    });
+                }
+                updateNotificationBadge();
+                if(!document.getElementById('adminNotificationsView').classList.contains('hidden')){
+                    renderNotifications();
+                }
+            }, (error) => {
+                console.error("Erro ao carregar notificações:", error);
             });
         }
 
@@ -818,7 +882,10 @@
             <div id="order-${order.id}" class="draggable-card bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing transition-all relative overflow-hidden group" 
                  draggable="true" 
                  ondragstart="drag(event)" 
-                 ondragend="dragEnd(event)">
+                 ondragend="dragEnd(event)"
+                 ontouchstart="touchStart(event)" 
+                 ontouchmove="touchMove(event)" 
+                 ontouchend="touchEnd(event)">
                  
                 <div class="flex justify-between items-start mb-2">
                     <span class="text-xs font-semibold px-2 py-0.5 rounded ${prioColors[order.priority] || prioColors['Média']}">
@@ -839,6 +906,63 @@
                 </div>
             </div>`;
         }
+
+        // Funções para arrastar no mobile
+        let touchDragElement = null;
+        let touchDragTimeout = null;
+
+        window.touchStart = function(ev) {
+            touchDragElement = ev.currentTarget;
+            touchDragTimeout = setTimeout(() => {
+                touchDragElement.classList.add('dragging-touch');
+            }, 200);
+        };
+
+        window.touchMove = function(ev) {
+            ev.preventDefault();
+            if (!touchDragElement || !touchDragElement.classList.contains('dragging-touch')) return;
+            
+            const touch = ev.touches[0];
+            const target = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            document.querySelectorAll('.kanban-column').forEach(col => col.classList.remove('drag-over'));
+            
+            if (target) {
+                const column = target.closest('.kanban-column');
+                if (column) {
+                    column.classList.add('drag-over');
+                }
+            }
+        };
+
+        window.touchEnd = function(ev) {
+            if (touchDragTimeout) {
+                clearTimeout(touchDragTimeout);
+                touchDragTimeout = null;
+            }
+            
+            if (!touchDragElement) return;
+            
+            const touch = ev.changedTouches[0];
+            const target = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            document.querySelectorAll('.kanban-column').forEach(col => col.classList.remove('drag-over'));
+            
+            if (target) {
+                const column = target.closest('.kanban-column');
+                if (column && touchDragElement.classList.contains('dragging-touch')) {
+                    const cardId = touchDragElement.id.replace('order-', '');
+                    const targetStatus = column.id.replace('kanban-', '');
+                    
+                    if (targetStatus && targetStatus !== '') {
+                        handleDrop(cardId, targetStatus);
+                    }
+                }
+            }
+            
+            touchDragElement.classList.remove('dragging-touch');
+            touchDragElement = null;
+        };
 
         window.drag = function(ev) {
             ev.dataTransfer.setData("text", ev.target.id);
@@ -876,6 +1000,10 @@
             if(!cardId) return;
             
             const rawId = cardId.replace('order-', '');
+            handleDrop(rawId, targetStatus);
+        };
+
+        async function handleDrop(rawId, targetStatus) {
             const order = globalOrders[rawId];
             
             if(order && order.status !== targetStatus) {
@@ -887,18 +1015,20 @@
                     showToast('Erro ao atualizar status', 'error');
                 }
             }
-        };
+        }
 
         window.openEditModal = function(orderId) {
             const order = globalOrders[orderId];
             if(!order) return;
 
             document.getElementById('editOrderId').value = orderId;
+            document.getElementById('editClientUid').value = order.userId || '';
             document.getElementById('editClientName').value = order.clientName || '';
             document.getElementById('editClientPhone').value = order.clientPhone || '';
+            document.getElementById('editClientEmail').value = order.clientEmail || '';
             document.getElementById('editClientCompany').value = order.clientCompany || '';
-            document.getElementById('editProduct').innerText = order.product;
-            document.getElementById('editQuantity').innerText = order.quantity;
+            document.getElementById('editProduct').value = order.product;
+            document.getElementById('editQuantity').value = order.quantity;
             document.getElementById('editStatus').value = order.status;
             document.getElementById('editPriority').value = order.priority || 'Média';
             
@@ -948,33 +1078,65 @@
             document.getElementById('adminEditModal').classList.add('hidden');
         };
 
-        window.saveOrderEdit = async function() {
+        window.saveClientEdit = async function() {
             const orderId = document.getElementById('editOrderId').value;
+            const clientUid = document.getElementById('editClientUid').value;
             const newStatus = document.getElementById('editStatus').value;
             const newPriority = document.getElementById('editPriority').value;
             const newClientName = document.getElementById('editClientName').value;
             const newClientPhone = document.getElementById('editClientPhone').value;
+            const newClientEmail = document.getElementById('editClientEmail').value;
             const newClientCompany = document.getElementById('editClientCompany').value;
+            const newProduct = document.getElementById('editProduct').value;
+            const newQuantity = document.getElementById('editQuantity').value;
 
             try {
+                // Atualiza o pedido
                 const orderRef = ref(db, `orders/${orderId}`);
+                const originalOrder = globalOrders[orderId];
+                
                 await update(orderRef, {
                     status: newStatus,
                     priority: newPriority,
                     clientName: newClientName,
                     clientPhone: newClientPhone,
-                    clientCompany: newClientCompany
+                    clientEmail: newClientEmail,
+                    clientCompany: newClientCompany,
+                    product: newProduct,
+                    quantity: newQuantity
                 });
                 
                 // Atualiza também no cadastro do usuário
-                const order = globalOrders[orderId];
-                if (order && order.userId) {
-                    const userRef = ref(db, `users/${order.userId}`);
+                if (clientUid) {
+                    const userRef = ref(db, `users/${clientUid}`);
                     await update(userRef, {
                         name: newClientName,
                         phone: newClientPhone,
+                        email: newClientEmail,
                         company: newClientCompany
                     });
+                }
+                
+                // Cria notificações para mudanças relevantes
+                const adminName = currentUserData.name;
+                
+                // Verifica mudanças no pedido
+                if (originalOrder) {
+                    if (originalOrder.quantity !== newQuantity) {
+                        await createNotification(`Pedido editado por @${adminName}: Quantidade alterada de ${originalOrder.quantity} para ${newQuantity}`);
+                    }
+                    if (originalOrder.product !== newProduct) {
+                        await createNotification(`Pedido editado por @${adminName}: Produto alterado de ${originalOrder.product} para ${newProduct}`);
+                    }
+                    if (originalOrder.status !== newStatus) {
+                        const statusText = { 'novo': 'Pendente', 'producao': 'Em Produção', 'finalizado': 'Finalizado' };
+                        await createNotification(`Status do pedido alterado por @${adminName}: ${statusText[originalOrder.status]} → ${statusText[newStatus]}`);
+                    }
+                }
+                
+                // Verifica mudanças no email
+                if (originalOrder && originalOrder.clientEmail !== newClientEmail) {
+                    await createNotification(`E-mail do cliente ${newClientName} foi alterado por @${adminName}: ${originalOrder.clientEmail} → ${newClientEmail}`);
                 }
                 
                 showToast('Pedido e dados do cliente atualizados!', 'success');
@@ -984,6 +1146,98 @@
             }
         };
 
+        window.deleteClient = async function() {
+            const clientUid = document.getElementById('editClientUid').value;
+            const clientName = document.getElementById('editClientName').value;
+            
+            if (!confirm(`Tem certeza que deseja excluir o cliente ${clientName}? Esta ação não pode ser desfeita.`)) {
+                return;
+            }
+            
+            try {
+                // Exclui todos os pedidos do cliente
+                const ordersToDelete = Object.values(globalOrders)
+                    .filter(order => order.userId === clientUid);
+                
+                for (const order of ordersToDelete) {
+                    await remove(ref(db, `orders/${order.id}`));
+                }
+                
+                // Exclui o usuário
+                if (clientUid) {
+                    await remove(ref(db, `users/${clientUid}`));
+                }
+                
+                // Cria notificação
+                await createNotification(`Cliente ${clientName} foi excluído por @${currentUserData.name}`);
+                
+                showToast('Cliente excluído com sucesso!', 'success');
+                closeEditModal();
+            } catch(err) {
+                showToast('Erro ao excluir cliente.', 'error');
+            }
+        };
+
+        async function createNotification(message) {
+            try {
+                const notificationsRef = ref(db, 'notifications');
+                const newNotificationRef = push(notificationsRef);
+                await set(newNotificationRef, {
+                    message: message,
+                    createdAt: Date.now(),
+                    read: false,
+                    createdBy: currentUserData.name
+                });
+            } catch (err) {
+                console.error("Erro ao criar notificação:", err);
+            }
+        }
+
+        function renderNotifications() {
+            const container = document.getElementById('notificationsList');
+            const notifications = Object.values(globalNotifications)
+                .sort((a, b) => b.createdAt - a.createdAt);
+            
+            if (notifications.length === 0) {
+                container.innerHTML = '<div class="text-center py-12 text-gray-400"><i class="fas fa-bell-slash text-4xl mb-3 block"></i>Nenhuma notificação</div>';
+                return;
+            }
+            
+            container.innerHTML = notifications.map(notif => `
+                <div class="p-4 hover:bg-gray-50 transition flex items-start gap-3">
+                    <i class="fas fa-info-circle text-blue-500 mt-1"></i>
+                    <div class="flex-1">
+                        <p class="text-sm text-gray-800">${notif.message}</p>
+                        <p class="text-xs text-gray-400 mt-1">${formatDateTime(notif.createdAt)}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateNotificationBadge() {
+            const badge = document.getElementById('notificationBadge');
+            const unreadCount = Object.values(globalNotifications).filter(n => !n.read).length;
+            
+            if (unreadCount > 0) {
+                badge.classList.remove('hidden');
+                badge.innerText = unreadCount;
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function clearNotificationBadge() {
+            const badge = document.getElementById('notificationBadge');
+            badge.classList.add('hidden');
+            
+            // Marca todas como lidas
+            Object.keys(globalNotifications).forEach(async (key) => {
+                if (!globalNotifications[key].read) {
+                    await update(ref(db, `notifications/${key}`), { read: true });
+                }
+            });
+        }
+
         function renderClientsList() {
             const tbody = document.getElementById('clientsTableBody');
             const clientStats = {};
@@ -991,6 +1245,7 @@
             // Inicializa dados dos usuários na tabela
             Object.values(globalUsers).forEach(user => {
                 clientStats[user.uid] = {
+                    uid: user.uid,
                     name: user.name,
                     email: user.email,
                     phone: user.phone || '',
@@ -1005,6 +1260,7 @@
                 const uid = order.userId;
                 if(!clientStats[uid]) {
                     clientStats[uid] = { 
+                        uid: uid,
                         name: order.clientName, 
                         email: order.clientEmail || 'N/A',
                         phone: order.clientPhone || '',
@@ -1030,7 +1286,7 @@
             }
 
             tbody.innerHTML = clientArray.map(client => `
-                <tr class="hover:bg-gray-50 transition">
+                <tr class="hover:bg-gray-50 transition cursor-pointer" onclick="openClientModal('${client.uid}')">
                     <td class="px-6 py-4 font-medium text-gray-900">
                         <div class="flex items-center gap-3">
                             <div class="w-8 h-8 rounded-full bg-gray-200 flex justify-center items-center text-gray-600 text-xs font-bold uppercase">
@@ -1053,6 +1309,35 @@
                 </tr>
             `).join('');
         }
+
+        window.openClientModal = function(clientUid) {
+            // Encontra o pedido mais recente do cliente para abrir o modal
+            const clientOrders = Object.values(globalOrders)
+                .filter(order => order.userId === clientUid)
+                .sort((a, b) => b.createdAt - a.createdAt);
+            
+            if (clientOrders.length > 0) {
+                openEditModal(clientOrders[0].id);
+            } else {
+                // Cria um pedido fictício para edição do cliente
+                const clientData = globalUsers[clientUid];
+                if (clientData) {
+                    document.getElementById('editOrderId').value = '';
+                    document.getElementById('editClientUid').value = clientUid;
+                    document.getElementById('editClientName').value = clientData.name || '';
+                    document.getElementById('editClientPhone').value = clientData.phone || '';
+                    document.getElementById('editClientEmail').value = clientData.email || '';
+                    document.getElementById('editClientCompany').value = clientData.company || '';
+                    document.getElementById('editProduct').value = '';
+                    document.getElementById('editQuantity').value = '';
+                    document.getElementById('editStatus').value = 'novo';
+                    document.getElementById('editPriority').value = 'Média';
+                    
+                    loadClientOrderHistory(clientUid);
+                    document.getElementById('adminEditModal').classList.remove('hidden');
+                }
+            }
+        };
 
     </script>
 </body>
