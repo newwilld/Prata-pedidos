@@ -7,39 +7,240 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
-        .fade-in { animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        :root {
+            --primary: #1e293b;
+            --primary-light: #334155;
+            --accent: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #8b5cf6;
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* Animações */
+        .fade-in { 
+            animation: fadeIn 0.5s ease-in-out; 
+        }
+        
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(20px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        
+        .slide-in-right {
+            animation: slideInRight 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        @keyframes slideInRight { 
+            from { transform: translateX(100%); opacity: 0; } 
+            to { transform: translateX(0); opacity: 1; } 
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
         
         /* Drag and Drop styles */
-        .kanban-column { min-height: 200px; }
-        .draggable-card.dragging { opacity: 0.5; transform: scale(0.98); }
-        .kanban-column.drag-over { background-color: #e5e7eb; border-color: #9ca3af; }
+        .kanban-column { 
+            min-height: 300px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 1.5rem;
+        }
+        
+        .draggable-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: grab;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .draggable-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .draggable-card.dragging { 
+            opacity: 0.5; 
+            transform: scale(0.98) rotate(2deg);
+        }
+        
+        .kanban-column.drag-over { 
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px dashed rgba(255, 255, 255, 0.5);
+            transform: scale(1.02);
+        }
         
         /* Mobile touch support */
-        .draggable-card { touch-action: none; -webkit-user-select: none; user-select: none; }
+        .draggable-card { 
+            touch-action: none; 
+            -webkit-user-select: none; 
+            user-select: none; 
+        }
         
         /* Toast Notification */
-        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
-        .toast { padding: 12px 24px; border-radius: 8px; color: white; font-weight: 500; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); animation: slideInRight 0.3s ease-out forwards; }
-        .toast.success { background-color: #10b981; }
-        .toast.error { background-color: #ef4444; }
-        .toast.info { background-color: #3b82f6; }
-        .toast-fade-out { animation: fadeOut 0.3s ease-in forwards; }
+        #toast-container { 
+            position: fixed; 
+            top: 20px; 
+            right: 20px; 
+            z-index: 9999; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px;
+        }
         
-        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
-
+        .toast { 
+            padding: 16px 24px; 
+            border-radius: 16px; 
+            color: white; 
+            font-weight: 600; 
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+            animation: slideInRight 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .toast.success { 
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+        
+        .toast.error { 
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+        
+        .toast.info { 
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+        }
+        
+        .toast-fade-out { 
+            animation: fadeOut 0.5s ease-in forwards;
+        }
+        
+        @keyframes fadeOut { 
+            from { opacity: 1; } 
+            to { opacity: 0; transform: translateX(100%); } 
+        }
+        
+        /* Glassmorphism */
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 1.5rem;
+        }
+        
         /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        ::-webkit-scrollbar { 
+            width: 8px; 
+            height: 8px; 
+        }
         
-        /* Mobile touch styling */
+        ::-webkit-scrollbar-track { 
+            background: transparent; 
+        }
+        
+        ::-webkit-scrollbar-thumb { 
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px; 
+        }
+        
+        ::-webkit-scrollbar-thumb:hover { 
+            background: rgba(255, 255, 255, 0.5);
+        }
+        
+        /* Cards com gradientes */
+        .card-gradient-novo {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .card-gradient-producao {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .card-gradient-finalizado {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        
+        /* TV Mode */
+        @media (min-width: 1920px) {
+            body {
+                font-size: 18px;
+            }
+            
+            .draggable-card {
+                padding: 24px !important;
+                border-radius: 20px !important;
+            }
+            
+            .kanban-column {
+                min-height: 500px;
+            }
+        }
+        
+        /* Mobile otimizado */
         @media (max-width: 768px) {
-            .draggable-card.dragging-touch { opacity: 0.7; transform: scale(0.95); }
+            .draggable-card.dragging-touch { 
+                opacity: 0.7; 
+                transform: scale(0.95); 
+            }
+            
+            .kanban-column {
+                min-height: 200px;
+            }
+        }
+        
+        /* Efeitos de brilho */
+        .glow-effect {
+            position: relative;
+        }
+        
+        .glow-effect::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: glow 3s infinite;
+        }
+        
+        @keyframes glow {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(10%, 10%); }
         }
     </style>
 </head>
@@ -49,20 +250,25 @@
     <div id="toast-container"></div>
 
     <!-- Barra de Navegação -->
-    <header class="bg-gray-900 text-white shadow-md z-10 flex-shrink-0">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-gray-900 font-bold text-xl">
+    <header class="bg-white/10 backdrop-blur-lg text-white shadow-lg z-10 flex-shrink-0 border-b border-white/20">
+        <div class="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-lg">
                     <i class="fas fa-box-open"></i>
                 </div>
-                <h1 class="text-xl font-bold tracking-tight hidden sm:block">Prata Embalagens</h1>
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight">Prata Embalagens</h1>
+                    <p class="text-xs text-white/70">Sistema de Gerenciamento</p>
+                </div>
             </div>
             
             <div id="userMenu" class="hidden items-center gap-4">
-                <span id="userNameDisplay" class="text-sm font-medium text-gray-300"></span>
-                <span id="userRoleBadge" class="text-xs px-2 py-1 bg-gray-700 rounded-md"></span>
-                <button onclick="logout()" class="text-gray-400 hover:text-white transition p-2">
-                    <i class="fas fa-sign-out-alt"></i> Sair
+                <div class="text-right hidden sm:block">
+                    <span id="userNameDisplay" class="text-sm font-semibold block"></span>
+                    <span id="userRoleBadge" class="text-xs px-3 py-1 rounded-full bg-white/20 font-medium"></span>
+                </div>
+                <button onclick="logout()" class="text-white/70 hover:text-white transition p-3 hover:bg-white/10 rounded-xl">
+                    <i class="fas fa-sign-out-alt text-xl"></i>
                 </button>
             </div>
         </div>
@@ -72,122 +278,122 @@
     <main class="flex-1 overflow-hidden relative">
         
         <!-- Tela de Login / Registro -->
-        <div id="authScreen" class="absolute inset-0 z-20 bg-gray-50 flex items-center justify-center p-4 overflow-y-auto">
-            <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md my-auto">
+        <div id="authScreen" class="absolute inset-0 z-20 flex items-center justify-center p-4 overflow-y-auto">
+            <div class="bg-white/10 backdrop-blur-xl p-10 rounded-3xl shadow-2xl w-full max-w-md my-auto border border-white/20">
                 <div class="text-center mb-8">
-                    <div class="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center text-white text-3xl mx-auto mb-4 shadow-lg shadow-gray-900/30">
+                    <div class="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl flex items-center justify-center text-white text-5xl mx-auto mb-6 shadow-2xl pulse">
                         <i class="fas fa-box-open"></i>
                     </div>
-                    <h2 class="text-2xl font-bold text-gray-900">Bem-vindo(a)</h2>
-                    <p class="text-gray-500 mt-1" id="authSubtitle">Faça login para continuar</p>
+                    <h2 class="text-3xl font-bold text-white">Bem-vindo(a)</h2>
+                    <p class="text-white/70 mt-2" id="authSubtitle">Faça login para continuar</p>
                 </div>
 
                 <form id="authForm" onsubmit="handleAuth(event)" class="space-y-5">
                     <div id="nameField" class="hidden fade-in">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
+                        <label class="block text-sm font-medium text-white mb-2">Nome Completo</label>
                         <div class="relative">
-                            <i class="fas fa-user absolute left-4 top-3.5 text-gray-400"></i>
-                            <input type="text" id="authName" class="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition" placeholder="Seu nome">
+                            <i class="fas fa-user absolute left-4 top-4 text-white/50"></i>
+                            <input type="text" id="authName" class="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50" placeholder="Seu nome">
                         </div>
                     </div>
                     
                     <div id="phoneField" class="hidden fade-in">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Telefone/WhatsApp</label>
+                        <label class="block text-sm font-medium text-white mb-2">Telefone/WhatsApp</label>
                         <div class="relative">
-                            <i class="fas fa-phone absolute left-4 top-3.5 text-gray-400"></i>
-                            <input type="tel" id="authPhone" class="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition" placeholder="(00) 00000-0000">
+                            <i class="fas fa-phone absolute left-4 top-4 text-white/50"></i>
+                            <input type="tel" id="authPhone" class="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50" placeholder="(00) 00000-0000">
                         </div>
                     </div>
                     
                     <div id="companyField" class="hidden fade-in">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Empresa (opcional)</label>
+                        <label class="block text-sm font-medium text-white mb-2">Empresa (opcional)</label>
                         <div class="relative">
-                            <i class="fas fa-building absolute left-4 top-3.5 text-gray-400"></i>
-                            <input type="text" id="authCompany" class="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition" placeholder="Nome da sua empresa">
+                            <i class="fas fa-building absolute left-4 top-4 text-white/50"></i>
+                            <input type="text" id="authCompany" class="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50" placeholder="Nome da sua empresa">
                         </div>
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+                        <label class="block text-sm font-medium text-white mb-2">E-mail</label>
                         <div class="relative">
-                            <i class="fas fa-envelope absolute left-4 top-3.5 text-gray-400"></i>
-                            <input type="email" id="authEmail" required class="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition" placeholder="seu@email.com">
+                            <i class="fas fa-envelope absolute left-4 top-4 text-white/50"></i>
+                            <input type="email" id="authEmail" required class="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50" placeholder="seu@email.com">
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+                        <label class="block text-sm font-medium text-white mb-2">Senha</label>
                         <div class="relative">
-                            <i class="fas fa-lock absolute left-4 top-3.5 text-gray-400"></i>
-                            <input type="password" id="authPassword" required minlength="6" class="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition" placeholder="••••••••">
+                            <i class="fas fa-lock absolute left-4 top-4 text-white/50"></i>
+                            <input type="password" id="authPassword" required minlength="6" class="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50" placeholder="••••••••">
                         </div>
                     </div>
 
-                    <button type="submit" class="w-full bg-gray-900 text-white font-medium py-3.5 rounded-xl hover:bg-gray-800 transition shadow-lg shadow-gray-900/20" id="authSubmitBtn">
+                    <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-4 rounded-2xl hover:from-blue-600 hover:to-purple-700 transition shadow-2xl transform hover:scale-105" id="authSubmitBtn">
                         Entrar
                     </button>
                 </form>
 
-                <div class="mt-6 text-center text-sm text-gray-600">
+                <div class="mt-6 text-center text-sm text-white/70">
                     <span id="authToggleText">Não tem uma conta?</span>
-                    <button type="button" onclick="toggleAuthMode()" class="text-gray-900 font-bold hover:underline ml-1" id="authToggleBtn">Criar agora</button>
+                    <button type="button" onclick="toggleAuthMode()" class="text-white font-bold hover:underline ml-1" id="authToggleBtn">Criar agora</button>
                 </div>
             </div>
         </div>
 
         <!-- Tela do Cliente -->
-        <div id="clientScreen" class="hidden h-full flex-col md:flex-row overflow-hidden bg-gray-50">
+        <div id="clientScreen" class="hidden h-full flex-col md:flex-row overflow-hidden">
             <!-- Coluna de Fazer Pedido -->
-            <div class="w-full md:w-1/3 bg-white border-r border-gray-200 flex flex-col h-full z-10 shadow-sm relative">
-                <div class="p-5 border-b border-gray-100 flex-shrink-0">
-                    <h2 class="text-lg font-bold text-gray-900"><i class="fas fa-plus-circle mr-2 text-gray-500"></i>Novo Pedido</h2>
-                    <p class="text-xs text-gray-500 mt-1">Preencha os dados para solicitar.</p>
+            <div class="w-full md:w-1/3 bg-white/10 backdrop-blur-lg border-r border-white/20 flex flex-col h-full z-10 shadow-2xl relative">
+                <div class="p-6 border-b border-white/20 flex-shrink-0">
+                    <h2 class="text-xl font-bold text-white"><i class="fas fa-plus-circle mr-2 text-blue-400"></i>Novo Pedido</h2>
+                    <p class="text-sm text-white/70 mt-1">Preencha os dados para solicitar.</p>
                 </div>
                 
-                <div class="p-5 overflow-y-auto flex-1">
+                <div class="p-6 overflow-y-auto flex-1">
                     <form id="orderForm" onsubmit="submitOrder(event)" class="space-y-5">
                         
                         <!-- Seletor de Produto -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Produto</label>
+                            <label class="block text-sm font-medium text-white mb-2">Produto</label>
                             <div class="relative">
-                                <select id="productSelect" required onchange="handleProductChange()" class="w-full appearance-none px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition bg-gray-50">
-                                    <option value="" disabled selected>Selecione um produto...</option>
-                                    <option value="Caixa de Pizza">Caixa de Pizza</option>
-                                    <option value="Caixa de Bolo">Caixa de Bolo</option>
-                                    <option value="Caixa de Torta">Caixa de Torta</option>
-                                    <option value="Caixa para Ecommerce">Caixa para Ecommerce</option>
+                                <select id="productSelect" required onchange="handleProductChange()" class="w-full appearance-none px-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white">
+                                    <option value="" disabled selected class="text-gray-900">Selecione um produto...</option>
+                                    <option value="Caixa de Pizza" class="text-gray-900">Caixa de Pizza</option>
+                                    <option value="Caixa de Bolo" class="text-gray-900">Caixa de Bolo</option>
+                                    <option value="Caixa de Torta" class="text-gray-900">Caixa de Torta</option>
+                                    <option value="Caixa para Ecommerce" class="text-gray-900">Caixa para Ecommerce</option>
                                 </select>
-                                <i class="fas fa-chevron-down absolute right-4 top-4 text-gray-400 pointer-events-none"></i>
+                                <i class="fas fa-chevron-down absolute right-4 top-5 text-white/50 pointer-events-none"></i>
                             </div>
                         </div>
 
                         <!-- Seletor de Quantidade (Cascata) -->
                         <div id="quantityContainer" class="hidden fade-in">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Quantidade</label>
+                            <label class="block text-sm font-medium text-white mb-2">Quantidade</label>
                             <div class="relative">
-                                <select id="quantitySelect" required onchange="handleQuantityChange()" class="w-full appearance-none px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition bg-gray-50">
-                                    <option value="" disabled selected>Escolha a quantidade...</option>
-                                    <option value="500">500 unidades</option>
-                                    <option value="1000">1.000 unidades</option>
-                                    <option value="2000">2.000 unidades</option>
-                                    <option value="3000">3.000 unidades</option>
-                                    <option value="4000">4.000 unidades</option>
-                                    <option value="5000">5.000 unidades</option>
-                                    <option value="Outra">Outra quantidade (Digitar aqui)</option>
+                                <select id="quantitySelect" required onchange="handleQuantityChange()" class="w-full appearance-none px-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white">
+                                    <option value="" disabled selected class="text-gray-900">Escolha a quantidade...</option>
+                                    <option value="500" class="text-gray-900">500 unidades</option>
+                                    <option value="1000" class="text-gray-900">1.000 unidades</option>
+                                    <option value="2000" class="text-gray-900">2.000 unidades</option>
+                                    <option value="3000" class="text-gray-900">3.000 unidades</option>
+                                    <option value="4000" class="text-gray-900">4.000 unidades</option>
+                                    <option value="5000" class="text-gray-900">5.000 unidades</option>
+                                    <option value="Outra" class="text-gray-900">Outra quantidade (Digitar aqui)</option>
                                 </select>
-                                <i class="fas fa-chevron-down absolute right-4 top-4 text-gray-400 pointer-events-none"></i>
+                                <i class="fas fa-chevron-down absolute right-4 top-5 text-white/50 pointer-events-none"></i>
                             </div>
                         </div>
 
                         <!-- Campo de Quantidade Customizada -->
                         <div id="customQuantityContainer" class="hidden fade-in">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Digite a Quantidade Específica</label>
-                            <input type="number" id="customQuantityInput" min="1" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition bg-gray-50" placeholder="Ex: 1500">
+                            <label class="block text-sm font-medium text-white mb-2">Digite a Quantidade Específica</label>
+                            <input type="number" id="customQuantityInput" min="1" class="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50" placeholder="Ex: 1500">
                         </div>
 
                         <!-- Botão Enviar -->
-                        <button type="submit" class="w-full bg-gray-900 text-white font-medium py-3.5 rounded-xl hover:bg-gray-800 transition shadow-lg shadow-gray-900/20 flex items-center justify-center gap-2">
+                        <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-4 rounded-2xl hover:from-blue-600 hover:to-purple-700 transition shadow-2xl transform hover:scale-105 flex items-center justify-center gap-2">
                             <i class="fas fa-paper-plane"></i> Enviar Pedido
                         </button>
                     </form>
@@ -196,79 +402,79 @@
 
             <!-- Coluna de Histórico do Cliente -->
             <div class="flex-1 flex flex-col h-full">
-                <div class="p-5 border-b border-gray-200 bg-white flex-shrink-0 flex justify-between items-center">
+                <div class="p-6 border-b border-white/20 bg-white/5 flex-shrink-0 flex justify-between items-center">
                     <div>
-                        <h2 class="text-lg font-bold text-gray-900"><i class="fas fa-history mr-2 text-gray-500"></i>Meu Histórico</h2>
-                        <p class="text-xs text-gray-500 mt-1">Acompanhe seus pedidos recentes.</p>
+                        <h2 class="text-xl font-bold text-white"><i class="fas fa-history mr-2 text-purple-400"></i>Meu Histórico</h2>
+                        <p class="text-sm text-white/70 mt-1">Acompanhe seus pedidos recentes.</p>
                     </div>
                 </div>
                 
-                <div class="p-5 flex-1 overflow-y-auto bg-gray-50">
+                <div class="p-6 flex-1 overflow-y-auto">
                     <div id="clientOrdersList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <!-- Pedidos do cliente aparecerão aqui -->
-                        <div class="col-span-full text-center text-gray-400 py-10">Carregando pedidos...</div>
+                        <div class="col-span-full text-center text-white/50 py-10">Carregando pedidos...</div>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Tela do Admin (Master) -->
-        <div id="adminScreen" class="hidden h-full flex-col bg-gray-100 overflow-hidden">
+        <div id="adminScreen" class="hidden h-full flex-col overflow-hidden">
             <!-- Abas Admin -->
-            <div class="bg-white border-b border-gray-200 px-4 sm:px-6 flex-shrink-0 flex overflow-x-auto no-scrollbar">
-                <button onclick="switchAdminTab('pedidos')" id="tabPedidos" class="px-5 py-4 text-sm font-medium border-b-2 border-gray-900 text-gray-900 whitespace-nowrap transition">
+            <div class="bg-white/10 backdrop-blur-lg border-b border-white/20 px-4 sm:px-6 flex-shrink-0 flex overflow-x-auto">
+                <button onclick="switchAdminTab('pedidos')" id="tabPedidos" class="px-6 py-5 text-sm font-bold border-b-4 border-blue-500 text-white whitespace-nowrap transition">
                     <i class="fas fa-tasks mr-2"></i>Quadro de Pedidos
                 </button>
-                <button onclick="switchAdminTab('clients')" id="tabClients" class="px-5 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap transition">
+                <button onclick="switchAdminTab('clients')" id="tabClients" class="px-6 py-5 text-sm font-bold border-b-4 border-transparent text-white/70 hover:text-white whitespace-nowrap transition">
                     <i class="fas fa-users mr-2"></i>Lista de Clientes
                 </button>
-                <button onclick="switchAdminTab('notifications')" id="tabNotifications" class="px-5 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap transition">
+                <button onclick="switchAdminTab('notifications')" id="tabNotifications" class="px-6 py-5 text-sm font-bold border-b-4 border-transparent text-white/70 hover:text-white whitespace-nowrap transition">
                     <i class="fas fa-bell mr-2"></i>Notificações
-                    <span id="notificationBadge" class="hidden ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">0</span>
+                    <span id="notificationBadge" class="hidden ml-2 bg-red-500 text-white text-xs px-3 py-1 rounded-full">0</span>
                 </button>
             </div>
 
             <!-- Conteúdo Abas Admin -->
-            <div class="flex-1 overflow-hidden relative">
+            <div class="flex-1 overflow-hidden relative p-4 sm:p-6">
                 
                 <!-- Aba Quadro de Pedidos -->
-                <div id="adminPedidosView" class="absolute inset-0 p-4 sm:p-6 overflow-x-auto flex flex-col sm:flex-row gap-6">
+                <div id="adminPedidosView" class="absolute inset-0 p-4 sm:p-6 overflow-x-auto flex flex-col sm:flex-row gap-4 lg:gap-6">
                     
                     <!-- Coluna: Novos -->
-                    <div class="flex-1 min-w-[300px] flex flex-col bg-gray-50/50 rounded-2xl border border-gray-200 shadow-sm max-h-full">
-                        <div class="p-4 border-b border-gray-200 bg-gray-100/50 rounded-t-2xl flex items-center justify-between">
-                            <h3 class="font-bold text-gray-800 flex items-center gap-2">
-                                <span class="w-3 h-3 rounded-full bg-gray-400"></span> Pendentes
+                    <div class="flex-1 min-w-[280px] lg:min-w-[350px] flex flex-col bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 shadow-2xl max-h-full">
+                        <div class="p-5 border-b border-white/20 rounded-t-3xl flex items-center justify-between bg-gradient-to-r from-purple-600 to-indigo-600">
+                            <h3 class="font-bold text-white text-lg flex items-center gap-3">
+                                <span class="w-4 h-4 rounded-full bg-white pulse"></span> Pendentes
                             </h3>
-                            <span id="countNovos" class="bg-gray-200 text-gray-600 text-xs font-bold px-2 py-1 rounded-full">0</span>
+                            <span id="countNovos" class="bg-white/20 text-white text-sm font-bold px-4 py-2 rounded-full">0</span>
                         </div>
-                        <div id="kanban-novo" class="kanban-column flex-1 overflow-y-auto p-3 space-y-3 transition-colors border-2 border-transparent rounded-b-2xl" ondragover="allowDrop(event)" ondrop="drop(event, 'novo')" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                        <div id="kanban-novo" class="kanban-column flex-1 overflow-y-auto p-4 space-y-4 transition-colors border-2 border-transparent rounded-b-3xl" ondragover="allowDrop(event)" ondrop="drop(event, 'novo')" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
                             <!-- Cards -->
                         </div>
                     </div>
 
                     <!-- Coluna: Produção -->
-                    <div class="flex-1 min-w-[300px] flex flex-col bg-gray-50/50 rounded-2xl border border-gray-200 shadow-sm max-h-full">
-                        <div class="p-4 border-b border-gray-200 bg-blue-50/50 rounded-t-2xl flex items-center justify-between">
-                            <h3 class="font-bold text-gray-800 flex items-center gap-2">
-                                <span class="w-3 h-3 rounded-full bg-blue-500"></span> Em Produção
+                    <div class="flex-1 min-w-[280px] lg:min-w-[350px] flex flex-col bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 shadow-2xl max-h-full">
+                        <div class="p-5 border-b border-white/20 rounded-t-3xl flex items-center justify-between bg-gradient-to-r from-pink-600 to-rose-600">
+                            <h3 class="font-bold text-white text-lg flex items-center gap-3">
+                                <span class="w-4 h-4 rounded-full bg-white pulse"></span> Em Produção
                             </h3>
-                            <span id="countProducao" class="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded-full">0</span>
+                            <span id="countProducao" class="bg-white/20 text-white text-sm font-bold px-4 py-2 rounded-full">0</span>
                         </div>
-                        <div id="kanban-producao" class="kanban-column flex-1 overflow-y-auto p-3 space-y-3 transition-colors border-2 border-transparent rounded-b-2xl" ondragover="allowDrop(event)" ondrop="drop(event, 'producao')" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                        <div id="kanban-producao" class="kanban-column flex-1 overflow-y-auto p-4 space-y-4 transition-colors border-2 border-transparent rounded-b-3xl" ondragover="allowDrop(event)" ondrop="drop(event, 'producao')" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
                              <!-- Cards -->
                         </div>
                     </div>
 
                     <!-- Coluna: Finalizado -->
-                    <div class="flex-1 min-w-[300px] flex flex-col bg-gray-50/50 rounded-2xl border border-gray-200 shadow-sm max-h-full">
-                        <div class="p-4 border-b border-gray-200 bg-green-50/50 rounded-t-2xl flex items-center justify-between">
-                            <h3 class="font-bold text-gray-800 flex items-center gap-2">
-                                <span class="w-3 h-3 rounded-full bg-green-500"></span> Finalizados
+                    <div class="flex-1 min-w-[280px] lg:min-w-[350px] flex flex-col bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 shadow-2xl max-h-full">
+                        <div class="p-5 border-b border-white/20 rounded-t-3xl flex items-center justify-between bg-gradient-to-r from-cyan-600 to-blue-600">
+                            <h3 class="font-bold text-white text-lg flex items-center gap-3">
+                                <span class="w-4 h-4 rounded-full bg-white pulse"></span> Finalizados
                             </h3>
-                            <span id="countFinalizado" class="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full">0</span>
+                            <span id="countFinalizado" class="bg-white/20 text-white text-sm font-bold px-4 py-2 rounded-full">0</span>
                         </div>
-                        <div id="kanban-finalizado" class="kanban-column flex-1 overflow-y-auto p-3 space-y-3 transition-colors border-2 border-transparent rounded-b-2xl" ondragover="allowDrop(event)" ondrop="drop(event, 'finalizado')" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                        <div id="kanban-finalizado" class="kanban-column flex-1 overflow-y-auto p-4 space-y-4 transition-colors border-2 border-transparent rounded-b-3xl" ondragover="allowDrop(event)" ondrop="drop(event, 'finalizado')" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
                              <!-- Cards -->
                         </div>
                     </div>
@@ -276,25 +482,25 @@
 
                 <!-- Aba Clientes -->
                 <div id="adminClientsView" class="hidden absolute inset-0 p-4 sm:p-6 overflow-y-auto">
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                        <div class="p-5 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-                            <h2 class="text-lg font-bold text-gray-900">Carteira de Clientes</h2>
-                            <div class="text-sm text-gray-500">Total: <span id="totalClientsCount" class="font-bold text-gray-900">0</span></div>
+                    <div class="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+                        <div class="p-6 border-b border-white/20 flex justify-between items-center bg-white/5">
+                            <h2 class="text-xl font-bold text-white">Carteira de Clientes</h2>
+                            <div class="text-white/70">Total: <span id="totalClientsCount" class="font-bold text-white">0</span></div>
                         </div>
                         <div class="overflow-x-auto">
-                            <table class="w-full text-left text-sm text-gray-600">
-                                <thead class="bg-gray-100 text-gray-700 text-xs uppercase font-semibold">
+                            <table class="w-full text-left text-sm text-white">
+                                <thead class="bg-white/10 text-white text-xs uppercase font-semibold">
                                     <tr>
-                                        <th class="px-6 py-4 rounded-tl-lg">Cliente</th>
-                                        <th class="px-6 py-4">Contato</th>
-                                        <th class="px-6 py-4">Empresa</th>
-                                        <th class="px-6 py-4 text-center">Total de Pedidos</th>
-                                        <th class="px-6 py-4 text-right rounded-tr-lg">Último Pedido</th>
+                                        <th class="px-6 py-5">Cliente</th>
+                                        <th class="px-6 py-5">Contato</th>
+                                        <th class="px-6 py-5">Empresa</th>
+                                        <th class="px-6 py-5 text-center">Total de Pedidos</th>
+                                        <th class="px-6 py-5 text-right">Último Pedido</th>
                                     </tr>
                                 </thead>
-                                <tbody id="clientsTableBody" class="divide-y divide-gray-100">
+                                <tbody id="clientsTableBody" class="divide-y divide-white/20">
                                     <!-- Lista gerada dinamicamente -->
-                                    <tr><td colspan="5" class="text-center py-8 text-gray-400">Carregando dados...</td></tr>
+                                    <tr><td colspan="5" class="text-center py-12 text-white/50">Carregando dados...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -303,15 +509,15 @@
 
                 <!-- Aba Notificações -->
                 <div id="adminNotificationsView" class="hidden absolute inset-0 p-4 sm:p-6 overflow-y-auto">
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200">
-                        <div class="p-5 border-b border-gray-200 bg-gray-50">
-                            <h2 class="text-lg font-bold text-gray-900">
-                                <i class="fas fa-bell mr-2 text-gray-500"></i>Notificações do Sistema
+                    <div class="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20">
+                        <div class="p-6 border-b border-white/20 bg-white/5">
+                            <h2 class="text-xl font-bold text-white">
+                                <i class="fas fa-bell mr-2 text-yellow-400"></i>Notificações do Sistema
                             </h2>
                         </div>
-                        <div id="notificationsList" class="divide-y divide-gray-100">
+                        <div id="notificationsList" class="divide-y divide-white/20">
                             <!-- Notificações carregadas dinamicamente -->
-                            <div class="text-center py-8 text-gray-400">Carregando notificações...</div>
+                            <div class="text-center py-12 text-white/50">Carregando notificações...</div>
                         </div>
                     </div>
                 </div>
@@ -322,56 +528,56 @@
     </main>
 
     <!-- Modal Admin Edição de Cliente/Pedido -->
-    <div id="adminEditModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all max-h-[90vh] flex flex-col">
-            <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                <h3 class="font-bold text-gray-900">Gerenciar Cliente e Pedidos</h3>
-                <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-700 transition">
-                    <i class="fas fa-times text-xl"></i>
+    <div id="adminEditModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-blue-600 to-purple-600">
+                <h3 class="font-bold text-white text-xl">Gerenciar Cliente e Pedidos</h3>
+                <button onclick="closeEditModal()" class="text-white/70 hover:text-white transition">
+                    <i class="fas fa-times text-2xl"></i>
                 </button>
             </div>
-            <div class="p-6 space-y-4 overflow-y-auto flex-1">
+            <div class="p-6 space-y-5 overflow-y-auto flex-1">
                 <input type="hidden" id="editOrderId">
                 <input type="hidden" id="editClientUid">
                 
                 <!-- Informações do Cliente (Editáveis) -->
-                <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3">
-                    <h4 class="font-semibold text-gray-900 text-sm uppercase">Informações do Cliente</h4>
-                    <div class="grid grid-cols-2 gap-3">
+                <div class="bg-gray-50 p-5 rounded-2xl border border-gray-200 space-y-4">
+                    <h4 class="font-bold text-gray-900 text-sm uppercase">Informações do Cliente</h4>
+                    <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-medium text-gray-700 mb-1">Nome</label>
-                            <input type="text" id="editClientName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none text-sm">
+                            <input type="text" id="editClientName" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-gray-700 mb-1">Telefone</label>
-                            <input type="text" id="editClientPhone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none text-sm">
+                            <input type="text" id="editClientPhone" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                         </div>
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">E-mail</label>
-                        <input type="email" id="editClientEmail" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none text-sm">
+                        <input type="email" id="editClientEmail" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">Empresa</label>
-                        <input type="text" id="editClientCompany" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none text-sm">
+                        <input type="text" id="editClientCompany" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                     </div>
                 </div>
                 
                 <!-- Informações do Pedido -->
-                <div class="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                <div class="grid grid-cols-2 gap-4 bg-gray-50 p-5 rounded-2xl border border-gray-200">
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">Produto</label>
-                        <input type="text" id="editProduct" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none text-sm bg-white">
+                        <input type="text" id="editProduct" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white">
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">Quantidade</label>
-                        <input type="text" id="editQuantity" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none text-sm bg-white">
+                        <input type="text" id="editQuantity" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white">
                     </div>
                 </div>
 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Status do Pedido</label>
-                    <select id="editStatus" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none bg-white">
+                    <select id="editStatus" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white">
                         <option value="novo">Pendente</option>
                         <option value="producao">Em Produção</option>
                         <option value="finalizado">Finalizado</option>
@@ -380,7 +586,7 @@
 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Prioridade (Interna)</label>
-                    <select id="editPriority" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none bg-white">
+                    <select id="editPriority" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white">
                         <option value="Baixa">Baixa</option>
                         <option value="Média">Média</option>
                         <option value="Alta">Alta</option>
@@ -389,22 +595,22 @@
 
                 <!-- Histórico de Pedidos do Cliente -->
                 <div class="mt-4">
-                    <h4 class="font-semibold text-gray-900 text-sm uppercase mb-3">Histórico de Pedidos do Cliente</h4>
-                    <div id="clientOrderHistory" class="space-y-2 max-h-60 overflow-y-auto">
+                    <h4 class="font-bold text-gray-900 text-sm uppercase mb-3">Histórico de Pedidos do Cliente</h4>
+                    <div id="clientOrderHistory" class="space-y-3 max-h-60 overflow-y-auto">
                         <!-- Histórico carregado dinamicamente -->
                     </div>
                 </div>
 
                 <!-- Botão Excluir Cliente -->
                 <div class="mt-4 border-t border-gray-200 pt-4">
-                    <button onclick="deleteClient()" class="w-full bg-red-50 text-red-600 font-medium py-3 rounded-xl hover:bg-red-100 transition flex items-center justify-center gap-2">
+                    <button onclick="deleteClient()" class="w-full bg-red-50 text-red-600 font-bold py-4 rounded-2xl hover:bg-red-100 transition flex items-center justify-center gap-2">
                         <i class="fas fa-trash"></i> Excluir Cliente
                     </button>
                 </div>
             </div>
-            <div class="p-5 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
-                <button onclick="closeEditModal()" class="px-5 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 transition">Cancelar</button>
-                <button onclick="saveClientEdit()" class="px-6 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition shadow-md shadow-gray-900/20">Salvar Alterações</button>
+            <div class="p-6 border-t border-gray-200 bg-gray-50 flex justify-end gap-3">
+                <button onclick="closeEditModal()" class="px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 transition">Cancelar</button>
+                <button onclick="saveClientEdit()" class="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-bold rounded-2xl hover:from-blue-700 hover:to-purple-700 transition shadow-lg">Salvar Alterações</button>
             </div>
         </div>
     </div>
@@ -452,13 +658,13 @@
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
-            toast.innerHTML = `<div class="flex items-center gap-2"><i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i> ${message}</div>`;
+            toast.innerHTML = `<div class="flex items-center gap-3"><i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'} text-xl"></i> ${message}</div>`;
             container.appendChild(toast);
             
             setTimeout(() => {
                 toast.classList.add('toast-fade-out');
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
+                setTimeout(() => toast.remove(), 500);
+            }, 4000);
         };
 
         window.formatDateTime = function(timestamp) {
@@ -614,7 +820,7 @@
             
             if (currentUserData.role === 'admin') {
                 badge.innerText = 'Admin Master';
-                badge.className = 'text-xs px-2 py-1 rounded-md font-bold bg-amber-500 text-amber-950';
+                badge.className = 'text-xs px-3 py-1 rounded-full font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white';
                 document.getElementById('adminScreen').classList.remove('hidden');
                 document.getElementById('adminScreen').classList.add('flex');
                 document.getElementById('clientScreen').classList.add('hidden');
@@ -627,7 +833,7 @@
                 }
             } else {
                 badge.innerText = 'Cliente';
-                badge.className = 'text-xs px-2 py-1 rounded-md font-medium bg-gray-700 text-gray-200';
+                badge.className = 'text-xs px-3 py-1 rounded-full font-medium bg-white/20 text-white';
                 document.getElementById('clientScreen').classList.remove('hidden');
                 document.getElementById('clientScreen').classList.add('flex');
                 document.getElementById('adminScreen').classList.add('hidden');
@@ -737,28 +943,31 @@
         function renderClientOrders(orders) {
             const list = document.getElementById('clientOrdersList');
             if (orders.length === 0) {
-                list.innerHTML = '<div class="col-span-full text-center py-10 bg-white rounded-xl border border-dashed border-gray-300 text-gray-500"><i class="fas fa-box-open text-3xl mb-3 text-gray-300 block"></i>Nenhum pedido realizado ainda.</div>';
+                list.innerHTML = '<div class="col-span-full text-center py-10 bg-white/10 rounded-3xl border border-white/20 text-white/70"><i class="fas fa-box-open text-4xl mb-4 text-white/30 block"></i>Nenhum pedido realizado ainda.</div>';
                 return;
             }
 
-            const statusColors = { 'novo': 'bg-gray-100 text-gray-700 border-gray-200', 'producao': 'bg-blue-100 text-blue-700 border-blue-200', 'finalizado': 'bg-green-100 text-green-700 border-green-200' };
+            const statusColors = { 
+                'novo': 'from-purple-600 to-indigo-600', 
+                'producao': 'from-pink-600 to-rose-600', 
+                'finalizado': 'from-cyan-600 to-blue-600' 
+            };
             const statusText = { 'novo': 'Pendente', 'producao': 'Em Produção', 'finalizado': 'Finalizado' };
 
             list.innerHTML = orders.map(order => {
                 return `
-                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col gap-3 relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-1 h-full ${order.status === 'finalizado' ? 'bg-green-500' : order.status === 'producao' ? 'bg-blue-500' : 'bg-gray-400'}"></div>
+                <div class="bg-gradient-to-br ${statusColors[order.status]} p-6 rounded-3xl shadow-xl flex flex-col gap-4 relative overflow-hidden">
                     <div class="flex justify-between items-start">
                         <div>
-                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">${formatDateTime(order.createdAt).split(' às')[0]}</span>
-                            <h4 class="font-bold text-gray-900 leading-tight mt-1">${order.product}</h4>
+                            <span class="text-xs font-semibold text-white/70 uppercase tracking-wider">${formatDateTime(order.createdAt).split(' às')[0]}</span>
+                            <h4 class="font-bold text-white text-lg leading-tight mt-1">${order.product}</h4>
                         </div>
-                        <span class="text-xs px-2.5 py-1 rounded-md font-medium border ${statusColors[order.status]}">
+                        <span class="text-xs px-3 py-1.5 rounded-full font-bold bg-white/20 text-white">
                             ${statusText[order.status]}
                         </span>
                     </div>
-                    <div class="text-sm text-gray-600 flex items-center gap-2">
-                        <i class="fas fa-cubes text-gray-400"></i> ${order.quantity}
+                    <div class="text-sm text-white/90 flex items-center gap-2">
+                        <i class="fas fa-cubes text-white/60"></i> ${order.quantity}
                     </div>
                 </div>`;
             }).join('');
@@ -769,20 +978,20 @@
             document.getElementById('adminClientsView').classList.add('hidden');
             document.getElementById('adminNotificationsView').classList.add('hidden');
             
-            document.getElementById('tabPedidos').className = "px-5 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap transition";
-            document.getElementById('tabClients').className = "px-5 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap transition";
-            document.getElementById('tabNotifications').className = "px-5 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap transition";
+            document.getElementById('tabPedidos').className = "px-6 py-5 text-sm font-bold border-b-4 border-transparent text-white/70 hover:text-white whitespace-nowrap transition";
+            document.getElementById('tabClients').className = "px-6 py-5 text-sm font-bold border-b-4 border-transparent text-white/70 hover:text-white whitespace-nowrap transition";
+            document.getElementById('tabNotifications').className = "px-6 py-5 text-sm font-bold border-b-4 border-transparent text-white/70 hover:text-white whitespace-nowrap transition";
             
             if (tab === 'pedidos') {
                 document.getElementById('adminPedidosView').classList.remove('hidden');
-                document.getElementById('tabPedidos').className = "px-5 py-4 text-sm font-medium border-b-2 border-gray-900 text-gray-900 whitespace-nowrap transition";
+                document.getElementById('tabPedidos').className = "px-6 py-5 text-sm font-bold border-b-4 border-blue-500 text-white whitespace-nowrap transition";
             } else if (tab === 'clients') {
                 document.getElementById('adminClientsView').classList.remove('hidden');
-                document.getElementById('tabClients').className = "px-5 py-4 text-sm font-medium border-b-2 border-gray-900 text-gray-900 whitespace-nowrap transition";
+                document.getElementById('tabClients').className = "px-6 py-5 text-sm font-bold border-b-4 border-blue-500 text-white whitespace-nowrap transition";
                 renderClientsList();
             } else if (tab === 'notifications') {
                 document.getElementById('adminNotificationsView').classList.remove('hidden');
-                document.getElementById('tabNotifications').className = "px-5 py-4 text-sm font-medium border-b-2 border-gray-900 text-gray-900 whitespace-nowrap transition";
+                document.getElementById('tabNotifications').className = "px-6 py-5 text-sm font-bold border-b-4 border-blue-500 text-white whitespace-nowrap transition";
                 renderNotifications();
                 clearNotificationBadge();
             }
@@ -864,7 +1073,7 @@
             ['novo', 'producao', 'finalizado'].forEach(status => {
                 const container = document.getElementById(`kanban-${status}`);
                 if (cols[status].length === 0) {
-                    container.innerHTML = `<div class="text-center py-6 text-sm text-gray-400 font-medium">Nenhum pedido</div>`;
+                    container.innerHTML = `<div class="text-center py-8 text-white/50 font-medium">Nenhum pedido</div>`;
                     return;
                 }
                 container.innerHTML = cols[status].map(order => createKanbanCard(order)).join('');
@@ -872,14 +1081,20 @@
         }
 
         function createKanbanCard(order) {
+            const statusGradients = {
+                'novo': 'from-purple-600 to-indigo-700',
+                'producao': 'from-pink-600 to-rose-700',
+                'finalizado': 'from-cyan-600 to-blue-700'
+            };
+            
             const prioColors = {
-                'Baixa': 'bg-green-100 text-green-700',
-                'Média': 'bg-amber-100 text-amber-700',
-                'Alta': 'bg-red-100 text-red-700'
+                'Baixa': 'bg-green-500/20 text-green-200',
+                'Média': 'bg-amber-500/20 text-amber-200',
+                'Alta': 'bg-red-500/20 text-red-200'
             };
             
             return `
-            <div id="order-${order.id}" class="draggable-card bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing transition-all relative overflow-hidden group" 
+            <div id="order-${order.id}" class="draggable-card bg-gradient-to-br ${statusGradients[order.status]} p-5 rounded-2xl border border-white/20 shadow-xl hover:shadow-2xl transition-all relative overflow-hidden group" 
                  draggable="true" 
                  ondragstart="drag(event)" 
                  ondragend="dragEnd(event)"
@@ -887,21 +1102,23 @@
                  ontouchmove="touchMove(event)" 
                  ontouchend="touchEnd(event)">
                  
-                <div class="flex justify-between items-start mb-2">
-                    <span class="text-xs font-semibold px-2 py-0.5 rounded ${prioColors[order.priority] || prioColors['Média']}">
+                <div class="flex justify-between items-start mb-3">
+                    <span class="text-xs font-bold px-3 py-1 rounded-full ${prioColors[order.priority] || prioColors['Média']}">
                         ${order.priority || 'Média'}
                     </span>
-                    <span class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">${formatDateTime(order.createdAt).split(' às')[0]}</span>
+                    <span class="text-[10px] text-white/70 font-medium uppercase tracking-wider">${formatDateTime(order.createdAt).split(' às')[0]}</span>
                 </div>
                 
-                <h4 class="font-bold text-gray-900 text-sm leading-tight mb-1">${order.product}</h4>
-                <div class="text-xs text-gray-600 mb-3 flex items-center gap-1.5"><i class="fas fa-cubes text-gray-400"></i> ${order.quantity}</div>
+                <h4 class="font-bold text-white text-lg leading-tight mb-2">${order.product}</h4>
+                <div class="text-sm text-white/80 mb-4 flex items-center gap-2">
+                    <i class="fas fa-cubes text-white/60"></i> ${order.quantity}
+                </div>
                 
-                <div class="pt-3 border-t border-gray-100 mt-2">
-                    <button onclick="openEditModal('${order.id}')" class="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 px-2 py-1 rounded transition w-full text-left">
-                        <i class="fas fa-user-circle text-gray-400 text-lg"></i> 
+                <div class="pt-4 border-t border-white/20 mt-2">
+                    <button onclick="openEditModal('${order.id}')" class="flex items-center gap-2 text-sm font-semibold text-white/90 hover:text-white hover:bg-white/10 px-3 py-2 rounded-xl transition w-full text-left">
+                        <i class="fas fa-user-circle text-white/70 text-xl"></i> 
                         <span class="truncate flex-1">${order.clientName}</span>
-                        <i class="fas fa-edit text-gray-300 group-hover:text-gray-600 transition"></i>
+                        <i class="fas fa-edit text-white/50 group-hover:text-white transition"></i>
                     </button>
                 </div>
             </div>`;
@@ -1053,21 +1270,21 @@
             
             historyContainer.innerHTML = clientOrders.map(order => {
                 const statusColors = { 
-                    'novo': 'bg-gray-100 text-gray-700', 
-                    'producao': 'bg-blue-100 text-blue-700', 
-                    'finalizado': 'bg-green-100 text-green-700' 
+                    'novo': 'bg-purple-100 text-purple-700', 
+                    'producao': 'bg-pink-100 text-pink-700', 
+                    'finalizado': 'bg-cyan-100 text-cyan-700' 
                 };
                 const statusText = { 'novo': 'Pendente', 'producao': 'Em Produção', 'finalizado': 'Finalizado' };
                 
                 return `
-                <div class="bg-white border border-gray-200 rounded-lg p-3 flex items-center justify-between">
+                <div class="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
                     <div class="flex-1">
-                        <p class="text-sm font-medium text-gray-900">${order.product} - ${order.quantity}</p>
+                        <p class="text-sm font-semibold text-gray-900">${order.product} - ${order.quantity}</p>
                         <p class="text-xs text-gray-500 mt-1">
                             <i class="fas fa-calendar-alt mr-1"></i>${formatDateTime(order.createdAt)}
                         </p>
                     </div>
-                    <span class="text-xs px-2 py-1 rounded-full font-medium ${statusColors[order.status]} ml-2">
+                    <span class="text-xs px-3 py-1.5 rounded-full font-bold ${statusColors[order.status]} ml-3">
                         ${statusText[order.status]}
                     </span>
                 </div>`;
@@ -1199,16 +1416,16 @@
                 .sort((a, b) => b.createdAt - a.createdAt);
             
             if (notifications.length === 0) {
-                container.innerHTML = '<div class="text-center py-12 text-gray-400"><i class="fas fa-bell-slash text-4xl mb-3 block"></i>Nenhuma notificação</div>';
+                container.innerHTML = '<div class="text-center py-16 text-white/50"><i class="fas fa-bell-slash text-5xl mb-4 block"></i>Nenhuma notificação</div>';
                 return;
             }
             
             container.innerHTML = notifications.map(notif => `
-                <div class="p-4 hover:bg-gray-50 transition flex items-start gap-3">
-                    <i class="fas fa-info-circle text-blue-500 mt-1"></i>
+                <div class="p-5 hover:bg-white/5 transition flex items-start gap-4">
+                    <i class="fas fa-info-circle text-yellow-400 text-xl mt-1"></i>
                     <div class="flex-1">
-                        <p class="text-sm text-gray-800">${notif.message}</p>
-                        <p class="text-xs text-gray-400 mt-1">${formatDateTime(notif.createdAt)}</p>
+                        <p class="text-sm text-white">${notif.message}</p>
+                        <p class="text-xs text-white/50 mt-2">${formatDateTime(notif.createdAt)}</p>
                     </div>
                 </div>
             `).join('');
@@ -1281,29 +1498,29 @@
             document.getElementById('totalClientsCount').innerText = clientArray.length;
 
             if(clientArray.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-400">Nenhum cliente registrado.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-12 text-white/50">Nenhum cliente registrado.</td></tr>';
                 return;
             }
 
             tbody.innerHTML = clientArray.map(client => `
-                <tr class="hover:bg-gray-50 transition cursor-pointer" onclick="openClientModal('${client.uid}')">
-                    <td class="px-6 py-4 font-medium text-gray-900">
+                <tr class="hover:bg-white/5 transition cursor-pointer" onclick="openClientModal('${client.uid}')">
+                    <td class="px-6 py-5 font-medium text-white">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-gray-200 flex justify-center items-center text-gray-600 text-xs font-bold uppercase">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex justify-center items-center text-white text-sm font-bold uppercase">
                                 ${client.name.charAt(0)}
                             </div>
                             <div>
-                                <p class="font-medium">${client.name}</p>
-                                <p class="text-xs text-gray-500">${client.email}</p>
+                                <p class="font-semibold">${client.name}</p>
+                                <p class="text-xs text-white/60">${client.email}</p>
                             </div>
                         </div>
                     </td>
-                    <td class="px-6 py-4 text-gray-500">${client.phone || 'N/A'}</td>
-                    <td class="px-6 py-4 text-gray-500">${client.company || 'N/A'}</td>
-                    <td class="px-6 py-4 text-center">
-                        <span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-bold">${client.totalOrders}</span>
+                    <td class="px-6 py-5 text-white/70">${client.phone || 'N/A'}</td>
+                    <td class="px-6 py-5 text-white/70">${client.company || 'N/A'}</td>
+                    <td class="px-6 py-5 text-center">
+                        <span class="bg-white/10 text-white px-4 py-2 rounded-full text-xs font-bold">${client.totalOrders}</span>
                     </td>
-                    <td class="px-6 py-4 text-right text-gray-500 text-sm">
+                    <td class="px-6 py-5 text-right text-white/70 text-sm">
                         ${client.lastOrderDate ? formatDateTime(client.lastOrderDate).split(' às')[0] : 'Nunca comprou'}
                     </td>
                 </tr>
