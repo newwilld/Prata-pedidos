@@ -228,19 +228,57 @@ window.handleProductChange = function() {
         document.getElementById('customQuantityContainer').classList.add('hidden');
         document.getElementById('customQuantityInput').removeAttribute('required');
         
-        // Adiciona informação do preço se disponível
-        updateProductPriceDisplay(product);
+        // Atualiza o display do valor total
+        updateTotalDisplay();
     }
 };
 
-// Função para extrair e exibir o preço do produto
-function updateProductPriceDisplay(product) {
-    const priceMatch = product.match(/R\$\s*([\d,.]+)/);
-    if (priceMatch) {
-        const price = priceMatch[1];
-        showToast(`Preço unitário: R$ ${price}`, 'info');
+// Função para atualizar o display do valor total
+window.updateTotalDisplay = function() {
+    const productSelect = document.getElementById('productSelect');
+    const selectedOption = productSelect.options[productSelect.selectedIndex];
+    
+    if (!selectedOption || !selectedOption.textContent) {
+        return;
     }
-}
+    
+    const productText = selectedOption.textContent;
+    const priceMatch = productText.match(/R\$\s*([\d,.]+)/);
+    
+    if (!priceMatch) {
+        return;
+    }
+    
+    const unitPrice = parseFloat(priceMatch[1].replace(',', '.'));
+    
+    // Pega a quantidade selecionada
+    let quantity = 0;
+    const quantitySelect = document.getElementById('quantitySelect');
+    const qValue = quantitySelect.value;
+    
+    if (qValue === 'Outra') {
+        const customQty = document.getElementById('customQuantityInput').value;
+        quantity = parseInt(customQty) || 0;
+    } else if (qValue) {
+        quantity = parseInt(qValue) || 0;
+    }
+    
+    // Calcula o valor total
+    const totalValue = unitPrice * quantity;
+    
+    // Atualiza o display
+    const totalDisplayContainer = document.getElementById('totalDisplayContainer');
+    const totalDisplayValue = document.getElementById('totalDisplayValue');
+    const unitPriceDisplay = document.getElementById('unitPriceDisplay');
+    
+    if (quantity > 0) {
+        totalDisplayContainer.classList.remove('hidden');
+        totalDisplayValue.textContent = `R$ ${totalValue.toFixed(2)}`;
+        unitPriceDisplay.textContent = `${quantity} unidades × R$ ${unitPrice.toFixed(2)} por unidade`;
+    } else {
+        totalDisplayContainer.classList.add('hidden');
+    }
+};
 
 window.handleQuantityChange = function() {
     const q = document.getElementById('quantitySelect').value;
@@ -254,6 +292,9 @@ window.handleQuantityChange = function() {
         cContainer.classList.add('hidden');
         cInput.removeAttribute('required');
     }
+    
+    // Atualiza o display do valor total
+    updateTotalDisplay();
 };
 
 window.submitOrder = async function(e) {
@@ -314,12 +355,13 @@ window.submitOrder = async function(e) {
         
         showToast('Pedido enviado com sucesso!', 'success');
         if (totalEstimated) {
-            showToast(`Valor estimado: R$ ${totalEstimated.toFixed(2)}`, 'info');
+            showToast(`Valor total: R$ ${totalEstimated.toFixed(2)}`, 'success');
         }
         
         document.getElementById('orderForm').reset();
         document.getElementById('quantityContainer').classList.add('hidden');
         document.getElementById('customQuantityContainer').classList.add('hidden');
+        document.getElementById('totalDisplayContainer').classList.add('hidden');
     } catch (error) {
         console.error(error);
         showToast('Erro ao enviar pedido.', 'error');
@@ -364,7 +406,7 @@ function renderClientOrders(orders) {
 
     list.innerHTML = orders.map(order => {
         const estimatedValue = order.totalEstimated ? 
-            `<div class="text-xs text-white/70 mt-1">Valor estimado: R$ ${order.totalEstimated.toFixed(2)}</div>` : '';
+            `<div class="text-sm font-bold text-white mt-2">Valor Total: R$ ${order.totalEstimated.toFixed(2)}</div>` : '';
         
         return `
         <div class="bg-gradient-to-br ${statusColors[order.status]} p-6 rounded-3xl shadow-xl flex flex-col gap-4 relative overflow-hidden">
@@ -506,7 +548,7 @@ function createKanbanCard(order) {
     };
     
     const estimatedValue = order.totalEstimated ? 
-        `<div class="text-xs text-white/70 mb-2">Valor: R$ ${order.totalEstimated.toFixed(2)}</div>` : '';
+        `<div class="text-sm font-bold text-white mb-2">Valor Total: R$ ${order.totalEstimated.toFixed(2)}</div>` : '';
     
     return `
     <div id="order-${order.id}" class="draggable-card bg-gradient-to-br ${statusGradients[order.status]} p-5 rounded-2xl border border-white/20 shadow-xl hover:shadow-2xl transition-all relative overflow-hidden group" 
@@ -665,6 +707,16 @@ window.openEditModal = function(orderId) {
     document.getElementById('editStatus').value = order.status;
     document.getElementById('editPriority').value = order.priority || 'Média';
     
+    // Atualiza o valor total no modal
+    const editTotalValue = document.getElementById('editTotalValue');
+    if (editTotalValue) {
+        if (order.totalEstimated) {
+            editTotalValue.textContent = `R$ ${order.totalEstimated.toFixed(2)}`;
+        } else {
+            editTotalValue.textContent = 'R$ 0,00';
+        }
+    }
+    
     loadClientOrderHistory(order.userId);
     
     document.getElementById('adminEditModal').classList.remove('hidden');
@@ -691,7 +743,7 @@ function loadClientOrderHistory(userId) {
         const statusText = { 'novo': 'Pendente', 'producao': 'Em Produção', 'finalizado': 'Finalizado' };
         
         const estimatedValue = order.totalEstimated ? 
-            `<p class="text-xs text-gray-500 mt-1">Valor: R$ ${order.totalEstimated.toFixed(2)}</p>` : '';
+            `<p class="text-sm font-bold text-gray-700 mt-1">Valor Total: R$ ${order.totalEstimated.toFixed(2)}</p>` : '';
         
         return `
         <div class="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
@@ -999,6 +1051,12 @@ window.openClientModal = function(clientUid) {
             document.getElementById('editQuantity').value = '';
             document.getElementById('editStatus').value = 'novo';
             document.getElementById('editPriority').value = 'Média';
+            
+            // Limpa o valor total para cliente sem pedidos
+            const editTotalValue = document.getElementById('editTotalValue');
+            if (editTotalValue) {
+                editTotalValue.textContent = 'R$ 0,00';
+            }
             
             loadClientOrderHistory(clientUid);
             document.getElementById('adminEditModal').classList.remove('hidden');
