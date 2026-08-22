@@ -185,12 +185,18 @@ body {
     color: white;
 }
 
-/* Estilos para o Select de Produtos */
+/* Estilos para os Selects de Produtos (Tipo, Modelo, Tamanho) */
+#productTypeSelect,
+#modelSelect,
+#sizeSelect,
 #productSelect {
     max-height: 400px;
     overflow-y: auto;
 }
 
+#productTypeSelect optgroup,
+#modelSelect optgroup,
+#sizeSelect optgroup,
 #productSelect optgroup {
     font-weight: 700;
     color: #1e293b;
@@ -200,11 +206,17 @@ body {
     letter-spacing: 0.5px;
 }
 
+#productTypeSelect optgroup::before,
+#modelSelect optgroup::before,
+#sizeSelect optgroup::before,
 #productSelect optgroup::before {
     content: '📦 ';
     font-size: 1.1em;
 }
 
+#productTypeSelect option,
+#modelSelect option,
+#sizeSelect option,
 #productSelect option {
     padding: 10px 12px;
     font-weight: 400;
@@ -213,11 +225,17 @@ body {
     transition: all 0.2s ease;
 }
 
+#productTypeSelect option:hover,
+#modelSelect option:hover,
+#sizeSelect option:hover,
 #productSelect option:hover {
     background-color: #e0e7ff;
     color: #1e40af;
 }
 
+#productTypeSelect option:checked,
+#modelSelect option:checked,
+#sizeSelect option:checked,
 #productSelect option:checked {
     background-color: #3b82f6;
     color: white;
@@ -289,6 +307,46 @@ select::-webkit-scrollbar-thumb:hover {
     letter-spacing: -0.5px;
 }
 
+/* Estilos para os containers de cascata */
+#modelContainer,
+#sizeContainer {
+    transition: all 0.3s ease;
+}
+
+#modelContainer.hidden,
+#sizeContainer.hidden {
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+}
+
+/* Estilo para o campo de observação */
+#orderObs {
+    resize: none;
+    min-height: 80px;
+    transition: all 0.3s ease;
+}
+
+#orderObs:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+#orderObs::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Estilo para o campo de observação no modal de edição */
+#editObs {
+    resize: none;
+    min-height: 60px;
+}
+
+#editObs:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: #3b82f6;
+}
+
 /* TV Mode */
 @media (min-width: 1920px) {
     body {
@@ -304,11 +362,17 @@ select::-webkit-scrollbar-thumb:hover {
         min-height: 500px;
     }
     
+    #productTypeSelect,
+    #modelSelect,
+    #sizeSelect,
     #productSelect {
         max-height: 500px;
         font-size: 1.1em;
     }
     
+    #productTypeSelect option,
+    #modelSelect option,
+    #sizeSelect option,
     #productSelect option {
         padding: 12px 14px;
     }
@@ -319,6 +383,10 @@ select::-webkit-scrollbar-thumb:hover {
     
     #totalDisplayContainer {
         padding: 1.5rem;
+    }
+    
+    #orderObs {
+        min-height: 100px;
     }
 }
 
@@ -333,15 +401,24 @@ select::-webkit-scrollbar-thumb:hover {
         min-height: 200px;
     }
     
+    #productTypeSelect,
+    #modelSelect,
+    #sizeSelect,
     #productSelect {
         max-height: 300px;
         font-size: 0.9em;
     }
     
+    #productTypeSelect option,
+    #modelSelect option,
+    #sizeSelect option,
     #productSelect option {
         padding: 8px 10px;
     }
     
+    #productTypeSelect optgroup,
+    #modelSelect optgroup,
+    #sizeSelect optgroup,
     #productSelect optgroup {
         font-size: 0.85em;
         padding: 6px 0;
@@ -353,6 +430,11 @@ select::-webkit-scrollbar-thumb:hover {
     
     #totalDisplayContainer {
         padding: 1rem;
+    }
+    
+    #orderObs {
+        min-height: 60px;
+        font-size: 0.9em;
     }
 }
 
@@ -379,10 +461,16 @@ select::-webkit-scrollbar-thumb:hover {
 
 /* Ajustes para o select em telas maiores */
 @media (min-width: 1024px) {
+    #productTypeSelect,
+    #modelSelect,
+    #sizeSelect,
     #productSelect {
         font-size: 0.95em;
     }
     
+    #productTypeSelect optgroup,
+    #modelSelect optgroup,
+    #sizeSelect optgroup,
     #productSelect optgroup {
         font-size: 0.88em;
     }
@@ -393,17 +481,26 @@ select::-webkit-scrollbar-thumb:hover {
 }
 
 /* Hover states para os grupos */
+#productTypeSelect optgroup:hover,
+#modelSelect optgroup:hover,
+#sizeSelect optgroup:hover,
 #productSelect optgroup:hover {
     background-color: #e2e8f0;
     cursor: pointer;
 }
 
-/* Estilo para quando o select está focado */
+/* Estilo para quando os selects estão focados */
+#productTypeSelect:focus,
+#modelSelect:focus,
+#sizeSelect:focus,
 #productSelect:focus {
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
 }
 
 /* Ajuste para o dropdown quando aberto */
+#productTypeSelect:focus-visible,
+#modelSelect:focus-visible,
+#sizeSelect:focus-visible,
 #productSelect:focus-visible {
     outline: none;
     border-color: #3b82f6;
@@ -430,4 +527,54 @@ select::-webkit-scrollbar-thumb:hover {
     opacity: 0;
     transform: translateY(-10px);
     pointer-events: none;
+}
+
+/* Estilos adicionais para os novos campos de cascata */
+#productTypeSelect,
+#modelSelect,
+#sizeSelect {
+    width: 100%;
+    appearance: none;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 1rem;
+    color: white;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+#productTypeSelect:hover,
+#modelSelect:hover,
+#sizeSelect:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+#productTypeSelect:focus,
+#modelSelect:focus,
+#sizeSelect:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* Estilo para as opções dentro dos selects */
+#productTypeSelect option,
+#modelSelect option,
+#sizeSelect option {
+    background-color: #ffffff;
+    color: #1e293b;
+    padding: 10px;
+    font-weight: 500;
+}
+
+#productTypeSelect option:hover,
+#modelSelect option:hover,
+#sizeSelect option:hover {
+    background-color: #e0e7ff;
 }

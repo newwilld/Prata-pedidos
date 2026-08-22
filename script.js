@@ -219,37 +219,180 @@ function setupUIForUser() {
     }
 }
 
-window.handleProductChange = function() {
-    const product = document.getElementById('productSelect').value;
-    const qContainer = document.getElementById('quantityContainer');
-    if (product) {
-        qContainer.classList.remove('hidden');
+// Dados dos produtos em cascata
+const productCatalog = {
+    'Caixa de pizza': {
+        'Oitavada': [
+            { name: 'Caixa de pizza oitavada 20cm (brotinho) - Branca', price: 1.70 },
+            { name: 'Caixa de pizza oitavada 25cm (pequena) - Branca', price: 2.10 },
+            { name: 'Caixa de pizza oitavada 30cm (média) - Branca', price: 2.40 },
+            { name: 'Caixa de pizza oitavada 35cm (grande) - Branca', price: 2.85 },
+            { name: 'Caixa de pizza oitavada 40cm (família) - Branca', price: 3.30 },
+            { name: 'Caixa de pizza oitavada 45cm (gigante) - Branca', price: 4.60 },
+            { name: 'Caixa de pizza oitavada 20cm (brotinho) - Parda', price: 1.60 },
+            { name: 'Caixa de pizza oitavada 25cm (pequena) - Parda', price: 2.00 },
+            { name: 'Caixa de pizza oitavada 30cm (média) - Parda', price: 2.30 },
+            { name: 'Caixa de pizza oitavada 35cm (grande) - Parda', price: 2.65 },
+            { name: 'Caixa de pizza oitavada 40cm (família) - Parda', price: 3.10 },
+            { name: 'Caixa de pizza oitavada 45cm (gigante) - Parda', price: 4.40 },
+            { name: 'Caixa de pizza oitavada 25cm (pequena) - Fotográfica', price: 2.80 },
+            { name: 'Caixa de pizza oitavada 30cm (média) - Fotográfica', price: 3.00 },
+            { name: 'Caixa de pizza oitavada 35cm (grande) - Fotográfica', price: 3.35 },
+            { name: 'Caixa de pizza oitavada 40cm (família) - Fotográfica', price: 3.70 }
+        ],
+        'Americanas': [
+            { name: 'Caixa Americana tam. 20cm (brotinho) - Branca', price: 1.98 },
+            { name: 'Caixa Americana tam. 25cm (pequena) - Branca', price: 2.10 },
+            { name: 'Caixa Americana tam. 30cm (média) - Branca', price: 2.40 },
+            { name: 'Caixa Americana tam. 35cm (grande) - Branca', price: 2.85 },
+            { name: 'Caixa Americana tam. 40cm (família) - Branca', price: 3.30 },
+            { name: 'Caixa Americana tam. 20cm (brotinho) - Parda', price: 1.88 },
+            { name: 'Caixa Americana tam. 25cm (pequena) - Parda', price: 2.00 },
+            { name: 'Caixa Americana tam. 30cm (média) - Parda', price: 2.20 },
+            { name: 'Caixa Americana tam. 35cm (grande) - Parda', price: 2.65 },
+            { name: 'Caixa Americana tam. 40cm (família) - Parda', price: 3.10 }
+        ],
+        'Quadrada': [
+            { name: 'Caixa quadrada 20x20x5cm (Broto)', price: 2.10 },
+            { name: 'Caixa quadrada 25x25x5,5cm (Pequena)', price: 2.40 },
+            { name: 'Caixa quadrada 30x30x4,0cm (média)', price: 2.50 },
+            { name: 'Caixa quadrada 30x30x5,5cm (média)', price: 2.85 },
+            { name: 'Caixa quadrada 35x35x4,0cm (grande)', price: 2.85 },
+            { name: 'Caixa quadrada 35x35x5,5cm (grande)', price: 3.18 },
+            { name: 'Caixa quadrada 40x40x4,0cm (família)', price: 3.32 },
+            { name: 'Caixa quadrada 40x40x4,5cm (família)', price: 3.52 },
+            { name: 'Caixa quadrada 40x40x5,5cm (família)', price: 4.38 },
+            { name: 'Caixa quadrada 40x40x7cm (família)', price: 4.70 },
+            { name: 'Caixa quadrada 45x45x5cm (Gigante)', price: 5.25 }
+        ]
+    },
+    'Caixa de torta': {
+        'Quadrada': [
+            { name: 'Caixa de torta 22 x 22 x 9,5cm', price: 3.00 },
+            { name: 'Caixa de torta retangular 29 x 18 x 10cm', price: 3.20 },
+            { name: 'Caixa de torta PP baixa 20 x 20 x 13cm', price: 3.45 },
+            { name: 'Caixa de torta PP alta 20 x 20 x 17cm', price: 3.65 },
+            { name: 'Caixa de torta pequena 25 x 25 x 15cm', price: 3.60 },
+            { name: 'Caixa de torta média 30 x 30 x 12cm baixa', price: 3.75 },
+            { name: 'Caixa de torta média 30 x 30 x 16cm alta', price: 4.55 },
+            { name: 'Caixa de torta grande 35 x 35 x 12cm baixa', price: 4.60 },
+            { name: 'Caixa de torta grande 35 x 35 x 15cm alta', price: 4.80 },
+            { name: 'Caixa de torta GG 40 x 40 x 12,5cm', price: 5.10 },
+            { name: 'Caixa de torta retangular 40 x 30 x 15cm', price: 6.50 },
+            { name: 'Caixa de torta retangular 54 x 41,5 x 12cm', price: 6.98 }
+        ]
+    },
+    'Caixa correio': {
+        'Americanas': [
+            { name: 'Caixa tipo correio 15 x 10 x 5cm', price: 2.40 },
+            { name: 'Caixa tipo correio 12,5 x 12,5 x 6,5cm', price: 2.85 },
+            { name: 'Caixa tipo correio 17,5 x 17,5 x 9cm', price: 3.20 },
+            { name: 'Caixa tipo correio 17,5 x 16,0 x 5,5cm', price: 1.80 },
+            { name: 'Caixa tipo correio 21 x 14,5 x 7cm', price: 3.20 },
+            { name: 'Caixa tipo correio 22,5 x 15 x 6cm', price: 3.00 },
+            { name: 'Caixa tipo correio 28,5 x 15,5 x 5,7cm', price: 3.25 },
+            { name: 'Caixa tipo correio 30 x 20 x 11cm', price: 4.50 },
+            { name: 'Caixa tipo correio 33 x 18,5 x 9cm', price: 4.60 },
+            { name: 'Caixa tipo correio 33 x 20,0 x 6cm', price: 4.00 },
+            { name: 'Caixa tipo correio 16 x 12 x 4cm (PAC Mini)', price: 2.00 },
+            { name: 'Caixa tipo correio 24 x 17 x 4cm (PAC Mini)', price: 2.50 },
+            { name: 'Caixa tipo correio 16 x 11 x 4cm (PAC Mini)', price: 1.75 },
+            { name: 'Caixa tipo correio 23 x 15 x 4cm (PAC Mini)', price: 1.85 }
+        ]
+    }
+};
+
+// Função para lidar com a mudança no tipo de produto
+window.handleProductTypeChange = function() {
+    const productType = document.getElementById('productTypeSelect').value;
+    const modelContainer = document.getElementById('modelContainer');
+    const sizeContainer = document.getElementById('sizeContainer');
+    const quantityContainer = document.getElementById('quantityContainer');
+    
+    // Resetar seleções
+    const modelSelect = document.getElementById('modelSelect');
+    const sizeSelect = document.getElementById('sizeSelect');
+    const quantitySelect = document.getElementById('quantitySelect');
+    
+    modelSelect.innerHTML = '<option value="" disabled selected class="text-gray-900">Selecione o modelo...</option>';
+    sizeSelect.innerHTML = '<option value="" disabled selected class="text-gray-900">Selecione o tamanho...</option>';
+    quantitySelect.value = "";
+    
+    // Resetar containers
+    modelContainer.classList.add('hidden');
+    sizeContainer.classList.add('hidden');
+    quantityContainer.classList.add('hidden');
+    document.getElementById('customQuantityContainer').classList.add('hidden');
+    document.getElementById('totalDisplayContainer').classList.add('hidden');
+    
+    if (productType && productCatalog[productType]) {
+        const models = Object.keys(productCatalog[productType]);
+        
+        models.forEach(model => {
+            const option = document.createElement('option');
+            option.value = model;
+            option.textContent = model;
+            option.className = 'text-gray-900';
+            modelSelect.appendChild(option);
+        });
+        
+        modelContainer.classList.remove('hidden');
+    }
+};
+
+// Função para lidar com a mudança no modelo
+window.handleModelChange = function() {
+    const productType = document.getElementById('productTypeSelect').value;
+    const model = document.getElementById('modelSelect').value;
+    const sizeContainer = document.getElementById('sizeContainer');
+    const quantityContainer = document.getElementById('quantityContainer');
+    const sizeSelect = document.getElementById('sizeSelect');
+    
+    sizeSelect.innerHTML = '<option value="" disabled selected class="text-gray-900">Selecione o tamanho...</option>';
+    quantityContainer.classList.add('hidden');
+    document.getElementById('customQuantityContainer').classList.add('hidden');
+    document.getElementById('totalDisplayContainer').classList.add('hidden');
+    
+    if (productType && model && productCatalog[productType][model]) {
+        const sizes = productCatalog[productType][model];
+        
+        sizes.forEach(size => {
+            const option = document.createElement('option');
+            option.value = size.name;
+            option.textContent = `${size.name} - R$ ${size.price.toFixed(2)}`;
+            option.dataset.price = size.price;
+            option.className = 'text-gray-900';
+            sizeSelect.appendChild(option);
+        });
+        
+        sizeContainer.classList.remove('hidden');
+    }
+};
+
+// Função para lidar com a mudança no tamanho
+window.handleSizeChange = function() {
+    const sizeSelect = document.getElementById('sizeSelect');
+    const quantityContainer = document.getElementById('quantityContainer');
+    
+    if (sizeSelect.value) {
+        quantityContainer.classList.remove('hidden');
         document.getElementById('quantitySelect').value = "";
         document.getElementById('customQuantityContainer').classList.add('hidden');
         document.getElementById('customQuantityInput').removeAttribute('required');
-        
-        // Atualiza o display do valor total
-        updateTotalDisplay();
+        document.getElementById('totalDisplayContainer').classList.add('hidden');
     }
 };
 
 // Função para atualizar o display do valor total
 window.updateTotalDisplay = function() {
-    const productSelect = document.getElementById('productSelect');
-    const selectedOption = productSelect.options[productSelect.selectedIndex];
+    const sizeSelect = document.getElementById('sizeSelect');
+    const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
     
-    if (!selectedOption || !selectedOption.textContent) {
+    if (!selectedOption || !selectedOption.dataset.price) {
         return;
     }
     
-    const productText = selectedOption.textContent;
-    const priceMatch = productText.match(/R\$\s*([\d,.]+)/);
-    
-    if (!priceMatch) {
-        return;
-    }
-    
-    const unitPrice = parseFloat(priceMatch[1].replace(',', '.'));
+    const unitPrice = parseFloat(selectedOption.dataset.price);
     
     // Pega a quantidade selecionada
     let quantity = 0;
@@ -301,31 +444,32 @@ window.submitOrder = async function(e) {
     e.preventDefault();
     if (!currentUserData) return;
 
-    const productSelect = document.getElementById('productSelect');
-    const selectedOption = productSelect.options[productSelect.selectedIndex];
-    const productText = selectedOption.textContent; // Pega o texto completo com preço
-    const productValue = productSelect.value; // Pega o valor sem preço
+    const productType = document.getElementById('productTypeSelect').value;
+    const model = document.getElementById('modelSelect').value;
+    const sizeSelect = document.getElementById('sizeSelect');
+    const sizeOption = sizeSelect.options[sizeSelect.selectedIndex];
+    const productValue = sizeSelect.value;
+    const productText = sizeOption.textContent;
+    const unitPrice = parseFloat(sizeOption.dataset.price);
     
     let quantity = document.getElementById('quantitySelect').value;
+    let quantityNumber = 0;
     
     if(quantity === 'Outra') {
-        quantity = document.getElementById('customQuantityInput').value + ' unidades';
+        quantityNumber = parseInt(document.getElementById('customQuantityInput').value) || 0;
+        quantity = quantityNumber + ' unidades';
     } else {
+        quantityNumber = parseInt(quantity) || 0;
         quantity = quantity + ' unidades';
     }
 
-    // Extrai o preço do texto do produto
-    const priceMatch = productText.match(/R\$\s*([\d,.]+)/);
-    const unitPrice = priceMatch ? parseFloat(priceMatch[1].replace(',', '.')) : null;
-    
     // Calcula o valor total estimado
     let totalEstimated = null;
-    if (unitPrice) {
-        const qtyNumber = parseInt(quantity.replace(/\D/g, '')) || 0;
-        if (qtyNumber > 0) {
-            totalEstimated = unitPrice * qtyNumber;
-        }
+    if (unitPrice && quantityNumber > 0) {
+        totalEstimated = unitPrice * quantityNumber;
     }
+
+    const obs = document.getElementById('orderObs').value.trim();
 
     const btn = e.target.querySelector('button[type="submit"]');
     const originalText = btn.innerHTML;
@@ -338,11 +482,14 @@ window.submitOrder = async function(e) {
         clientEmail: currentUserData.email,
         clientPhone: currentUserData.phone || '',
         clientCompany: currentUserData.company || '',
-        product: productValue, // Usa o valor sem preço para manter compatibilidade
-        productFullDescription: productText, // Mantém a descrição completa com preço
+        productType: productType,
+        model: model,
+        product: productValue,
+        productFullDescription: productText,
         quantity: quantity,
         unitPrice: unitPrice,
         totalEstimated: totalEstimated,
+        obs: obs,
         priority: "Média",
         status: "novo",
         createdAt: Date.now()
@@ -359,6 +506,8 @@ window.submitOrder = async function(e) {
         }
         
         document.getElementById('orderForm').reset();
+        document.getElementById('modelContainer').classList.add('hidden');
+        document.getElementById('sizeContainer').classList.add('hidden');
         document.getElementById('quantityContainer').classList.add('hidden');
         document.getElementById('customQuantityContainer').classList.add('hidden');
         document.getElementById('totalDisplayContainer').classList.add('hidden');
@@ -408,6 +557,9 @@ function renderClientOrders(orders) {
         const estimatedValue = order.totalEstimated ? 
             `<div class="text-sm font-bold text-white mt-2">Valor Total: R$ ${order.totalEstimated.toFixed(2)}</div>` : '';
         
+        const obsDisplay = order.obs ? 
+            `<div class="text-sm text-white/90 mt-2 flex items-start gap-2"><i class="fas fa-comment-dots text-white/60 mt-1"></i> ${order.obs}</div>` : '';
+        
         return `
         <div class="bg-gradient-to-br ${statusColors[order.status]} p-6 rounded-3xl shadow-xl flex flex-col gap-4 relative overflow-hidden">
             <div class="flex justify-between items-start">
@@ -423,6 +575,7 @@ function renderClientOrders(orders) {
             <div class="text-sm text-white/90 flex items-center gap-2">
                 <i class="fas fa-cubes text-white/60"></i> ${order.quantity}
             </div>
+            ${obsDisplay}
         </div>`;
     }).join('');
 }
@@ -550,6 +703,9 @@ function createKanbanCard(order) {
     const estimatedValue = order.totalEstimated ? 
         `<div class="text-sm font-bold text-white mb-2">Valor Total: R$ ${order.totalEstimated.toFixed(2)}</div>` : '';
     
+    const obsDisplay = order.obs ? 
+        `<div class="text-xs text-white/80 mb-2 flex items-start gap-1"><i class="fas fa-comment-dots text-white/60 mt-0.5"></i> ${order.obs}</div>` : '';
+    
     return `
     <div id="order-${order.id}" class="draggable-card bg-gradient-to-br ${statusGradients[order.status]} p-5 rounded-2xl border border-white/20 shadow-xl hover:shadow-2xl transition-all relative overflow-hidden group" 
          draggable="true" 
@@ -571,6 +727,7 @@ function createKanbanCard(order) {
             <i class="fas fa-cubes text-white/60"></i> ${order.quantity}
         </div>
         ${estimatedValue}
+        ${obsDisplay}
         
         <div class="pt-4 border-t border-white/20 mt-2">
             <button onclick="openEditModal('${order.id}')" class="flex items-center gap-2 text-sm font-semibold text-white/90 hover:text-white hover:bg-white/10 px-3 py-2 rounded-xl transition w-full text-left">
@@ -704,6 +861,7 @@ window.openEditModal = function(orderId) {
     document.getElementById('editClientCompany').value = order.clientCompany || '';
     document.getElementById('editProduct').value = order.product;
     document.getElementById('editQuantity').value = order.quantity;
+    document.getElementById('editObs').value = order.obs || '';
     document.getElementById('editStatus').value = order.status;
     document.getElementById('editPriority').value = order.priority || 'Média';
     
@@ -750,6 +908,7 @@ function loadClientOrderHistory(userId) {
             <div class="flex-1">
                 <p class="text-sm font-semibold text-gray-900">${order.product} - ${order.quantity}</p>
                 ${estimatedValue}
+                ${order.obs ? `<p class="text-xs text-gray-500 mt-1"><i class="fas fa-comment-dots mr-1"></i>${order.obs}</p>` : ''}
                 <p class="text-xs text-gray-500 mt-1">
                     <i class="fas fa-calendar-alt mr-1"></i>${window.formatDateTime(order.createdAt)}
                 </p>
@@ -776,6 +935,7 @@ window.saveClientEdit = async function() {
     const newClientCompany = document.getElementById('editClientCompany').value;
     const newProduct = document.getElementById('editProduct').value;
     const newQuantity = document.getElementById('editQuantity').value;
+    const newObs = document.getElementById('editObs').value;
 
     try {
         const orderRef = ref(db, `orders/${orderId}`);
@@ -789,7 +949,8 @@ window.saveClientEdit = async function() {
             clientEmail: newClientEmail,
             clientCompany: newClientCompany,
             product: newProduct,
-            quantity: newQuantity
+            quantity: newQuantity,
+            obs: newObs
         });
         
         if (clientUid) {
@@ -1049,6 +1210,7 @@ window.openClientModal = function(clientUid) {
             document.getElementById('editClientCompany').value = clientData.company || '';
             document.getElementById('editProduct').value = '';
             document.getElementById('editQuantity').value = '';
+            document.getElementById('editObs').value = '';
             document.getElementById('editStatus').value = 'novo';
             document.getElementById('editPriority').value = 'Média';
             

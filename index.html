@@ -113,129 +113,43 @@
                 <div class="p-6 overflow-y-auto flex-1">
                     <form id="orderForm" onsubmit="submitOrder(event)" class="space-y-5">
                         
-                       <!-- Seletor de Produto (substituir a seção atual) -->
-<div>
-    <label class="block text-sm font-medium text-white mb-2">Produto</label>
-    <div class="relative">
-        <select id="productSelect" required onchange="handleProductChange()" class="w-full appearance-none px-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white">
-            <option value="" disabled selected class="text-gray-900">Selecione um produto...</option>
-            
-            <!-- CAIXAS DE PIZZA MODELO OITAVADA – FLEXOGRÁFICAS - BRANCA -->
-            <optgroup label="Caixas de Pizza Oitavada - Flexográficas - Branca" class="text-gray-900 font-bold">
-                <option value="Caixa de pizza oitavada 20cm (brotinho) - Branca" class="text-gray-900">Caixa de pizza oitavada 20cm (brotinho) - R$ 1,70</option>
-                <option value="Caixa de pizza oitavada 25cm (pequena) - Branca" class="text-gray-900">Caixa de pizza oitavada 25cm (pequena) - R$ 2,10</option>
-                <option value="Caixa de pizza oitavada 30cm (média) - Branca" class="text-gray-900">Caixa de pizza oitavada 30cm (média) - R$ 2,40</option>
-                <option value="Caixa de pizza oitavada 35cm (grande) - Branca" class="text-gray-900">Caixa de pizza oitavada 35cm (grande) - R$ 2,85</option>
-                <option value="Caixa de pizza oitavada 40cm (família) - Branca" class="text-gray-900">Caixa de pizza oitavada 40cm (família) - R$ 3,30</option>
-                <option value="Caixa de pizza oitavada 45cm (gigante) - Branca" class="text-gray-900">Caixa de pizza oitavada 45cm (gigante) - R$ 4,60</option>
-            </optgroup>
-            
-            <!-- CAIXAS DE PIZZA MODELO OITAVADA – FLEXOGRÁFICAS - PARDA -->
-            <optgroup label="Caixas de Pizza Oitavada - Flexográficas - Parda" class="text-gray-900 font-bold">
-                <option value="Caixa de pizza oitavada 20cm (brotinho) - Parda" class="text-gray-900">Caixa de pizza oitavada 20cm (brotinho) - R$ 1,60</option>
-                <option value="Caixa de pizza oitavada 25cm (pequena) - Parda" class="text-gray-900">Caixa de pizza oitavada 25cm (pequena) - R$ 2,00</option>
-                <option value="Caixa de pizza oitavada 30cm (média) - Parda" class="text-gray-900">Caixa de pizza oitavada 30cm (média) - R$ 2,30</option>
-                <option value="Caixa de pizza oitavada 35cm (grande) - Parda" class="text-gray-900">Caixa de pizza oitavada 35cm (grande) - R$ 2,65</option>
-                <option value="Caixa de pizza oitavada 40cm (família) - Parda" class="text-gray-900">Caixa de pizza oitavada 40cm (família) - R$ 3,10</option>
-                <option value="Caixa de pizza oitavada 45cm (gigante) - Parda" class="text-gray-900">Caixa de pizza oitavada 45cm (gigante) - R$ 4,40</option>
-            </optgroup>
-            
-            <!-- CAIXAS DE PIZZA MODELO OITAVADA – FOTOGRÁFICAS -->
-            <optgroup label="Caixas de Pizza Oitavada - Fotográficas" class="text-gray-900 font-bold">
-                <option value="Caixa de pizza oitavada 25cm (pequena) - Fotográfica" class="text-gray-900">Caixa de pizza oitavada 25cm (pequena) - R$ 2,80</option>
-                <option value="Caixa de pizza oitavada 30cm (média) - Fotográfica" class="text-gray-900">Caixa de pizza oitavada 30cm (média) - R$ 3,00</option>
-                <option value="Caixa de pizza oitavada 35cm (grande) - Fotográfica" class="text-gray-900">Caixa de pizza oitavada 35cm (grande) - R$ 3,35</option>
-                <option value="Caixa de pizza oitavada 40cm (família) - Fotográfica" class="text-gray-900">Caixa de pizza oitavada 40cm (família) - R$ 3,70</option>
-            </optgroup>
-            
-            <!-- CAIXAS PARA PIZZAS, DOCES, SALGADOS, ESFIRRAS – AMERICANA - BRANCA -->
-            <optgroup label="Caixas Americanas - Branca" class="text-gray-900 font-bold">
-                <option value="Caixa Americana tam. 20cm (brotinho) - Branca" class="text-gray-900">Caixa Americana 20cm (brotinho) - R$ 1,98</option>
-                <option value="Caixa Americana tam. 25cm (pequena) - Branca" class="text-gray-900">Caixa Americana 25cm (pequena) - R$ 2,10</option>
-                <option value="Caixa Americana tam. 30cm (média) - Branca" class="text-gray-900">Caixa Americana 30cm (média) - R$ 2,40</option>
-                <option value="Caixa Americana tam. 35cm (grande) - Branca" class="text-gray-900">Caixa Americana 35cm (grande) - R$ 2,85</option>
-                <option value="Caixa Americana tam. 40cm (família) - Branca" class="text-gray-900">Caixa Americana 40cm (família) - R$ 3,30</option>
-            </optgroup>
-            
-            <!-- CAIXAS PARA PIZZAS, DOCES, SALGADOS, ESFIRRAS – AMERICANA - PARDA -->
-            <optgroup label="Caixas Americanas - Parda" class="text-gray-900 font-bold">
-                <option value="Caixa Americana tam. 20cm (brotinho) - Parda" class="text-gray-900">Caixa Americana 20cm (brotinho) - R$ 1,88</option>
-                <option value="Caixa Americana tam. 25cm (pequena) - Parda" class="text-gray-900">Caixa Americana 25cm (pequena) - R$ 2,00</option>
-                <option value="Caixa Americana tam. 30cm (média) - Parda" class="text-gray-900">Caixa Americana 30cm (média) - R$ 2,20</option>
-                <option value="Caixa Americana tam. 35cm (grande) - Parda" class="text-gray-900">Caixa Americana 35cm (grande) - R$ 2,65</option>
-                <option value="Caixa Americana tam. 40cm (família) - Parda" class="text-gray-900">Caixa Americana 40cm (família) - R$ 3,10</option>
-            </optgroup>
-            
-            <!-- CAIXAS DE DOCES/ SALGADOS/ PIZZA/ ESFIRRAS – QUADRADA BRANCA -->
-            <optgroup label="Caixas Quadradas - Branca" class="text-gray-900 font-bold">
-                <option value="Caixa quadrada 20x20x5cm (Broto)" class="text-gray-900">Caixa quadrada 20x20x5cm (Broto) - R$ 2,10</option>
-                <option value="Caixa quadrada 25x25x5,5cm (Pequena)" class="text-gray-900">Caixa quadrada 25x25x5,5cm (Pequena) - R$ 2,40</option>
-                <option value="Caixa quadrada 30x30x4,0cm (média)" class="text-gray-900">Caixa quadrada 30x30x4,0cm (média) - R$ 2,50</option>
-                <option value="Caixa quadrada 30x30x5,5cm (média)" class="text-gray-900">Caixa quadrada 30x30x5,5cm (média) - R$ 2,85</option>
-                <option value="Caixa quadrada 35x35x4,0cm (grande)" class="text-gray-900">Caixa quadrada 35x35x4,0cm (grande) - R$ 2,85</option>
-                <option value="Caixa quadrada 35x35x5,5cm (grande)" class="text-gray-900">Caixa quadrada 35x35x5,5cm (grande) - R$ 3,18</option>
-                <option value="Caixa quadrada 40x40x4,0cm (família)" class="text-gray-900">Caixa quadrada 40x40x4,0cm (família) - R$ 3,32</option>
-                <option value="Caixa quadrada 40x40x4,5cm (família)" class="text-gray-900">Caixa quadrada 40x40x4,5cm (família) - R$ 3,52</option>
-                <option value="Caixa quadrada 40x40x5,5cm (família)" class="text-gray-900">Caixa quadrada 40x40x5,5cm (família) - R$ 4,38</option>
-                <option value="Caixa quadrada 40x40x7cm (família)" class="text-gray-900">Caixa quadrada 40x40x7cm (família) - R$ 4,70</option>
-                <option value="Caixa quadrada 45x45x5cm (Gigante)" class="text-gray-900">Caixa quadrada 45x45x5cm (Gigante) - R$ 5,25</option>
-            </optgroup>
-            
-            <!-- CAIXAS PARA TORTAS E BOLO – BRANCA -->
-            <optgroup label="Caixas para Tortas e Bolo - Branca" class="text-gray-900 font-bold">
-                <option value="Caixa de torta 22 x 22 x 9,5cm" class="text-gray-900">Caixa de torta 22cm - R$ 3,00</option>
-                <option value="Caixa de torta retangular 29 x 18 x 10cm" class="text-gray-900">Caixa de torta retangular - R$ 3,20</option>
-                <option value="Caixa de torta PP baixa 20 x 20 x 13cm" class="text-gray-900">Caixa PP baixa 20cm - R$ 3,45</option>
-                <option value="Caixa de torta PP alta 20 x 20 x 17cm" class="text-gray-900">Caixa PP alta 20cm - R$ 3,65</option>
-                <option value="Caixa de torta pequena 25 x 25 x 15cm" class="text-gray-900">Caixa pequena 25cm - R$ 3,60</option>
-                <option value="Caixa de torta média 30 x 30 x 12cm baixa" class="text-gray-900">Caixa média 30cm baixa - R$ 3,75</option>
-                <option value="Caixa de torta média 30 x 30 x 16cm alta" class="text-gray-900">Caixa média 30cm alta - R$ 4,55</option>
-                <option value="Caixa de torta grande 35 x 35 x 12cm baixa" class="text-gray-900">Caixa grande 35cm baixa - R$ 4,60</option>
-                <option value="Caixa de torta grande 35 x 35 x 15cm alta" class="text-gray-900">Caixa grande 35cm alta - R$ 4,80</option>
-                <option value="Caixa de torta GG 40 x 40 x 12,5cm" class="text-gray-900">Caixa GG 40cm - R$ 5,10</option>
-                <option value="Caixa de torta retangular 40 x 30 x 15cm" class="text-gray-900">Caixa Retangular - R$ 6,50</option>
-                <option value="Caixa de torta retangular 54 x 41,5 x 12cm" class="text-gray-900">Caixa Retangular Grande - R$ 6,98</option>
-            </optgroup>
-            
-            <!-- CAIXAS RETANGULARES PARA DOCES, SALGADOS, ESFIRRAS, PRATOS, FRITAS -->
-            <optgroup label="Caixas Retangulares" class="text-gray-900 font-bold">
-                <option value="Caixa retangular 21 x 14 x 5cm" class="text-gray-900">Caixa retangular 21x14x5cm - R$ 1,80</option>
-                <option value="Caixa retangular 28 x 21 x 5cm" class="text-gray-900">Caixa retangular 28x21x5cm - R$ 2,00</option>
-                <option value="Caixa retangular P (filé/lasanha) 22,5 x 18,5 x 5cm" class="text-gray-900">Caixa retangular P (filé/lasanha) - R$ 2,18</option>
-                <option value="Caixa retangular M (filé/lasanha) 27 x 19 x 5cm" class="text-gray-900">Caixa retangular M (filé/lasanha) - R$ 2,30</option>
-                <option value="Caixa retangular G (filé/lasanha) 29,5 x 23,5 x 5cm" class="text-gray-900">Caixa retangular G (filé/lasanha) - R$ 2,42</option>
-            </optgroup>
-            
-            <!-- CAIXAS TIPO CORREIO/ ECOMMERCE P/ ENCOMENDAS -->
-            <optgroup label="Caixas Tipo Correio/Ecommerce" class="text-gray-900 font-bold">
-                <option value="Caixa tipo correio 15 x 10 x 5cm" class="text-gray-900">Caixa tipo correio 15x10x5cm - R$ 2,40</option>
-                <option value="Caixa tipo correio 12,5 x 12,5 x 6,5cm" class="text-gray-900">Caixa tipo correio 12,5x12,5x6,5cm - R$ 2,85</option>
-                <option value="Caixa tipo correio 17,5 x 17,5 x 9cm" class="text-gray-900">Caixa tipo correio 17,5x17,5x9cm - R$ 3,20</option>
-                <option value="Caixa tipo correio 17,5 x 16,0 x 5,5cm" class="text-gray-900">Caixa tipo correio 17,5x16x5,5cm - R$ 1,80</option>
-                <option value="Caixa tipo correio 21 x 14,5 x 7cm" class="text-gray-900">Caixa tipo correio 21x14,5x7cm - R$ 3,20</option>
-                <option value="Caixa tipo correio 22,5 x 15 x 6cm" class="text-gray-900">Caixa tipo correio 22,5x15x6cm - R$ 3,00</option>
-                <option value="Caixa tipo correio 28,5 x 15,5 x 5,7cm" class="text-gray-900">Caixa tipo correio 28,5x15,5x5,7cm - R$ 3,25</option>
-                <option value="Caixa tipo correio 30 x 20 x 11cm" class="text-gray-900">Caixa tipo correio 30x20x11cm - R$ 4,50</option>
-                <option value="Caixa tipo correio 33 x 18,5 x 9cm" class="text-gray-900">Caixa tipo correio 33x18,5x9cm - R$ 4,60</option>
-                <option value="Caixa tipo correio 33 x 20,0 x 6cm" class="text-gray-900">Caixa tipo correio 33x20x6cm - R$ 4,00</option>
-                <option value="Caixa tipo correio 16 x 12 x 4cm (PAC Mini)" class="text-gray-900">Caixa tipo correio 16x12x4cm (PAC Mini) - R$ 2,00</option>
-                <option value="Caixa tipo correio 24 x 17 x 4cm (PAC Mini)" class="text-gray-900">Caixa tipo correio 24x17x4cm (PAC Mini) - R$ 2,50</option>
-                <option value="Caixa tipo correio 16 x 11 x 4cm (PAC Mini)" class="text-gray-900">Caixa tipo correio 16x11x4cm (PAC Mini) - R$ 1,75</option>
-                <option value="Caixa tipo correio 23 x 15 x 4cm (PAC Mini)" class="text-gray-900">Caixa tipo correio 23x15x4cm (PAC Mini) - R$ 1,85</option>
-            </optgroup>
-            
-            <!-- CAIXAS TIPO MALETA PARA INDÚSTRIAS - PARDA -->
-            <optgroup label="Caixas Tipo Maleta para Indústrias - Parda" class="text-gray-900 font-bold">
-                <option value="Caixa tipo maleta 16 x 10,5 x 22,5cm (20 picolés)" class="text-gray-900">Caixa tipo maleta (20 picolés) - R$ 1,70</option>
-                <option value="Caixa tipo maleta 16,0 x 10,5 x 11,5cm (10 picolés)" class="text-gray-900">Caixa tipo maleta (10 picolés) - R$ 1,40</option>
-                <option value="Caixa tipo maleta 21,0 x 16,0 x 11,5cm" class="text-gray-900">Caixa tipo maleta 21x16x11,5cm - R$ 2,50</option>
-                <option value="Caixa tipo maleta 27,5 x 17,5 x 11,0cm" class="text-gray-900">Caixa tipo maleta 27,5x17,5x11cm - R$ 2,70</option>
-                <option value="Caixa tipo maleta 32,0 x 24,0 x 16,0cm" class="text-gray-900">Caixa tipo maleta 32x24x16cm - R$ 3,20</option>
-            </optgroup>
-        </select>
-        <i class="fas fa-chevron-down absolute right-4 top-5 text-white/50 pointer-events-none"></i>
-    </div>
-</div>
+                        <!-- Seletor de Tipo de Produto (Cascata) -->
+                        <div>
+                            <label class="block text-sm font-medium text-white mb-2">Produto</label>
+                            <div class="relative">
+                                <select id="productTypeSelect" required onchange="handleProductTypeChange()" class="w-full appearance-none px-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white">
+                                    <option value="" disabled selected class="text-gray-900">Selecione o tipo de produto...</option>
+                                    <option value="Caixa de pizza" class="text-gray-900">Caixa de pizza</option>
+                                    <option value="Caixa de torta" class="text-gray-900">Caixa de torta</option>
+                                    <option value="Caixa correio" class="text-gray-900">Caixa correio</option>
+                                </select>
+                                <i class="fas fa-chevron-down absolute right-4 top-5 text-white/50 pointer-events-none"></i>
+                            </div>
+                        </div>
+
+                        <!-- Seletor de Modelo (Cascata - depende do tipo de produto) -->
+                        <div id="modelContainer" class="hidden fade-in">
+                            <label class="block text-sm font-medium text-white mb-2">Modelo</label>
+                            <div class="relative">
+                                <select id="modelSelect" required onchange="handleModelChange()" class="w-full appearance-none px-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white">
+                                    <option value="" disabled selected class="text-gray-900">Selecione o modelo...</option>
+                                    <!-- Opções serão carregadas dinamicamente -->
+                                </select>
+                                <i class="fas fa-chevron-down absolute right-4 top-5 text-white/50 pointer-events-none"></i>
+                            </div>
+                        </div>
+
+                        <!-- Seletor de Tamanho/Especificação (Cascata - depende do modelo) -->
+                        <div id="sizeContainer" class="hidden fade-in">
+                            <label class="block text-sm font-medium text-white mb-2">Tamanho/Especificação</label>
+                            <div class="relative">
+                                <select id="sizeSelect" required onchange="handleSizeChange()" class="w-full appearance-none px-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white">
+                                    <option value="" disabled selected class="text-gray-900">Selecione o tamanho...</option>
+                                    <!-- Opções serão carregadas dinamicamente -->
+                                </select>
+                                <i class="fas fa-chevron-down absolute right-4 top-5 text-white/50 pointer-events-none"></i>
+                            </div>
+                        </div>
 
                         <!-- Seletor de Quantidade (Cascata) -->
                         <div id="quantityContainer" class="hidden fade-in">
@@ -259,6 +173,15 @@
                         <div id="customQuantityContainer" class="hidden fade-in">
                             <label class="block text-sm font-medium text-white mb-2">Digite a Quantidade Específica</label>
                             <input type="number" id="customQuantityInput" min="1" class="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50" placeholder="Ex: 1500" oninput="updateTotalDisplay()">
+                        </div>
+
+                        <!-- Campo de Observação -->
+                        <div class="fade-in">
+                            <label class="block text-sm font-medium text-white mb-2">Observação</label>
+                            <div class="relative">
+                                <i class="fas fa-comment-dots absolute left-4 top-4 text-white/50"></i>
+                                <textarea id="orderObs" rows="3" class="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50 resize-none" placeholder="Alguma observação? Ex: cor específica, tipo de material, etc."></textarea>
+                            </div>
                         </div>
 
                         <!-- Display do Valor Total -->
@@ -455,6 +378,12 @@
                         <label class="block text-xs font-medium text-gray-700 mb-1">Quantidade</label>
                         <input type="text" id="editQuantity" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white">
                     </div>
+                </div>
+
+                <!-- Campo de Observação no Modal de Edição -->
+                <div class="bg-gray-50 p-5 rounded-2xl border border-gray-200">
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Observação</label>
+                    <textarea id="editObs" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white resize-none" placeholder="Observação do pedido..."></textarea>
                 </div>
 
                 <!-- Valor Total do Pedido -->
