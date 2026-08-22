@@ -185,6 +185,68 @@ body {
     color: white;
 }
 
+/* Estilos para o Select de Produtos */
+#productSelect {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+#productSelect optgroup {
+    font-weight: 700;
+    color: #1e293b;
+    background-color: #f1f5f9;
+    padding: 8px 0;
+    font-size: 0.9em;
+    letter-spacing: 0.5px;
+}
+
+#productSelect optgroup::before {
+    content: '📦 ';
+    font-size: 1.1em;
+}
+
+#productSelect option {
+    padding: 10px 12px;
+    font-weight: 400;
+    color: #334155;
+    background-color: #ffffff;
+    transition: all 0.2s ease;
+}
+
+#productSelect option:hover {
+    background-color: #e0e7ff;
+    color: #1e40af;
+}
+
+#productSelect option:checked {
+    background-color: #3b82f6;
+    color: white;
+}
+
+/* Melhorar a aparência do dropdown */
+select {
+    scrollbar-width: thin;
+    scrollbar-color: #94a3b8 #e2e8f0;
+}
+
+select::-webkit-scrollbar {
+    width: 8px;
+}
+
+select::-webkit-scrollbar-track {
+    background: #e2e8f0;
+    border-radius: 4px;
+}
+
+select::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+    border-radius: 4px;
+}
+
+select::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
 /* TV Mode */
 @media (min-width: 1920px) {
     body {
@@ -199,6 +261,15 @@ body {
     .kanban-column {
         min-height: 500px;
     }
+    
+    #productSelect {
+        max-height: 500px;
+        font-size: 1.1em;
+    }
+    
+    #productSelect option {
+        padding: 12px 14px;
+    }
 }
 
 /* Mobile otimizado */
@@ -210,6 +281,20 @@ body {
     
     .kanban-column {
         min-height: 200px;
+    }
+    
+    #productSelect {
+        max-height: 300px;
+        font-size: 0.9em;
+    }
+    
+    #productSelect option {
+        padding: 8px 10px;
+    }
+    
+    #productSelect optgroup {
+        font-size: 0.85em;
+        padding: 6px 0;
     }
 }
 
@@ -232,4 +317,32 @@ body {
 @keyframes glow {
     0%, 100% { transform: translate(0, 0); }
     50% { transform: translate(10%, 10%); }
+}
+
+/* Ajustes para o select em telas maiores */
+@media (min-width: 1024px) {
+    #productSelect {
+        font-size: 0.95em;
+    }
+    
+    #productSelect optgroup {
+        font-size: 0.88em;
+    }
+}
+
+/* Hover states para os grupos */
+#productSelect optgroup:hover {
+    background-color: #e2e8f0;
+    cursor: pointer;
+}
+
+/* Estilo para quando o select está focado */
+#productSelect:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+/* Ajuste para o dropdown quando aberto */
+#productSelect:focus-visible {
+    outline: none;
+    border-color: #3b82f6;
 }

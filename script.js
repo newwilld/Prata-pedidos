@@ -227,8 +227,20 @@ window.handleProductChange = function() {
         document.getElementById('quantitySelect').value = "";
         document.getElementById('customQuantityContainer').classList.add('hidden');
         document.getElementById('customQuantityInput').removeAttribute('required');
+        
+        // Adiciona informação do preço se disponível
+        updateProductPriceDisplay(product);
     }
 };
+
+// Função para extrair e exibir o preço do produto
+function updateProductPriceDisplay(product) {
+    const priceMatch = product.match(/R\$\s*([\d,.]+)/);
+    if (priceMatch) {
+        const price = priceMatch[1];
+        showToast(`Preço unitário: R$ ${price}`, 'info');
+    }
+}
 
 window.handleQuantityChange = function() {
     const q = document.getElementById('quantitySelect').value;
@@ -248,13 +260,30 @@ window.submitOrder = async function(e) {
     e.preventDefault();
     if (!currentUserData) return;
 
-    const product = document.getElementById('productSelect').value;
+    const productSelect = document.getElementById('productSelect');
+    const selectedOption = productSelect.options[productSelect.selectedIndex];
+    const productText = selectedOption.textContent; // Pega o texto completo com preço
+    const productValue = productSelect.value; // Pega o valor sem preço
+    
     let quantity = document.getElementById('quantitySelect').value;
     
     if(quantity === 'Outra') {
         quantity = document.getElementById('customQuantityInput').value + ' unidades';
     } else {
         quantity = quantity + ' unidades';
+    }
+
+    // Extrai o preço do texto do produto
+    const priceMatch = productText.match(/R\$\s*([\d,.]+)/);
+    const unitPrice = priceMatch ? parseFloat(priceMatch[1].replace(',', '.')) : null;
+    
+    // Calcula o valor total estimado
+    let totalEstimated = null;
+    if (unitPrice) {
+        const qtyNumber = parseInt(quantity.replace(/\D/g, '')) || 0;
+        if (qtyNumber > 0) {
+            totalEstimated = unitPrice * qtyNumber;
+        }
     }
 
     const btn = e.target.querySelector('button[type="submit"]');
@@ -268,8 +297,11 @@ window.submitOrder = async function(e) {
         clientEmail: currentUserData.email,
         clientPhone: currentUserData.phone || '',
         clientCompany: currentUserData.company || '',
-        product: product,
+        product: productValue, // Usa o valor sem preço para manter compatibilidade
+        productFullDescription: productText, // Mantém a descrição completa com preço
         quantity: quantity,
+        unitPrice: unitPrice,
+        totalEstimated: totalEstimated,
         priority: "Média",
         status: "novo",
         createdAt: Date.now()
@@ -281,6 +313,10 @@ window.submitOrder = async function(e) {
         await set(newOrderRef, newOrder);
         
         showToast('Pedido enviado com sucesso!', 'success');
+        if (totalEstimated) {
+            showToast(`Valor estimado: R$ ${totalEstimated.toFixed(2)}`, 'info');
+        }
+        
         document.getElementById('orderForm').reset();
         document.getElementById('quantityContainer').classList.add('hidden');
         document.getElementById('customQuantityContainer').classList.add('hidden');
@@ -327,12 +363,16 @@ function renderClientOrders(orders) {
     const statusText = { 'novo': 'Pendente', 'producao': 'Em Produção', 'finalizado': 'Finalizado' };
 
     list.innerHTML = orders.map(order => {
+        const estimatedValue = order.totalEstimated ? 
+            `<div class="text-xs text-white/70 mt-1">Valor estimado: R$ ${order.totalEstimated.toFixed(2)}</div>` : '';
+        
         return `
         <div class="bg-gradient-to-br ${statusColors[order.status]} p-6 rounded-3xl shadow-xl flex flex-col gap-4 relative overflow-hidden">
             <div class="flex justify-between items-start">
                 <div>
                     <span class="text-xs font-semibold text-white/70 uppercase tracking-wider">${window.formatDateTime(order.createdAt).split(' às')[0]}</span>
                     <h4 class="font-bold text-white text-lg leading-tight mt-1">${order.product}</h4>
+                    ${estimatedValue}
                 </div>
                 <span class="text-xs px-3 py-1.5 rounded-full font-bold bg-white/20 text-white">
                     ${statusText[order.status]}
@@ -465,6 +505,9 @@ function createKanbanCard(order) {
         'Alta': 'bg-red-500/20 text-red-200'
     };
     
+    const estimatedValue = order.totalEstimated ? 
+        `<div class="text-xs text-white/70 mb-2">Valor: R$ ${order.totalEstimated.toFixed(2)}</div>` : '';
+    
     return `
     <div id="order-${order.id}" class="draggable-card bg-gradient-to-br ${statusGradients[order.status]} p-5 rounded-2xl border border-white/20 shadow-xl hover:shadow-2xl transition-all relative overflow-hidden group" 
          draggable="true" 
@@ -482,9 +525,10 @@ function createKanbanCard(order) {
         </div>
         
         <h4 class="font-bold text-white text-lg leading-tight mb-2">${order.product}</h4>
-        <div class="text-sm text-white/80 mb-4 flex items-center gap-2">
+        <div class="text-sm text-white/80 mb-2 flex items-center gap-2">
             <i class="fas fa-cubes text-white/60"></i> ${order.quantity}
         </div>
+        ${estimatedValue}
         
         <div class="pt-4 border-t border-white/20 mt-2">
             <button onclick="openEditModal('${order.id}')" class="flex items-center gap-2 text-sm font-semibold text-white/90 hover:text-white hover:bg-white/10 px-3 py-2 rounded-xl transition w-full text-left">
@@ -646,10 +690,14 @@ function loadClientOrderHistory(userId) {
         };
         const statusText = { 'novo': 'Pendente', 'producao': 'Em Produção', 'finalizado': 'Finalizado' };
         
+        const estimatedValue = order.totalEstimated ? 
+            `<p class="text-xs text-gray-500 mt-1">Valor: R$ ${order.totalEstimated.toFixed(2)}</p>` : '';
+        
         return `
         <div class="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
             <div class="flex-1">
                 <p class="text-sm font-semibold text-gray-900">${order.product} - ${order.quantity}</p>
+                ${estimatedValue}
                 <p class="text-xs text-gray-500 mt-1">
                     <i class="fas fa-calendar-alt mr-1"></i>${window.formatDateTime(order.createdAt)}
                 </p>
