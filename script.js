@@ -35,6 +35,109 @@ let globalUsers = {};
 let globalNotifications = {};
 let listenersInitialized = false;
 
+// Dados dos produtos em cascata (Categoria > Modelo > Tamanho/Especificação)
+const productCatalog = {
+    'Caixa de pizza': {
+        'Oitavada - Flexográficas - Branca': [
+            { name: 'Caixa de pizza oitavada 20cm (brotinho)', price: 1.70 },
+            { name: 'Caixa de pizza oitavada 25cm (pequena)', price: 2.10 },
+            { name: 'Caixa de pizza oitavada 30cm (média)', price: 2.40 },
+            { name: 'Caixa de pizza oitavada 35cm (grande)', price: 2.85 },
+            { name: 'Caixa de pizza oitavada 40cm (família)', price: 3.30 },
+            { name: 'Caixa de pizza oitavada 45cm (gigante)', price: 4.60 }
+        ],
+        'Oitavada - Flexográficas - Parda': [
+            { name: 'Caixa de pizza oitavada 20cm (brotinho)', price: 1.60 },
+            { name: 'Caixa de pizza oitavada 25cm (pequena)', price: 2.00 },
+            { name: 'Caixa de pizza oitavada 30cm (média)', price: 2.30 },
+            { name: 'Caixa de pizza oitavada 35cm (grande)', price: 2.65 },
+            { name: 'Caixa de pizza oitavada 40cm (família)', price: 3.10 },
+            { name: 'Caixa de pizza oitavada 45cm (gigante)', price: 4.40 }
+        ],
+        'Oitavada - Fotográficas': [
+            { name: 'Caixa de pizza oitavada 25cm (pequena)', price: 2.80 },
+            { name: 'Caixa de pizza oitavada 30cm (média)', price: 3.00 },
+            { name: 'Caixa de pizza oitavada 35cm (grande)', price: 3.35 },
+            { name: 'Caixa de pizza oitavada 40cm (família)', price: 3.70 }
+        ],
+        'Americana - Branca': [
+            { name: 'Caixa Americana tam. 20cm (brotinho)', price: 1.98 },
+            { name: 'Caixa Americana tam. 25cm (pequena)', price: 2.10 },
+            { name: 'Caixa Americana tam. 30cm (média)', price: 2.40 },
+            { name: 'Caixa Americana tam. 35cm (grande)', price: 2.85 },
+            { name: 'Caixa Americana tam. 40cm (família)', price: 3.30 }
+        ],
+        'Americana - Parda': [
+            { name: 'Caixa Americana tam. 20cm (brotinho)', price: 1.88 },
+            { name: 'Caixa Americana tam. 25cm (pequena)', price: 2.00 },
+            { name: 'Caixa Americana tam. 30cm (média)', price: 2.20 },
+            { name: 'Caixa Americana tam. 35cm (grande)', price: 2.65 },
+            { name: 'Caixa Americana tam. 40cm (família)', price: 3.10 }
+        ],
+        'Quadrada Branca': [
+            { name: 'Caixa quadrada tam. 20x20x5cm (Broto)', price: 2.10 },
+            { name: 'Caixa quadrada tam. 25x25x5,5cm (Pequena)', price: 2.40 },
+            { name: 'Caixa quadrada tam. 30x30x4,0cm (média)', price: 2.50 },
+            { name: 'Caixa quadrada tam. 30x30x5,5cm (média)', price: 2.85 },
+            { name: 'Caixa quadrada tam. 35x35x4,0cm (grande)', price: 2.85 },
+            { name: 'Caixa quadrada tam. 35x35x5,5cm (grande)', price: 3.18 },
+            { name: 'Caixa quadrada tam. 40x40x4,0cm (família)', price: 3.32 },
+            { name: 'Caixa quadrada tam. 40x40x4,5cm (família)', price: 3.52 },
+            { name: 'Caixa quadrada tam. 40x40x5,5cm (família)', price: 4.38 },
+            { name: 'Caixa quadrada tam. 40x40x7cm (família)', price: 4.70 },
+            { name: 'Caixa quadrada tam. 45x45x5cm (Gigante)', price: 5.25 }
+        ]
+    },
+    'Caixa de torta': {
+        'Caixas para Tortas e Bolo - Branca': [
+            { name: 'Caixa de torta medindo 22 x 22 x 9,5cm (Cx de torta 22cm)', price: 3.00 },
+            { name: 'Caixa de torta medindo 29 x 18 x 10cm (Cx de torta retangular)', price: 3.20 },
+            { name: 'Caixa de torta medindo 20 x 20 x 13cm (Cx PP baixa 20cm)', price: 3.45 },
+            { name: 'Caixa de torta medindo 20 x 20 x 17cm (Cx PP alta 20cm)', price: 3.65 },
+            { name: 'Caixa de torta medindo 25 x 25 x 15cm (Cx pequena 25cm)', price: 3.60 },
+            { name: 'Caixa de torta medindo 30 x 30 x 12cm (Cx média 30cm baixa)', price: 3.75 },
+            { name: 'Caixa de torta medindo 30 x 30 x 16cm (Cx média 30cm alta)', price: 4.55 },
+            { name: 'Caixa de torta medindo 35 x 35 x 12cm (Cx grande 35cm baixa)', price: 4.60 },
+            { name: 'Caixa de torta medindo 35 x 35 x 15cm (Cx grande 35cm alta)', price: 4.80 },
+            { name: 'Caixa de torta medindo 40 x 40 x 12,5cm (Cx GG 40cm)', price: 5.10 },
+            { name: 'Caixa de torta retangular medindo 40 x 30 x 15cm (Cx Retangular)', price: 6.50 },
+            { name: 'Caixa de torta retangular medindo 54 x 41,5 x 12cm (Cx Retangular)', price: 6.98 }
+        ]
+    },
+    'Caixa correio': {
+        'Caixas Retangulares': [
+            { name: 'Caixa retangular medindo 21 x 14 x 5cm alt', price: 1.80 },
+            { name: 'Caixa retangular medindo 28 x 21 x 5cm alt', price: 2.00 },
+            { name: 'Caixa retangular P (filé/lasanha) medindo 22,5 x 18,5 x 5cm alt', price: 2.18 },
+            { name: 'Caixa retangular M (filé/lasanha) medindo 27 x 19 x 5cm alt', price: 2.30 },
+            { name: 'Caixa retangular G (filé/lasanha) medindo 29,5 x 23,5 x 5cm alt', price: 2.42 }
+        ],
+        'Caixas Tipo Correio/Ecommerce': [
+            { name: 'Caixa tipo correio medindo 15 x 10 x 5cm alt', price: 2.40 },
+            { name: 'Caixa tipo correio medindo 12,5 x 12,5 x 6,5cm alt', price: 2.85 },
+            { name: 'Caixa tipo correio medindo 17,5 x 17,5 x 9cm alt', price: 3.20 },
+            { name: 'Caixa tipo correio medindo 17,5 x 16,0 x 5,5cm alt', price: 1.80 },
+            { name: 'Caixa tipo correio medindo 21 x 14,5 x 7cm alt', price: 3.20 },
+            { name: 'Caixa tipo correio medindo 22,5 x 15 x 6cm alt', price: 3.00 },
+            { name: 'Caixa tipo correio medindo 28,5 x 15,5 x 5,7cm alt', price: 3.25 },
+            { name: 'Caixa tipo correio medindo 30 x 20 x 11 cm alt', price: 4.50 },
+            { name: 'Caixa tipo correio medindo 33 x 18,5 x 9 cm alt', price: 4.60 },
+            { name: 'Caixa tipo correio medindo 33 x 20,0 x 6 cm alt', price: 4.00 },
+            { name: 'Caixa tipo correio medindo 16 x 12 x 4cm alt (PAC Mini)', price: 2.00 },
+            { name: 'Caixa tipo correio medindo 24 x 17 x 4cm alt (PAC Mini)', price: 2.50 },
+            { name: 'Caixa tipo correio medindo 16 x 11 x 4cm alt (PAC Mini)', price: 1.75 },
+            { name: 'Caixa tipo correio medindo 23 x 15 x 4cm alt (PAC Mini)', price: 1.85 }
+        ],
+        'Caixas Tipo Maleta - Parda': [
+            { name: 'Caixa tipo maleta medindo 16 x 10,5 x 22,5cm alt (20 picolés)', price: 1.70 },
+            { name: 'Caixa tipo maleta medindo 16,0 x 10,5 x 11,5cm alt (10 picolés)', price: 1.40 },
+            { name: 'Caixa tipo maleta medindo 21,0 x 16,0 x 11,5cm alt', price: 2.50 },
+            { name: 'Caixa tipo maleta medindo 27,5 x 17,5 x 11,0cm alt', price: 2.70 },
+            { name: 'Caixa tipo maleta medindo 32,0 x 24,0 x 16,0 cm alt', price: 3.20 }
+        ]
+    }
+};
+
 // Funções de UI Auxiliares
 window.showToast = function(message, type = 'info') {
     const container = document.getElementById('toast-container');
@@ -218,89 +321,6 @@ function setupUIForUser() {
         }
     }
 }
-
-// Dados dos produtos em cascata
-const productCatalog = {
-    'Caixa de pizza': {
-        'Oitavada': [
-            { name: 'Caixa de pizza oitavada 20cm (brotinho) - Branca', price: 1.70 },
-            { name: 'Caixa de pizza oitavada 25cm (pequena) - Branca', price: 2.10 },
-            { name: 'Caixa de pizza oitavada 30cm (média) - Branca', price: 2.40 },
-            { name: 'Caixa de pizza oitavada 35cm (grande) - Branca', price: 2.85 },
-            { name: 'Caixa de pizza oitavada 40cm (família) - Branca', price: 3.30 },
-            { name: 'Caixa de pizza oitavada 45cm (gigante) - Branca', price: 4.60 },
-            { name: 'Caixa de pizza oitavada 20cm (brotinho) - Parda', price: 1.60 },
-            { name: 'Caixa de pizza oitavada 25cm (pequena) - Parda', price: 2.00 },
-            { name: 'Caixa de pizza oitavada 30cm (média) - Parda', price: 2.30 },
-            { name: 'Caixa de pizza oitavada 35cm (grande) - Parda', price: 2.65 },
-            { name: 'Caixa de pizza oitavada 40cm (família) - Parda', price: 3.10 },
-            { name: 'Caixa de pizza oitavada 45cm (gigante) - Parda', price: 4.40 },
-            { name: 'Caixa de pizza oitavada 25cm (pequena) - Fotográfica', price: 2.80 },
-            { name: 'Caixa de pizza oitavada 30cm (média) - Fotográfica', price: 3.00 },
-            { name: 'Caixa de pizza oitavada 35cm (grande) - Fotográfica', price: 3.35 },
-            { name: 'Caixa de pizza oitavada 40cm (família) - Fotográfica', price: 3.70 }
-        ],
-        'Americanas': [
-            { name: 'Caixa Americana tam. 20cm (brotinho) - Branca', price: 1.98 },
-            { name: 'Caixa Americana tam. 25cm (pequena) - Branca', price: 2.10 },
-            { name: 'Caixa Americana tam. 30cm (média) - Branca', price: 2.40 },
-            { name: 'Caixa Americana tam. 35cm (grande) - Branca', price: 2.85 },
-            { name: 'Caixa Americana tam. 40cm (família) - Branca', price: 3.30 },
-            { name: 'Caixa Americana tam. 20cm (brotinho) - Parda', price: 1.88 },
-            { name: 'Caixa Americana tam. 25cm (pequena) - Parda', price: 2.00 },
-            { name: 'Caixa Americana tam. 30cm (média) - Parda', price: 2.20 },
-            { name: 'Caixa Americana tam. 35cm (grande) - Parda', price: 2.65 },
-            { name: 'Caixa Americana tam. 40cm (família) - Parda', price: 3.10 }
-        ],
-        'Quadrada': [
-            { name: 'Caixa quadrada 20x20x5cm (Broto)', price: 2.10 },
-            { name: 'Caixa quadrada 25x25x5,5cm (Pequena)', price: 2.40 },
-            { name: 'Caixa quadrada 30x30x4,0cm (média)', price: 2.50 },
-            { name: 'Caixa quadrada 30x30x5,5cm (média)', price: 2.85 },
-            { name: 'Caixa quadrada 35x35x4,0cm (grande)', price: 2.85 },
-            { name: 'Caixa quadrada 35x35x5,5cm (grande)', price: 3.18 },
-            { name: 'Caixa quadrada 40x40x4,0cm (família)', price: 3.32 },
-            { name: 'Caixa quadrada 40x40x4,5cm (família)', price: 3.52 },
-            { name: 'Caixa quadrada 40x40x5,5cm (família)', price: 4.38 },
-            { name: 'Caixa quadrada 40x40x7cm (família)', price: 4.70 },
-            { name: 'Caixa quadrada 45x45x5cm (Gigante)', price: 5.25 }
-        ]
-    },
-    'Caixa de torta': {
-        'Quadrada': [
-            { name: 'Caixa de torta 22 x 22 x 9,5cm', price: 3.00 },
-            { name: 'Caixa de torta retangular 29 x 18 x 10cm', price: 3.20 },
-            { name: 'Caixa de torta PP baixa 20 x 20 x 13cm', price: 3.45 },
-            { name: 'Caixa de torta PP alta 20 x 20 x 17cm', price: 3.65 },
-            { name: 'Caixa de torta pequena 25 x 25 x 15cm', price: 3.60 },
-            { name: 'Caixa de torta média 30 x 30 x 12cm baixa', price: 3.75 },
-            { name: 'Caixa de torta média 30 x 30 x 16cm alta', price: 4.55 },
-            { name: 'Caixa de torta grande 35 x 35 x 12cm baixa', price: 4.60 },
-            { name: 'Caixa de torta grande 35 x 35 x 15cm alta', price: 4.80 },
-            { name: 'Caixa de torta GG 40 x 40 x 12,5cm', price: 5.10 },
-            { name: 'Caixa de torta retangular 40 x 30 x 15cm', price: 6.50 },
-            { name: 'Caixa de torta retangular 54 x 41,5 x 12cm', price: 6.98 }
-        ]
-    },
-    'Caixa correio': {
-        'Americanas': [
-            { name: 'Caixa tipo correio 15 x 10 x 5cm', price: 2.40 },
-            { name: 'Caixa tipo correio 12,5 x 12,5 x 6,5cm', price: 2.85 },
-            { name: 'Caixa tipo correio 17,5 x 17,5 x 9cm', price: 3.20 },
-            { name: 'Caixa tipo correio 17,5 x 16,0 x 5,5cm', price: 1.80 },
-            { name: 'Caixa tipo correio 21 x 14,5 x 7cm', price: 3.20 },
-            { name: 'Caixa tipo correio 22,5 x 15 x 6cm', price: 3.00 },
-            { name: 'Caixa tipo correio 28,5 x 15,5 x 5,7cm', price: 3.25 },
-            { name: 'Caixa tipo correio 30 x 20 x 11cm', price: 4.50 },
-            { name: 'Caixa tipo correio 33 x 18,5 x 9cm', price: 4.60 },
-            { name: 'Caixa tipo correio 33 x 20,0 x 6cm', price: 4.00 },
-            { name: 'Caixa tipo correio 16 x 12 x 4cm (PAC Mini)', price: 2.00 },
-            { name: 'Caixa tipo correio 24 x 17 x 4cm (PAC Mini)', price: 2.50 },
-            { name: 'Caixa tipo correio 16 x 11 x 4cm (PAC Mini)', price: 1.75 },
-            { name: 'Caixa tipo correio 23 x 15 x 4cm (PAC Mini)', price: 1.85 }
-        ]
-    }
-};
 
 // Função para lidar com a mudança no tipo de produto
 window.handleProductTypeChange = function() {

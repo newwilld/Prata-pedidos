@@ -578,3 +578,171 @@ select::-webkit-scrollbar-thumb:hover {
 #sizeSelect option:hover {
     background-color: #e0e7ff;
 }
+
+/* Estilos específicos para o select de produto (categoria principal) */
+#productTypeSelect {
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+#productTypeSelect option {
+    font-weight: 500;
+    padding: 12px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+#productTypeSelect option:last-child {
+    border-bottom: none;
+}
+
+/* Estilos para o select de modelo */
+#modelSelect {
+    font-weight: 500;
+}
+
+#modelSelect option {
+    padding: 10px 12px;
+    font-size: 0.95em;
+}
+
+/* Estilos para o select de tamanho */
+#sizeSelect {
+    font-weight: 500;
+}
+
+#sizeSelect option {
+    padding: 10px 12px;
+    font-size: 0.9em;
+    color: #475569;
+}
+
+#sizeSelect option:hover {
+    background-color: #f0f9ff;
+    color: #0369a1;
+}
+
+/* Melhorias de acessibilidade */
+#productTypeSelect:focus-visible,
+#modelSelect:focus-visible,
+#sizeSelect:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* Estilo para o container do formulário */
+#orderForm {
+    position: relative;
+}
+
+#orderForm > div {
+    position: relative;
+    z-index: 1;
+}
+
+/* Ajuste para o ícone de chevron nos selects */
+#productTypeSelect + i,
+#modelSelect + i,
+#sizeSelect + i {
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* Melhorias de performance */
+.draggable-card,
+.kanban-column,
+#totalDisplayContainer,
+#modelContainer,
+#sizeContainer {
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+}
+
+/* Suporte para modo escuro do sistema */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-main: #0f172a;
+        --bg-card: #1e293b;
+        --text-primary: #f8fafc;
+        --text-secondary: #cbd5e1;
+        --text-muted: #64748b;
+        --border-color: #334155;
+    }
+}
+
+/* Ajustes finais para melhor visualização */
+#productTypeSelect option:disabled,
+#modelSelect option:disabled,
+#sizeSelect option:disabled {
+    color: #94a3b8;
+    font-style: italic;
+}
+
+/* Estilo para quando não há opções disponíveis */
+#modelSelect option:only-child,
+#sizeSelect option:only-child {
+    color: #94a3b8;
+    font-style: italic;
+}
+
+/* Melhorar contraste e legibilidade */
+#productTypeSelect option,
+#modelSelect option,
+#sizeSelect option {
+    text-shadow: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Animações suaves para mostrar/esconder elementos */
+.hidden {
+    display: none !important;
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Melhorar a aparência do select quando aberto */
+select:focus option:checked {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+}
+
+/* Estilo para o texto do placeholder nos selects */
+select:invalid {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Ajustes para o modo TV */
+@media (min-width: 1920px) and (max-width: 2560px) {
+    #productTypeSelect,
+    #modelSelect,
+    #sizeSelect {
+        font-size: 1.2em;
+    }
+    
+    #productTypeSelect option,
+    #modelSelect option,
+    #sizeSelect option {
+        padding: 15px 18px;
+    }
+    
+    #totalDisplayValue {
+        font-size: 3rem;
+    }
+    
+    #unitPriceDisplay {
+        font-size: 1.1rem;
+    }
+}
