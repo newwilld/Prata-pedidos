@@ -1359,6 +1359,7 @@
             }
         };
 
+        // Função deleteClient completamente refeita para garantir que o cliente suma do sistema
         window.deleteClient = async function() {
             const clientUid = document.getElementById('editClientUid').value;
             const clientName = document.getElementById('editClientName').value;
@@ -1368,26 +1369,48 @@
             }
             
             try {
-                // Exclui todos os pedidos do cliente
-                const ordersToDelete = Object.values(globalOrders)
-                    .filter(order => order.userId === clientUid);
+                // 1. Remove TODOS os pedidos do cliente - incluindo os que podem ter nome "undefined"
+                const ordersToDelete = Object.keys(globalOrders).filter(key => {
+                    const order = globalOrders[key];
+                    return order.userId === clientUid;
+                });
                 
-                for (const order of ordersToDelete) {
-                    await remove(ref(db, `orders/${order.id}`));
+                // Remove cada pedido do Firebase
+                for (const orderId of ordersToDelete) {
+                    await remove(ref(db, `orders/${orderId}`));
                 }
                 
-                // Exclui o usuário
+                // 2. Remove o usuário do Firebase
                 if (clientUid) {
                     await remove(ref(db, `users/${clientUid}`));
                 }
                 
-                // Cria notificação
+                // 3. Remove qualquer notificação relacionada a este cliente (opcional)
+                // Percorre todas as notificações e remove as que mencionam o cliente
+                const notificationKeys = Object.keys(globalNotifications);
+                for (const notifKey of notificationKeys) {
+                    const notif = globalNotifications[notifKey];
+                    if (notif.message && notif.message.includes(clientName)) {
+                        await remove(ref(db, `notifications/${notifKey}`));
+                    }
+                }
+                
+                // 4. Cria notificação sobre a exclusão
                 await createNotification(`Cliente ${clientName} foi excluído por @${currentUserData.name}`);
                 
-                showToast('Cliente excluído com sucesso!', 'success');
+                showToast(`Cliente ${clientName} e todos os seus pedidos foram removidos do sistema!`, 'success');
                 closeEditModal();
+                
+                // 5. Atualiza a interface imediatamente (os listeners já farão isso, mas forçamos)
+                setTimeout(() => {
+                    renderKanban();
+                    renderClientsList();
+                    renderNotifications();
+                }, 500);
+                
             } catch(err) {
-                showToast('Erro ao excluir cliente.', 'error');
+                console.error("Erro ao excluir cliente:", err);
+                showToast('Erro ao excluir cliente. Verifique o console para mais detalhes.', 'error');
             }
         };
 
@@ -1468,13 +1491,16 @@
                 };
             });
 
-            // Agrega pedidos para cada cliente
+            // Agrega pedidos para cada cliente - ignora pedidos sem userId ou com userId que não existe
             Object.values(globalOrders).forEach(order => {
                 const uid = order.userId;
-                if(!clientStats[uid]) {
+                if (!uid) return; // Ignora pedidos sem userId
+                
+                if (!clientStats[uid]) {
+                    // Se o pedido tem um userId que não está em globalUsers, cria uma entrada temporária
                     clientStats[uid] = { 
                         uid: uid,
-                        name: order.clientName, 
+                        name: order.clientName || 'Cliente sem nome',
                         email: order.clientEmail || 'N/A',
                         phone: order.clientPhone || '',
                         company: order.clientCompany || '',
@@ -1490,7 +1516,18 @@
                 }
             });
 
-            const clientArray = Object.values(clientStats).sort((a,b) => b.totalOrders - a.totalOrders);
+            // Filtra clientes que têm apenas pedidos "undefined" (sem nome válido)
+            // e também clientes que foram marcados para exclusão
+            const clientArray = Object.values(clientStats)
+                .filter(client => {
+                    // Remove clientes com nome "undefined" ou vazio que não têm pedidos
+                    if ((!client.name || client.name === 'undefined' || client.name.trim() === '') && client.totalOrders === 0) {
+                        return false;
+                    }
+                    return true;
+                })
+                .sort((a,b) => b.totalOrders - a.totalOrders);
+            
             document.getElementById('totalClientsCount').innerText = clientArray.length;
 
             if(clientArray.length === 0) {
@@ -1498,16 +1535,20 @@
                 return;
             }
 
-            tbody.innerHTML = clientArray.map(client => `
+            tbody.innerHTML = clientArray.map(client => {
+                const displayName = client.name && client.name !== 'undefined' ? client.name : 'Cliente sem nome';
+                const displayEmail = client.email && client.email !== 'undefined' ? client.email : 'N/A';
+                
+                return `
                 <tr class="hover:bg-white/5 transition cursor-pointer" onclick="openClientModal('${client.uid}')">
                     <td class="px-6 py-5 font-medium text-white">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex justify-center items-center text-white text-sm font-bold uppercase">
-                                ${client.name.charAt(0)}
+                                ${displayName.charAt(0) || '?'}
                             </div>
                             <div>
-                                <p class="font-semibold">${client.name}</p>
-                                <p class="text-xs text-white/60">${client.email}</p>
+                                <p class="font-semibold">${displayName}</p>
+                                <p class="text-xs text-white/60">${displayEmail}</p>
                             </div>
                         </div>
                     </td>
@@ -1520,7 +1561,7 @@
                         ${client.lastOrderDate ? formatDateTime(client.lastOrderDate).split(' às')[0] : 'Nunca comprou'}
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
         }
 
         window.openClientModal = function(clientUid) {
