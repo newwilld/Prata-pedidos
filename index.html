@@ -1359,20 +1359,34 @@
             }
         };
 
-        // Função deleteClient completamente refeita para garantir que o cliente suma do sistema
+        // Função deleteClient completamente refeita para garantir que o cliente e o pedido sumam do sistema (mesmo os "undefined")
         window.deleteClient = async function() {
             const clientUid = document.getElementById('editClientUid').value;
             const clientName = document.getElementById('editClientName').value;
+            const currentOrderId = document.getElementById('editOrderId').value;
             
-            if (!confirm(`Tem certeza que deseja excluir o cliente ${clientName}? Esta ação não pode ser desfeita.`)) {
+            // Tratamento visual para o alerta
+            const displayNome = (clientName && clientName !== 'undefined') ? clientName : 'Sem Nome / Undefined';
+
+            if (!confirm(`Tem certeza que deseja excluir o cliente ${displayNome}? Esta ação não pode ser desfeita.`)) {
                 return;
             }
             
             try {
-                // 1. Remove TODOS os pedidos do cliente - incluindo os que podem ter nome "undefined"
+                // 1. Remove TODOS os pedidos vinculados (inclusive falhas de amarração)
                 const ordersToDelete = Object.keys(globalOrders).filter(key => {
                     const order = globalOrders[key];
-                    return order.userId === clientUid;
+                    
+                    // Condição 1: Mesma ID de usuário (quando existente e válida)
+                    if (clientUid && clientUid !== 'undefined' && order.userId === clientUid) return true;
+                    
+                    // Condição 2: É o exato pedido que está aberto no modal agora (cobre casos em que userId é vazio/perdido)
+                    if (currentOrderId && key === currentOrderId) return true;
+                    
+                    // Condição 3: Limpeza de lixo fantasma (se a string 'undefined' vazou pro db)
+                    if ((!clientUid || clientUid === 'undefined') && order.userId === clientUid) return true;
+                    
+                    return false;
                 });
                 
                 // Remove cada pedido do Firebase
@@ -1381,31 +1395,35 @@
                 }
                 
                 // 2. Remove o usuário do Firebase
-                if (clientUid) {
+                if (clientUid && clientUid !== 'undefined') {
                     await remove(ref(db, `users/${clientUid}`));
+                } else if (clientUid === 'undefined') {
+                    await remove(ref(db, `users/undefined`));
                 }
                 
-                // 3. Remove qualquer notificação relacionada a este cliente (opcional)
-                // Percorre todas as notificações e remove as que mencionam o cliente
-                const notificationKeys = Object.keys(globalNotifications);
-                for (const notifKey of notificationKeys) {
-                    const notif = globalNotifications[notifKey];
-                    if (notif.message && notif.message.includes(clientName)) {
-                        await remove(ref(db, `notifications/${notifKey}`));
+                // 3. Remove qualquer notificação relacionada a este cliente
+                if (clientName && clientName !== 'undefined') {
+                    const notificationKeys = Object.keys(globalNotifications);
+                    for (const notifKey of notificationKeys) {
+                        const notif = globalNotifications[notifKey];
+                        if (notif.message && notif.message.includes(clientName)) {
+                            await remove(ref(db, `notifications/${notifKey}`));
+                        }
                     }
                 }
                 
                 // 4. Cria notificação sobre a exclusão
-                await createNotification(`Cliente ${clientName} foi excluído por @${currentUserData.name}`);
+                await createNotification(`Cliente ${displayNome} foi excluído por @${currentUserData.name}`);
                 
-                showToast(`Cliente ${clientName} e todos os seus pedidos foram removidos do sistema!`, 'success');
+                showToast(`Cliente e pedidos removidos do sistema com sucesso!`, 'success');
                 closeEditModal();
                 
-                // 5. Atualiza a interface imediatamente (os listeners já farão isso, mas forçamos)
+                // 5. Atualiza a interface (força visualização nova)
                 setTimeout(() => {
                     renderKanban();
-                    renderClientsList();
-                    renderNotifications();
+                    if(!document.getElementById('adminClientsView').classList.contains('hidden')){
+                        renderClientsList();
+                    }
                 }, 500);
                 
             } catch(err) {
