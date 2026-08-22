@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prata Embalagens - Gerenciador de Pedidos</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="text-gray-800 h-screen flex flex-col overflow-hidden">
+
+    <!-- Container de Notificações -->
+    <div id="toast-container"></div>
+
+    <!-- Barra de Navegação -->
+    <header class="bg-white/10 backdrop-blur-lg text-white shadow-lg z-10 flex-shrink-0 border-b border-white/20">
+        <div class="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <img src="https://raw.githubusercontent.com/newwilld/Prata-pedidos/refs/heads/main/PRATA%20LOGO.webp" alt="Prata Embalagens Logo" class="w-16 h-16 object-contain rounded-2xl shadow-lg">
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight">Prata Embalagens</h1>
+                    <p class="text-xs text-white/70">Sistema de Gerenciamento</p>
+                </div>
+            </div>
+            
+            <div id="userMenu" class="hidden items-center gap-4">
+                <div class="text-right hidden sm:block">
+                    <span id="userNameDisplay" class="text-sm font-semibold block"></span>
+                    <span id="userRoleBadge" class="text-xs px-3 py-1 rounded-full bg-white/20 font-medium"></span>
+                </div>
+                <button onclick="logout()" class="text-white/70 hover:text-white transition p-3 hover:bg-white/10 rounded-xl">
+                    <i class="fas fa-sign-out-alt text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <main class="flex-1 overflow-hidden relative">
+        
+        <!-- Tela de Login / Registro -->
+        <div id="authScreen" class="absolute inset-0 z-20 flex items-center justify-center p-4 overflow-y-auto">
+            <div class="bg-white/10 backdrop-blur-xl p-10 rounded-3xl shadow-2xl w-full max-w-md my-auto border border-white/20">
+                <div class="text-center mb-8">
+                    <img src="https://raw.githubusercontent.com/newwilld/Prata-pedidos/refs/heads/main/PRATA%20LOGO.webp" alt="Prata Embalagens Logo" class="w-28 h-28 object-contain mx-auto mb-6 shadow-2xl pulse">
+                    <h2 class="text-3xl font-bold text-white">Bem-vindo(a)</h2>
+                    <p class="text-white/70 mt-2" id="authSubtitle">Faça login para continuar</p>
+                </div>
+
+                <form id="authForm" onsubmit="handleAuth(event)" class="space-y-5">
+                    <div id="nameField" class="hidden fade-in">
+                        <label class="block text-sm font-medium text-white mb-2">Nome Completo</label>
+                        <div class="relative">
+                            <i class="fas fa-user absolute left-4 top-4 text-white/50"></i>
+                            <input type="text" id="authName" class="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50" placeholder="Seu nome">
+                        </div>
+                    </div>
+                    
+                    <div id="phoneField" class="hidden fade-in">
+                        <label class="block text-sm font-medium text-white mb-2">Telefone/WhatsApp</label>
+                        <div class="relative">
+                            <i class="fas fa-phone absolute left-4 top-4 text-white/50"></i>
+                            <input type="tel" id="authPhone" class="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50" placeholder="(00) 00000-0000">
+                        </div>
+                    </div>
+                    
+                    <div id="companyField" class="hidden fade-in">
+                        <label class="block text-sm font-medium text-white mb-2">Empresa (opcional)</label>
+                        <div class="relative">
+                            <i class="fas fa-building absolute left-4 top-4 text-white/50"></i>
+                            <input type="text" id="authCompany" class="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50" placeholder="Nome da sua empresa">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-white mb-2">E-mail</label>
+                        <div class="relative">
+                            <i class="fas fa-envelope absolute left-4 top-4 text-white/50"></i>
+                            <input type="email" id="authEmail" required class="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50" placeholder="seu@email.com">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-white mb-2">Senha</label>
+                        <div class="relative">
+                            <i class="fas fa-lock absolute left-4 top-4 text-white/50"></i>
+                            <input type="password" id="authPassword" required minlength="6" class="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50" placeholder="••••••••">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-4 rounded-2xl hover:from-blue-600 hover:to-purple-700 transition shadow-2xl transform hover:scale-105" id="authSubmitBtn">
+                        Entrar
+                    </button>
+                </form>
+
+                <div class="mt-6 text-center text-sm text-white/70">
+                    <span id="authToggleText">Não tem uma conta?</span>
+                    <button type="button" onclick="toggleAuthMode()" class="text-white font-bold hover:underline ml-1" id="authToggleBtn">Criar agora</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tela do Cliente -->
+        <div id="clientScreen" class="hidden h-full flex-col md:flex-row overflow-hidden">
+            <!-- Coluna de Fazer Pedido -->
+            <div class="w-full md:w-1/3 bg-white/10 backdrop-blur-lg border-r border-white/20 flex flex-col h-full z-10 shadow-2xl relative">
+                <div class="p-6 border-b border-white/20 flex-shrink-0">
+                    <h2 class="text-xl font-bold text-white"><i class="fas fa-plus-circle mr-2 text-blue-400"></i>Novo Pedido</h2>
+                    <p class="text-sm text-white/70 mt-1">Preencha os dados para solicitar.</p>
+                </div>
+                
+                <div class="p-6 overflow-y-auto flex-1">
+                    <form id="orderForm" onsubmit="submitOrder(event)" class="space-y-5">
+                        
+                        <!-- Seletor de Produto -->
+                        <div>
+                            <label class="block text-sm font-medium text-white mb-2">Produto</label>
+                            <div class="relative">
+                                <select id="productSelect" required onchange="handleProductChange()" class="w-full appearance-none px-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white">
+                                    <option value="" disabled selected class="text-gray-900">Selecione um produto...</option>
+                                    <option value="Caixa de Pizza" class="text-gray-900">Caixa de Pizza</option>
+                                    <option value="Caixa de Bolo" class="text-gray-900">Caixa de Bolo</option>
+                                    <option value="Caixa de Torta" class="text-gray-900">Caixa de Torta</option>
+                                    <option value="Caixa para Ecommerce" class="text-gray-900">Caixa para Ecommerce</option>
+                                </select>
+                                <i class="fas fa-chevron-down absolute right-4 top-5 text-white/50 pointer-events-none"></i>
+                            </div>
+                        </div>
+
+                        <!-- Seletor de Quantidade (Cascata) -->
+                        <div id="quantityContainer" class="hidden fade-in">
+                            <label class="block text-sm font-medium text-white mb-2">Quantidade</label>
+                            <div class="relative">
+                                <select id="quantitySelect" required onchange="handleQuantityChange()" class="w-full appearance-none px-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white">
+                                    <option value="" disabled selected class="text-gray-900">Escolha a quantidade...</option>
+                                    <option value="500" class="text-gray-900">500 unidades</option>
+                                    <option value="1000" class="text-gray-900">1.000 unidades</option>
+                                    <option value="2000" class="text-gray-900">2.000 unidades</option>
+                                    <option value="3000" class="text-gray-900">3.000 unidades</option>
+                                    <option value="4000" class="text-gray-900">4.000 unidades</option>
+                                    <option value="5000" class="text-gray-900">5.000 unidades</option>
+                                    <option value="Outra" class="text-gray-900">Outra quantidade (Digitar aqui)</option>
+                                </select>
+                                <i class="fas fa-chevron-down absolute right-4 top-5 text-white/50 pointer-events-none"></i>
+                            </div>
+                        </div>
+
+                        <!-- Campo de Quantidade Customizada -->
+                        <div id="customQuantityContainer" class="hidden fade-in">
+                            <label class="block text-sm font-medium text-white mb-2">Digite a Quantidade Específica</label>
+                            <input type="number" id="customQuantityInput" min="1" class="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50" placeholder="Ex: 1500">
+                        </div>
+
+                        <!-- Botão Enviar -->
+                        <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-4 rounded-2xl hover:from-blue-600 hover:to-purple-700 transition shadow-2xl transform hover:scale-105 flex items-center justify-center gap-2">
+                            <i class="fas fa-paper-plane"></i> Enviar Pedido
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Coluna de Histórico do Cliente -->
+            <div class="flex-1 flex flex-col h-full">
+                <div class="p-6 border-b border-white/20 bg-white/5 flex-shrink-0 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-xl font-bold text-white"><i class="fas fa-history mr-2 text-purple-400"></i>Meu Histórico</h2>
+                        <p class="text-sm text-white/70 mt-1">Acompanhe seus pedidos recentes.</p>
+                    </div>
+                </div>
+                
+                <div class="p-6 flex-1 overflow-y-auto">
+                    <div id="clientOrdersList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Pedidos do cliente aparecerão aqui -->
+                        <div class="col-span-full text-center text-white/50 py-10">Carregando pedidos...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tela do Admin (Master) -->
+        <div id="adminScreen" class="hidden h-full flex-col overflow-hidden">
+            <!-- Abas Admin -->
+            <div class="bg-white/10 backdrop-blur-lg border-b border-white/20 px-4 sm:px-6 flex-shrink-0 flex overflow-x-auto">
+                <button onclick="switchAdminTab('pedidos')" id="tabPedidos" class="px-6 py-5 text-sm font-bold border-b-4 border-blue-500 text-white whitespace-nowrap transition">
+                    <i class="fas fa-tasks mr-2"></i>Quadro de Pedidos
+                </button>
+                <button onclick="switchAdminTab('clients')" id="tabClients" class="px-6 py-5 text-sm font-bold border-b-4 border-transparent text-white/70 hover:text-white whitespace-nowrap transition">
+                    <i class="fas fa-users mr-2"></i>Lista de Clientes
+                </button>
+                <button onclick="switchAdminTab('notifications')" id="tabNotifications" class="px-6 py-5 text-sm font-bold border-b-4 border-transparent text-white/70 hover:text-white whitespace-nowrap transition">
+                    <i class="fas fa-bell mr-2"></i>Notificações
+                    <span id="notificationBadge" class="hidden ml-2 bg-red-500 text-white text-xs px-3 py-1 rounded-full">0</span>
+                </button>
+            </div>
+
+            <!-- Conteúdo Abas Admin -->
+            <div class="flex-1 overflow-hidden relative p-4 sm:p-6">
+                
+                <!-- Aba Quadro de Pedidos -->
+                <div id="adminPedidosView" class="absolute inset-0 p-4 sm:p-6 overflow-x-auto flex flex-col sm:flex-row gap-4 lg:gap-6">
+                    
+                    <!-- Coluna: Novos -->
+                    <div class="flex-1 min-w-[280px] lg:min-w-[350px] flex flex-col bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 shadow-2xl max-h-full">
+                        <div class="p-5 border-b border-white/20 rounded-t-3xl flex items-center justify-between bg-gradient-to-r from-purple-600 to-indigo-600">
+                            <h3 class="font-bold text-white text-lg flex items-center gap-3">
+                                <span class="w-4 h-4 rounded-full bg-white pulse"></span> Pendentes
+                            </h3>
+                            <span id="countNovos" class="bg-white/20 text-white text-sm font-bold px-4 py-2 rounded-full">0</span>
+                        </div>
+                        <div id="kanban-novo" class="kanban-column flex-1 overflow-y-auto p-4 space-y-4 transition-colors border-2 border-transparent rounded-b-3xl" ondragover="allowDrop(event)" ondrop="drop(event, 'novo')" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                            <!-- Cards -->
+                        </div>
+                    </div>
+
+                    <!-- Coluna: Produção -->
+                    <div class="flex-1 min-w-[280px] lg:min-w-[350px] flex flex-col bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 shadow-2xl max-h-full">
+                        <div class="p-5 border-b border-white/20 rounded-t-3xl flex items-center justify-between bg-gradient-to-r from-pink-600 to-rose-600">
+                            <h3 class="font-bold text-white text-lg flex items-center gap-3">
+                                <span class="w-4 h-4 rounded-full bg-white pulse"></span> Em Produção
+                            </h3>
+                            <span id="countProducao" class="bg-white/20 text-white text-sm font-bold px-4 py-2 rounded-full">0</span>
+                        </div>
+                        <div id="kanban-producao" class="kanban-column flex-1 overflow-y-auto p-4 space-y-4 transition-colors border-2 border-transparent rounded-b-3xl" ondragover="allowDrop(event)" ondrop="drop(event, 'producao')" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                             <!-- Cards -->
+                        </div>
+                    </div>
+
+                    <!-- Coluna: Finalizado -->
+                    <div class="flex-1 min-w-[280px] lg:min-w-[350px] flex flex-col bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 shadow-2xl max-h-full">
+                        <div class="p-5 border-b border-white/20 rounded-t-3xl flex items-center justify-between bg-gradient-to-r from-cyan-600 to-blue-600">
+                            <h3 class="font-bold text-white text-lg flex items-center gap-3">
+                                <span class="w-4 h-4 rounded-full bg-white pulse"></span> Finalizados
+                            </h3>
+                            <span id="countFinalizado" class="bg-white/20 text-white text-sm font-bold px-4 py-2 rounded-full">0</span>
+                        </div>
+                        <div id="kanban-finalizado" class="kanban-column flex-1 overflow-y-auto p-4 space-y-4 transition-colors border-2 border-transparent rounded-b-3xl" ondragover="allowDrop(event)" ondrop="drop(event, 'finalizado')" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                             <!-- Cards -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aba Clientes -->
+                <div id="adminClientsView" class="hidden absolute inset-0 p-4 sm:p-6 overflow-y-auto">
+                    <div class="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+                        <div class="p-6 border-b border-white/20 flex justify-between items-center bg-white/5">
+                            <h2 class="text-xl font-bold text-white">Carteira de Clientes</h2>
+                            <div class="text-white/70">Total: <span id="totalClientsCount" class="font-bold text-white">0</span></div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm text-white">
+                                <thead class="bg-white/10 text-white text-xs uppercase font-semibold">
+                                    <tr>
+                                        <th class="px-6 py-5">Cliente</th>
+                                        <th class="px-6 py-5">Contato</th>
+                                        <th class="px-6 py-5">Empresa</th>
+                                        <th class="px-6 py-5 text-center">Total de Pedidos</th>
+                                        <th class="px-6 py-5 text-right">Último Pedido</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="clientsTableBody" class="divide-y divide-white/20">
+                                    <!-- Lista gerada dinamicamente -->
+                                    <tr><td colspan="5" class="text-center py-12 text-white/50">Carregando dados...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aba Notificações -->
+                <div id="adminNotificationsView" class="hidden absolute inset-0 p-4 sm:p-6 overflow-y-auto">
+                    <div class="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20">
+                        <div class="p-6 border-b border-white/20 bg-white/5">
+                            <h2 class="text-xl font-bold text-white">
+                                <i class="fas fa-bell mr-2 text-yellow-400"></i>Notificações do Sistema
+                            </h2>
+                        </div>
+                        <div id="notificationsList" class="divide-y divide-white/20">
+                            <!-- Notificações carregadas dinamicamente -->
+                            <div class="text-center py-12 text-white/50">Carregando notificações...</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal Admin Edição de Cliente/Pedido -->
+    <div id="adminEditModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-blue-600 to-purple-600">
+                <h3 class="font-bold text-white text-xl">Gerenciar Cliente e Pedidos</h3>
+                <button onclick="closeEditModal()" class="text-white/70 hover:text-white transition">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-5 overflow-y-auto flex-1">
+                <input type="hidden" id="editOrderId">
+                <input type="hidden" id="editClientUid">
+                
+                <!-- Informações do Cliente (Editáveis) -->
+                <div class="bg-gray-50 p-5 rounded-2xl border border-gray-200 space-y-4">
+                    <h4 class="font-bold text-gray-900 text-sm uppercase">Informações do Cliente</h4>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Nome</label>
+                            <input type="text" id="editClientName" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Telefone</label>
+                            <input type="text" id="editClientPhone" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">E-mail</label>
+                        <input type="email" id="editClientEmail" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Empresa</label>
+                        <input type="text" id="editClientCompany" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                    </div>
+                </div>
+                
+                <!-- Informações do Pedido -->
+                <div class="grid grid-cols-2 gap-4 bg-gray-50 p-5 rounded-2xl border border-gray-200">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Produto</label>
+                        <input type="text" id="editProduct" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Quantidade</label>
+                        <input type="text" id="editQuantity" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Status do Pedido</label>
+                    <select id="editStatus" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                        <option value="novo">Pendente</option>
+                        <option value="producao">Em Produção</option>
+                        <option value="finalizado">Finalizado</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Prioridade (Interna)</label>
+                    <select id="editPriority" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                        <option value="Baixa">Baixa</option>
+                        <option value="Média">Média</option>
+                        <option value="Alta">Alta</option>
+                    </select>
+                </div>
+
+                <!-- Histórico de Pedidos do Cliente -->
+                <div class="mt-4">
+                    <h4 class="font-bold text-gray-900 text-sm uppercase mb-3">Histórico de Pedidos do Cliente</h4>
+                    <div id="clientOrderHistory" class="space-y-3 max-h-60 overflow-y-auto">
+                        <!-- Histórico carregado dinamicamente -->
+                    </div>
+                </div>
+
+                <!-- Botão Excluir Cliente -->
+                <div class="mt-4 border-t border-gray-200 pt-4">
+                    <button onclick="deleteClient()" class="w-full bg-red-50 text-red-600 font-bold py-4 rounded-2xl hover:bg-red-100 transition flex items-center justify-center gap-2">
+                        <i class="fas fa-trash"></i> Excluir Cliente
+                    </button>
+                </div>
+            </div>
+            <div class="p-6 border-t border-gray-200 bg-gray-50 flex justify-end gap-3">
+                <button onclick="closeEditModal()" class="px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 transition">Cancelar</button>
+                <button onclick="saveClientEdit()" class="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-bold rounded-2xl hover:from-blue-700 hover:to-purple-700 transition shadow-lg">Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carregando o script.js externo -->
+    <script type="module" src="script.js"></script>
+</body>
+</html>
