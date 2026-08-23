@@ -218,35 +218,6 @@ window.handleAuth = async function(e) {
             setupUIForUser();
             showToast('Conta criada com sucesso!', 'success');
             return;
-            function setupUIForUser() {
-    console.log("Setup UI - Role:", currentUserData.role);
-    console.log("Admin Screen element:", document.getElementById('adminScreen'));
-    
-    document.getElementById('authScreen').classList.add('hidden');
-    document.getElementById('userMenu').classList.remove('hidden');
-    document.getElementById('userMenu').classList.add('flex');
-    
-    document.getElementById('userNameDisplay').innerText = currentUserData.name;
-    const badge = document.getElementById('userRoleBadge');
-    
-    if (currentUserData.role === 'admin') {
-        console.log("Entrando como admin...");
-        badge.innerText = 'Admin Master';
-        badge.className = 'text-xs px-3 py-1 rounded-full font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white';
-        document.getElementById('adminScreen').classList.remove('hidden');
-        document.getElementById('adminScreen').classList.add('flex');
-        document.getElementById('clientScreen').classList.add('hidden');
-        document.getElementById('clientScreen').classList.remove('flex');
-        
-        if (!listenersInitialized) {
-            console.log("Inicializando listeners do admin...");
-            initAdminListeners();
-            listenersInitialized = true;
-        }
-    } else {
-        // ... resto do código para cliente
-    }
-}
         }
         showToast(isLoginMode ? 'Login realizado com sucesso!' : 'Conta criada com sucesso!', 'success');
     } catch (error) {
@@ -1386,7 +1357,7 @@ window.saveClientEdit = async function() {
         
         await update(orderRef, updates);
         
-        if (clientUid) {
+        if (clientUid && clientUid !== 'undefined' && clientUid !== '') {
             const userRef = ref(db, `users/${clientUid}`);
             await update(userRef, {
                 name: newClientName,
@@ -1412,6 +1383,7 @@ window.saveClientEdit = async function() {
         showToast('Pedido e dados do cliente atualizados!', 'success');
         closeEditModal();
     } catch(err) {
+        console.error("Erro ao salvar:", err);
         showToast('Erro ao salvar.', 'error');
     }
 };
@@ -1539,6 +1511,7 @@ function renderClientsList() {
     const tbody = document.getElementById('clientsTableBody');
     const clientStats = {};
     
+    // Primeiro, adiciona todos os usuários cadastrados
     Object.values(globalUsers).forEach(user => {
         clientStats[user.uid] = {
             uid: user.uid,
@@ -1551,20 +1524,30 @@ function renderClientsList() {
         };
     });
 
+    // Depois, adiciona estatísticas dos pedidos
     Object.values(globalOrders).forEach(order => {
         const uid = order.userId;
-        if (!uid) return;
         
+        // Ignora pedidos sem userId válido
+        if (!uid || uid === 'undefined' || uid === 'null') return;
+        
+        // Se o cliente não existe nas estatísticas, cria um novo
         if (!clientStats[uid]) {
-            clientStats[uid] = { 
-                uid: uid,
-                name: order.clientName || 'Cliente sem nome',
-                email: order.clientEmail || 'N/A',
-                phone: order.clientPhone || '',
-                company: order.clientCompany || '',
-                totalOrders: 0, 
-                lastOrderDate: null 
-            };
+            // Só cria se tiver informações válidas
+            if (order.clientName && order.clientName !== 'undefined' && order.clientName.trim() !== '') {
+                clientStats[uid] = { 
+                    uid: uid,
+                    name: order.clientName,
+                    email: order.clientEmail || 'N/A',
+                    phone: order.clientPhone || '',
+                    company: order.clientCompany || '',
+                    totalOrders: 0, 
+                    lastOrderDate: null 
+                };
+            } else {
+                // Se não tem nome válido, ignora este pedido
+                return;
+            }
         }
         
         clientStats[uid].totalOrders += 1;
@@ -1574,11 +1557,24 @@ function renderClientsList() {
         }
     });
 
+    // Filtra clientes válidos
     const clientArray = Object.values(clientStats)
         .filter(client => {
-            if ((!client.name || client.name === 'undefined' || client.name.trim() === '') && client.totalOrders === 0) {
+            // Remove clientes sem UID válido
+            if (!client.uid || client.uid === 'undefined' || client.uid === 'null') {
                 return false;
             }
+            
+            // Remove clientes sem nome válido
+            if (!client.name || client.name === 'undefined' || client.name === 'null' || client.name.trim() === '') {
+                return false;
+            }
+            
+            // Remove clientes sem email e sem pedidos
+            if ((!client.email || client.email === 'N/A') && client.totalOrders === 0) {
+                return false;
+            }
+            
             return true;
         })
         .sort((a,b) => b.totalOrders - a.totalOrders);
@@ -1592,7 +1588,7 @@ function renderClientsList() {
 
     tbody.innerHTML = clientArray.map(client => {
         const displayName = client.name && client.name !== 'undefined' ? client.name : 'Cliente sem nome';
-        const displayEmail = client.email && client.email !== 'undefined' ? client.email : 'N/A';
+        const displayEmail = client.email && client.email !== 'undefined' && client.email !== 'N/A' ? client.email : 'N/A';
         
         return `
         <tr class="hover:bg-white/5 transition cursor-pointer" onclick="openClientModal('${client.uid}')">
