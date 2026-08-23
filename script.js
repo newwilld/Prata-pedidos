@@ -466,17 +466,6 @@ window.handleModelChange = function() {
     if (productType && model && productCatalog[productType][model]) {
         const sizes = productCatalog[productType][model];
         
-        // Filtra tamanhos permitidos para clientes
-        const allowedSizes = sizes.filter(size => {
-            if (!currentUserData || currentUserData.role === 'admin') return true;
-            return isItemAllowed(`${productType} > ${model} > ${size.name}`);
-        });
-        
-        if (allowedSizes.length === 0) {
-            showToast('Nenhum item disponível para este modelo.', 'error');
-            return;
-        }
-        
         // Cria os checkboxes para cada tamanho permitido
         allowedSizes.forEach((size, index) => {
             const div = document.createElement('div');
