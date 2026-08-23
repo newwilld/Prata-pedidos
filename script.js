@@ -458,8 +458,7 @@ function setupUIForUser() {
         
         applyItemsFilter();
     }
-}
-
+} // <- Fim correto da função
         badge.innerText = 'Cliente';
         badge.className = 'text-xs px-3 py-1 rounded-full font-medium bg-white/20 text-white';
         document.getElementById('clientScreen').classList.remove('hidden');
