@@ -316,11 +316,12 @@
                                         <th class="px-6 py-5">Empresa</th>
                                         <th class="px-6 py-5 text-center">Total de Pedidos</th>
                                         <th class="px-6 py-5 text-right">Último Pedido</th>
+                                        <th class="px-6 py-5 text-right">Itens Permitidos</th>
                                     </tr>
                                 </thead>
                                 <tbody id="clientsTableBody" class="divide-y divide-white/20">
                                     <!-- Lista gerada dinamicamente -->
-                                    <tr><td colspan="5" class="text-center py-12 text-white/50">Carregando dados...</td></tr>
+                                    <tr><td colspan="6" class="text-center py-12 text-white/50">Carregando dados...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -349,7 +350,7 @@
 
     <!-- Modal Admin Edição de Cliente/Pedido -->
     <div id="adminEditModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all max-h-[90vh] flex flex-col">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-3xl overflow-hidden transform transition-all max-h-[90vh] flex flex-col">
             <div class="p-6 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-blue-600 to-purple-600">
                 <h3 class="font-bold text-white text-xl">Gerenciar Cliente e Pedidos</h3>
                 <button onclick="closeEditModal()" class="text-white/70 hover:text-white transition">
@@ -381,6 +382,74 @@
                         <label class="block text-xs font-medium text-gray-700 mb-1">Empresa</label>
                         <input type="text" id="editClientCompany" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                     </div>
+                </div>
+                
+                <!-- NOVA SEÇÃO: Configuração de Itens Permitidos -->
+                <div class="bg-green-50 p-5 rounded-2xl border border-green-200 space-y-4">
+                    <h4 class="font-bold text-gray-900 text-sm uppercase flex items-center gap-2">
+                        <i class="fas fa-box-open text-green-600"></i> Itens Disponíveis para o Cliente
+                    </h4>
+                    
+                    <div class="space-y-3">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" id="itemsAllowedTodos" class="w-5 h-5 text-green-600 rounded" checked>
+                            <span class="text-sm font-medium text-gray-900">Todos os itens</span>
+                        </label>
+                        
+                        <div class="border-t border-gray-200 pt-3 space-y-2">
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" id="itemsAllowedPizza" class="w-5 h-5 text-green-600 rounded">
+                                <span class="text-sm font-medium text-gray-900">Caixas de Pizza</span>
+                            </label>
+                            
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" id="itemsAllowedTorta" class="w-5 h-5 text-green-600 rounded">
+                                <span class="text-sm font-medium text-gray-900">Caixas de Torta</span>
+                            </label>
+                            
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" id="itemsAllowedCorreio" class="w-5 h-5 text-green-600 rounded">
+                                <span class="text-sm font-medium text-gray-900">Caixas de Correio/Ecommerce</span>
+                            </label>
+                        </div>
+                        
+                        <div class="flex gap-3 pt-2">
+                            <button type="button" onclick="marcarTodosItensExcluidos()" class="flex-1 bg-blue-600 text-white text-sm font-bold px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                                Marcar Todos (Exceto Permitidos)
+                            </button>
+                            <button type="button" onclick="exibirTodosItens()" class="flex-1 bg-purple-600 text-white text-sm font-bold px-4 py-2 rounded-lg hover:bg-purple-700 transition">
+                                Exibir Todos os Itens
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Display dos Itens Permitidos (verde) -->
+                    <div class="mt-4">
+                        <h5 class="text-xs font-bold text-gray-700 uppercase mb-2">Itens Permitidos:</h5>
+                        <div id="allowedItemsDisplay" class="flex flex-wrap">
+                            <span class="text-green-600 font-bold">Todos os itens permitidos</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Display dos Itens Excluídos (vermelho) -->
+                    <div class="mt-4">
+                        <h5 class="text-xs font-bold text-gray-700 uppercase mb-2">Itens Excluídos:</h5>
+                        <div id="excludedItemsDisplay" class="flex flex-wrap">
+                            <span class="text-gray-500">Nenhum item excluído</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Lista de Todos os Itens (oculta por padrão) -->
+                    <div id="allItemsList" class="hidden mt-4 max-h-60 overflow-y-auto space-y-2">
+                        <!-- Itens carregados dinamicamente -->
+                    </div>
+                </div>
+                
+                <!-- Botão para Salvar Configuração de Itens -->
+                <div class="bg-yellow-50 p-4 rounded-2xl border border-yellow-200">
+                    <button onclick="saveClientItemsConfig()" class="w-full bg-yellow-600 text-white text-sm font-bold px-4 py-3 rounded-lg hover:bg-yellow-700 transition flex items-center justify-center gap-2">
+                        <i class="fas fa-save"></i> Salvar Configuração de Itens
+                    </button>
                 </div>
                 
                 <!-- Informações do Pedido -->
