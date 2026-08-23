@@ -526,7 +526,9 @@ select::-webkit-scrollbar-thumb:hover {
     }
 }
 
-/* Mobile otimizado - TELAS PEQUENAS */
+/* =============================================
+   MOBILE OTIMIZADO - CORREÇÃO CARDS KANBAN
+   ============================================= */
 @media (max-width: 768px) {
     body {
         overflow: hidden;
@@ -540,47 +542,179 @@ select::-webkit-scrollbar-thumb:hover {
         transform: scale(0.95); 
     }
     
-    .kanban-column {
-        min-height: 150px;
-        max-height: 300px;
-        border-radius: 1rem;
-        padding: 0.5rem !important;
-    }
-    
+    /* Container do kanban */
     #adminPedidosView {
         display: flex;
         flex-direction: column;
-        gap: 0.75rem;
+        gap: 0.5rem;
         padding: 0.5rem;
         overflow-y: auto;
         overflow-x: hidden;
         -webkit-overflow-scrolling: touch;
-    }
-    
-    #adminPedidosView > div {
         width: 100%;
-        min-width: unset;
-        max-height: 350px;
+        max-width: 100%;
+        box-sizing: border-box;
     }
     
-    .draggable-card {
-        padding: 0.75rem !important;
-        border-radius: 0.75rem !important;
+    /* Colunas do kanban */
+    #adminPedidosView > div {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        flex: none !important;
         margin-bottom: 0.5rem;
-        touch-action: manipulation;
-        cursor: grab;
+        border-radius: 0.75rem !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
     }
     
-    .draggable-card:active {
-        cursor: grabbing;
+    /* Header da coluna */
+    #adminPedidosView > div > div:first-child {
+        padding: 0.5rem 0.75rem !important;
+        border-radius: 0.75rem 0.75rem 0 0 !important;
     }
     
-    .draggable-card[draggable="true"] {
-        -webkit-user-select: none;
-        user-select: none;
-        -webkit-touch-callout: none;
+    #adminPedidosView h3 {
+        font-size: 0.85rem !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
     
+    /* Container dos cards */
+    .kanban-column {
+        min-height: 80px !important;
+        max-height: 300px !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        padding: 0.5rem !important;
+        border-radius: 0 0 0.75rem 0.75rem !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* CARDS - CORREÇÃO PRINCIPAL */
+    .draggable-card {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 0 0.5rem 0 !important;
+        padding: 0.6rem !important;
+        border-radius: 0.6rem !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+    }
+    
+    /* Conteúdo interno dos cards */
+    .draggable-card .flex.justify-between {
+        flex-wrap: wrap !important;
+        gap: 0.25rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+    
+    .draggable-card h4 {
+        font-size: 0.8rem !important;
+        line-height: 1.2 !important;
+        margin-bottom: 0.25rem !important;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+        max-width: 100% !important;
+    }
+    
+    .draggable-card ul {
+        padding-left: 0.75rem !important;
+        margin: 0.25rem 0 !important;
+        list-style-position: inside !important;
+    }
+    
+    .draggable-card ul li {
+        font-size: 0.7rem !important;
+        line-height: 1.3 !important;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+    }
+    
+    .draggable-card .text-sm {
+        font-size: 0.7rem !important;
+        line-height: 1.3 !important;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+    }
+    
+    .draggable-card .text-xs {
+        font-size: 0.65rem !important;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+    }
+    
+    .draggable-card .text-\[10px\] {
+        font-size: 0.6rem !important;
+        word-break: break-word !important;
+    }
+    
+    /* Badge de prioridade */
+    .draggable-card .px-3.py-1 {
+        padding: 0.15rem 0.4rem !important;
+        font-size: 0.6rem !important;
+        white-space: nowrap !important;
+    }
+    
+    /* Botão dentro do card */
+    .draggable-card .pt-4.border-t {
+        padding-top: 0.5rem !important;
+        margin-top: 0.25rem !important;
+    }
+    
+    .draggable-card button {
+        padding: 0.4rem !important;
+        font-size: 0.7rem !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        gap: 0.25rem !important;
+    }
+    
+    .draggable-card button span {
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        flex: 1 !important;
+        min-width: 0 !important;
+    }
+    
+    .draggable-card button i {
+        font-size: 0.8rem !important;
+        flex-shrink: 0 !important;
+    }
+    
+    /* Garantir que nada dentro do card estoure */
+    .draggable-card *,
+    .draggable-card *::before,
+    .draggable-card *::after {
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* Forçar quebra de texto */
+    .draggable-card,
+    .draggable-card p,
+    .draggable-card h4,
+    .draggable-card li,
+    .draggable-card span {
+        overflow-wrap: break-word !important;
+        word-wrap: break-word !important;
+        word-break: break-word !important;
+    }
+    
+    /* Ícones dentro dos cards */
+    .draggable-card i,
+    .draggable-card svg,
+    .draggable-card img {
+        max-width: 16px !important;
+        flex-shrink: 0 !important;
+    }
+    
+    /* Outros elementos mobile */
     #productTypeSelect,
     #modelSelect,
     #sizeSelect,
@@ -663,26 +797,22 @@ select::-webkit-scrollbar-thumb:hover {
         max-height: 98vh !important;
     }
     
-    /* Headers dos modais */
     #clientOrderModal .p-6,
     #adminEditModal .p-6 {
         padding: 1rem !important;
     }
     
-    /* Conteúdo dos modais */
     #clientOrderModal .p-6.space-y-5,
     #adminEditModal .p-6.space-y-5 {
         padding: 1rem !important;
         gap: 0.75rem !important;
     }
     
-    /* Footer dos modais */
     #clientOrderModal .border-t,
     #adminEditModal .border-t {
         padding: 0.75rem !important;
     }
     
-    /* Botões nos modais */
     #clientOrderModal button,
     #adminEditModal button {
         padding: 0.6rem 0.75rem !important;
@@ -703,25 +833,22 @@ select::-webkit-scrollbar-thumb:hover {
         border-radius: 12px;
     }
     
-    /* Tabela de clientes no mobile */
+    /* Tabela de clientes */
     #clientsTableBody td,
     #clientsTableBody th {
         padding: 0.5rem 0.75rem !important;
         font-size: 0.8em;
     }
     
-    /* Selects mais compactos */
     select {
         font-size: 0.85em !important;
     }
     
-    /* Botões do formulário */
     #orderForm button {
         padding: 0.7rem 1rem !important;
         font-size: 0.9em !important;
     }
     
-    /* Inputs mais compactos */
     #orderForm input,
     #orderForm textarea,
     #orderForm select {
@@ -737,12 +864,33 @@ select::-webkit-scrollbar-thumb:hover {
     }
     
     .kanban-column {
-        max-height: 250px;
+        max-height: 250px !important;
+        padding: 0.35rem !important;
     }
     
     .draggable-card {
-        padding: 0.5rem !important;
+        padding: 0.45rem !important;
+        margin-bottom: 0.35rem !important;
+        border-radius: 0.5rem !important;
         font-size: 0.8em;
+    }
+    
+    .draggable-card h4 {
+        font-size: 0.75rem !important;
+    }
+    
+    .draggable-card ul li,
+    .draggable-card .text-sm {
+        font-size: 0.65rem !important;
+    }
+    
+    .draggable-card .text-xs {
+        font-size: 0.6rem !important;
+    }
+    
+    .draggable-card button {
+        padding: 0.35rem !important;
+        font-size: 0.65rem !important;
     }
     
     #clientOrderModal .modal-cart-item {
@@ -764,6 +912,17 @@ select::-webkit-scrollbar-thumb:hover {
     button[onclick="repetirPedidoCliente()"] {
         font-size: 0.7rem !important;
         padding: 0.4rem 0.6rem !important;
+    }
+}
+
+/* Prevenir overflow horizontal */
+@media (max-width: 768px) {
+    #adminScreen,
+    #adminPedidosView,
+    .kanban-column,
+    .draggable-card,
+    body {
+        overflow-x: hidden !important;
     }
 }
 
@@ -826,7 +985,6 @@ select::-webkit-scrollbar-thumb:hover {
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
 }
 
-/* Ajuste para o dropdown quando aberto */
 #productTypeSelect:focus-visible,
 #modelSelect:focus-visible,
 #sizeSelect:focus-visible,
@@ -835,7 +993,7 @@ select::-webkit-scrollbar-thumb:hover {
     border-color: #3b82f6;
 }
 
-/* Animação especial para o valor total quando atualizado */
+/* Animação especial para o valor total */
 @keyframes valueUpdate {
     0% { transform: scale(1); }
     50% { transform: scale(1.1); }
@@ -846,7 +1004,6 @@ select::-webkit-scrollbar-thumb:hover {
     animation: valueUpdate 0.3s ease;
 }
 
-/* Estilo para o container do valor total no formulário */
 #orderForm #totalDisplayContainer {
     margin-top: 0.5rem;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -858,7 +1015,7 @@ select::-webkit-scrollbar-thumb:hover {
     pointer-events: none;
 }
 
-/* Estilos adicionais para os novos campos de cascata */
+/* Estilos adicionais para os campos de cascata */
 #productTypeSelect,
 #modelSelect,
 #sizeSelect {
@@ -892,7 +1049,6 @@ select::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.15);
 }
 
-/* Estilo para as opções dentro dos selects */
 #productTypeSelect option,
 #modelSelect option,
 #sizeSelect option {
@@ -908,7 +1064,6 @@ select::-webkit-scrollbar-thumb:hover {
     background-color: #e0e7ff;
 }
 
-/* Estilos específicos para o select de produto (categoria principal) */
 #productTypeSelect {
     font-weight: 600;
     letter-spacing: 0.3px;
@@ -924,7 +1079,6 @@ select::-webkit-scrollbar-thumb:hover {
     border-bottom: none;
 }
 
-/* Estilos para o select de modelo */
 #modelSelect {
     font-weight: 500;
 }
@@ -934,7 +1088,6 @@ select::-webkit-scrollbar-thumb:hover {
     font-size: 0.95em;
 }
 
-/* Estilos para o select de tamanho */
 #sizeSelect {
     font-weight: 500;
 }
@@ -950,7 +1103,6 @@ select::-webkit-scrollbar-thumb:hover {
     color: #0369a1;
 }
 
-/* Melhorias de acessibilidade */
 #productTypeSelect:focus-visible,
 #modelSelect:focus-visible,
 #sizeSelect:focus-visible {
@@ -958,7 +1110,6 @@ select::-webkit-scrollbar-thumb:hover {
     outline-offset: 2px;
 }
 
-/* Estilo para o container do formulário */
 #orderForm {
     position: relative;
 }
@@ -968,7 +1119,6 @@ select::-webkit-scrollbar-thumb:hover {
     z-index: 1;
 }
 
-/* Ajuste para o ícone de chevron nos selects */
 #productTypeSelect + i,
 #modelSelect + i,
 #sizeSelect + i {
@@ -988,7 +1138,7 @@ select::-webkit-scrollbar-thumb:hover {
     backface-visibility: hidden;
 }
 
-/* Suporte para modo escuro do sistema */
+/* Suporte para modo escuro */
 @media (prefers-color-scheme: dark) {
     :root {
         --bg-main: #0f172a;
@@ -1000,7 +1150,6 @@ select::-webkit-scrollbar-thumb:hover {
     }
 }
 
-/* Ajustes finais para melhor visualização */
 #productTypeSelect option:disabled,
 #modelSelect option:disabled,
 #sizeSelect option:disabled {
@@ -1008,14 +1157,12 @@ select::-webkit-scrollbar-thumb:hover {
     font-style: italic;
 }
 
-/* Estilo para quando não há opções disponíveis */
 #modelSelect option:only-child,
 #sizeSelect option:only-child {
     color: #94a3b8;
     font-style: italic;
 }
 
-/* Melhorar contraste e legibilidade */
 #productTypeSelect option,
 #modelSelect option,
 #sizeSelect option {
@@ -1024,7 +1171,6 @@ select::-webkit-scrollbar-thumb:hover {
     -moz-osx-font-smoothing: grayscale;
 }
 
-/* Animações suaves para mostrar/esconder elementos */
 .hidden {
     display: none !important;
 }
@@ -1044,18 +1190,15 @@ select::-webkit-scrollbar-thumb:hover {
     }
 }
 
-/* Melhorar a aparência do select quando aberto */
 select:focus option:checked {
     background: linear-gradient(135deg, #3b82f6, #2563eb);
     color: white;
 }
 
-/* Estilo para o texto do placeholder nos selects */
 select:invalid {
     color: rgba(255, 255, 255, 0.6);
 }
 
-/* Ajustes para o modo TV */
 @media (min-width: 1920px) and (max-width: 2560px) {
     #productTypeSelect,
     #modelSelect,
@@ -1078,7 +1221,6 @@ select:invalid {
     }
 }
 
-/* Animações para o carrinho */
 #cartContainer.fade-in {
     animation: cartSlideIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
@@ -1094,7 +1236,6 @@ select:invalid {
     }
 }
 
-/* Estilo para itens do carrinho */
 #cartItemsList li {
     animation: itemSlideIn 0.3s ease;
 }
@@ -1110,7 +1251,6 @@ select:invalid {
     }
 }
 
-/* Botão de remover item do carrinho */
 #cartItemsList button {
     transition: all 0.2s ease;
 }
@@ -1121,7 +1261,6 @@ select:invalid {
     border-radius: 0.5rem;
 }
 
-/* Estilos para o botão de remover item no modal */
 #clientModalItemsList button[onclick="removerItemModalCliente(this)"] {
     transition: all 0.2s ease;
 }
@@ -1131,7 +1270,6 @@ select:invalid {
     background: rgba(239, 68, 68, 0.2);
 }
 
-/* Responsividade para o modal do cliente em telas muito pequenas */
 @media (max-width: 380px) {
     #clientOrderModal .modal-cart-item {
         flex-direction: column !important;
@@ -1154,7 +1292,6 @@ select:invalid {
     }
 }
 
-/* Ajustes para o scroll suave no mobile */
 @media (hover: none) and (pointer: coarse) {
     .kanban-column {
         -webkit-overflow-scrolling: touch;
