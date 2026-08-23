@@ -139,11 +139,20 @@
                             </div>
                         </div>
 
-                        <!-- NOVO: Seletor de Tamanho/Especificação com Checkboxes -->
+                        <!-- Seletor de Tamanho/Especificação com Checkboxes -->
                         <div id="sizeContainer" class="hidden fade-in">
                             <label class="block text-sm font-medium text-white mb-2">Tamanho/Especificação</label>
                             <div id="sizeCheckboxContainer" class="space-y-3 bg-white/5 border border-white/20 rounded-2xl p-4">
                                 <!-- Os checkboxes serão carregados dinamicamente via JS -->
+                            </div>
+                        </div>
+
+                        <!-- Campo de Quantidade -->
+                        <div id="quantityContainer" class="hidden fade-in">
+                            <label class="block text-sm font-medium text-white mb-2">Quantidade</label>
+                            <div class="relative">
+                                <i class="fas fa-hashtag absolute left-4 top-4 text-white/50"></i>
+                                <input type="number" id="orderQuantity" min="1" value="1" class="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50" placeholder="Quantidade">
                             </div>
                         </div>
 
