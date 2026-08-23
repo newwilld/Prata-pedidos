@@ -138,8 +138,6 @@ const productCatalog = {
     }
 };
 
-
-
 // Função para obter todos os itens do catálogo
 function getAllCatalogItems() {
     const allItems = [];
@@ -366,9 +364,6 @@ function setupUIForUser() {
         document.getElementById('clientScreen').classList.add('hidden');
         document.getElementById('clientScreen').classList.remove('flex');
         
-        // Restaura todas as opções para admin
-        restoreAllProductTypeOptions();
-        
         if (!listenersInitialized) {
             initAdminListeners();
             listenersInitialized = true;
@@ -386,36 +381,29 @@ function setupUIForUser() {
             listenersInitialized = true;
         }
         
-        // APLICA FILTRO DE ITENS PERMITIDOS
-        filterProductTypeOptions();
+        // Aplica filtro de itens no catálogo
+        applyItemsFilter();
     }
 }
 
-// Função para restaurar todas as opções de produto (para admin)
-function restoreAllProductTypeOptions() {
+// Função para aplicar filtro de itens no catálogo
+function applyItemsFilter() {
+    if (!currentUserData || currentUserData.role === 'admin') return;
+    
     const productTypeSelect = document.getElementById('productTypeSelect');
     if (!productTypeSelect) return;
     
-    // Limpa o select
-    productTypeSelect.innerHTML = '';
-    
-    // Adiciona placeholder
-    const placeholder = document.createElement('option');
-    placeholder.value = '';
-    placeholder.disabled = true;
-    placeholder.selected = true;
-    placeholder.textContent = 'Selecione o tipo de produto...';
-    placeholder.className = 'text-gray-900';
-    productTypeSelect.appendChild(placeholder);
-    
-    // Adiciona todas as categorias
-    Object.keys(productCatalog).forEach(category => {
-        const option = document.createElement('option');
-        option.value = category;
-        option.textContent = category;
-        option.className = 'text-gray-900';
-        productTypeSelect.appendChild(option);
-    });
+    const allOptions = productTypeSelect.options;
+    for (let i = 0; i < allOptions.length; i++) {
+        const option = allOptions[i];
+        if (option.value && !isItemAllowed(option.value)) {
+            option.disabled = true;
+            option.style.display = 'none';
+        } else {
+            option.disabled = false;
+            option.style.display = '';
+        }
+    }
 }
 
 // Lógica de Formulário em Cascata
@@ -439,12 +427,11 @@ window.handleProductTypeChange = function() {
         const models = Object.keys(productCatalog[productType]);
         models.forEach(model => {
             // Verifica se algum item deste modelo está permitido
-            const hasAllowedItem = productCatalog[productType][model].some(size => {
-                if (!currentUserData || currentUserData.role === 'admin') return true;
-                return isItemAllowed(`${productType} > ${model} > ${size.name}`);
-            });
+            const hasAllowedItem = productCatalog[productType][model].some(size => 
+                isItemAllowed(`${productType} > ${model} > ${size.name}`)
+            );
             
-            if (hasAllowedItem) {
+            if (hasAllowedItem || currentUserData.role === 'admin') {
                 const option = document.createElement('option');
                 option.value = model;
                 option.textContent = model;
@@ -471,14 +458,9 @@ window.handleModelChange = function() {
         
         // Filtra tamanhos permitidos para clientes
         const allowedSizes = sizes.filter(size => {
-            if (!currentUserData || currentUserData.role === 'admin') return true;
+            if (currentUserData.role === 'admin') return true;
             return isItemAllowed(`${productType} > ${model} > ${size.name}`);
         });
-        
-        if (allowedSizes.length === 0) {
-            showToast('Nenhum item disponível para este modelo.', 'error');
-            return;
-        }
         
         // Cria os checkboxes para cada tamanho permitido
         allowedSizes.forEach((size, index) => {
@@ -515,38 +497,6 @@ window.handleModelChange = function() {
         sizeContainer.classList.remove('hidden');
     }
 };
-// Função para filtrar as opções do select de tipo de produto para clientes
-function filterProductTypeOptions() {
-    if (!currentUserData || currentUserData.role === 'admin') return;
-    
-    const productTypeSelect = document.getElementById('productTypeSelect');
-    if (!productTypeSelect) return;
-    
-    const options = productTypeSelect.options;
-    
-    // Começa do índice 1 para pular o placeholder
-    for (let i = options.length - 1; i >= 1; i--) {
-        const optionValue = options[i].value;
-        
-        if (optionValue && !isItemAllowed(optionValue)) {
-            // Remove completamente a opção do select
-            productTypeSelect.remove(i);
-        }
-    }
-    
-    // Se não houver opções disponíveis, mostra mensagem
-    if (productTypeSelect.options.length <= 1) {
-        const noOptions = document.createElement('option');
-        noOptions.value = '';
-        noOptions.disabled = true;
-        noOptions.selected = true;
-        noOptions.textContent = 'Nenhum produto disponível para você';
-        noOptions.className = 'text-gray-900';
-        productTypeSelect.appendChild(noOptions);
-    }
-}
-
-
 
 window.handleSizeCheckboxChange = function(index) {
     const checkbox = document.getElementById(`size-check-${index}`);
