@@ -43,36 +43,30 @@ let selectedSizes = {}; // Para armazenar os tamanhos selecionados com checkboxe
 // Dados dos produtos em cascata (Categoria > Modelo > Tamanho/Especificação)
 const productCatalog = {
     'Caixa de pizza': {
-        'Oitavada - Flexográficas - Branca': [
+        'Oitavada': [
             { name: '20cm brotinho', price: 1.70 },
             { name: '25cm pequena', price: 2.10 },
             { name: '30cm média', price: 2.40 },
             { name: '35cm grande', price: 2.85 },
             { name: '40cm família', price: 3.30 },
-            { name: '45cm gigante', price: 4.60 }
-        ],
-        'Oitavada - Flexográficas - Parda': [
+            { name: '45cm gigante', price: 4.60 },
             { name: '20cm brotinho', price: 1.60 },
             { name: '25cm pequena', price: 2.00 },
             { name: '30cm média', price: 2.30 },
             { name: '35cm grande', price: 2.65 },
             { name: '40cm família', price: 3.10 },
-            { name: '45cm gigante', price: 4.40 }
-        ],
-        'Oitavada - Fotográficas': [
+            { name: '45cm gigante', price: 4.40 },
             { name: '25cm pequena', price: 2.80 },
             { name: '30cm média', price: 3.00 },
             { name: '35cm grande', price: 3.35 },
             { name: '40cm família', price: 3.70 }
         ],
-        'Americana - Branca': [
+        'Americana': [
             { name: '20cm brotinho', price: 1.98 },
             { name: '25cm pequena', price: 2.10 },
             { name: '30cm média', price: 2.40 },
             { name: '35cm grande', price: 2.85 },
-            { name: '40cm família', price: 3.30 }
-        ],
-        'Americana - Parda': [
+            { name: '40cm família', price: 3.30 },
             { name: '20cm brotinho', price: 1.88 },
             { name: '25cm pequena', price: 2.00 },
             { name: '30cm média', price: 2.20 },
