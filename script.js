@@ -50,16 +50,16 @@ const productCatalog = {
             { name: '25cm pequena (branca)', price: 2.10 },
             { name: '30cm média (parda)', price: 2.30 },
             { name: '30cm média (branca)', price: 2.40 },
+            { name: '25cm pequena (parda)', price: 2.80 },
             { name: '35cm grande (parda)', price: 2.65 },
             { name: '35cm grande (branca)', price: 2.85 },
+            { name: '30cm média (branca)', price: 3.00 },
+            { name: '35cm grande (branca)', price: 3.35 },
             { name: '40cm família (parda)', price: 3.10 },
             { name: '40cm família (branca)', price: 3.30 },
+            { name: '40cm família (branca)', price: 3.70 },
             { name: '45cm gigante (parda)', price: 4.40 },
-            { name: '45cm gigante (branca)', price: 4.60 },
-            { name: '25cm pequena', price: 2.80 },
-            { name: '30cm média', price: 3.00 },
-            { name: '35cm grande', price: 3.35 },
-            { name: '40cm família', price: 3.70 }
+            { name: '45cm gigante (branca)', price: 4.60 }
         ],
         'Quadrada': [
             { name: '20x20x5cm (Broto)', price: 2.10 },
@@ -136,7 +136,6 @@ const productCatalog = {
         ]
     }
 };
-
 // Funções de UI Auxiliares
 window.showToast = function(message, type = 'info') {
     const container = document.getElementById('toast-container');
