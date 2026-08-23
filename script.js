@@ -2008,3 +2008,197 @@ window.openClientModal = function(clientUid) {
         }
     }
 };
+/* NOVO: Estilos para os checkboxes de tamanho com quantidade */
+#sizeCheckboxContainer {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.size-checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.size-checkbox-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateX(4px);
+}
+
+.size-checkbox-item.checked {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.4);
+}
+
+.size-checkbox-item input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: #3b82f6;
+    flex-shrink: 0;
+}
+
+.size-checkbox-label {
+    flex: 1;
+    color: white;
+    font-weight: 500;
+    font-size: 0.95rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.size-quantity-input {
+    width: 120px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: white;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.size-quantity-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.size-quantity-input:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* NOVO: Estilos para mensagens de status de alteração */
+#alterationStatusArea {
+    margin-bottom: 1rem;
+}
+
+#alterationPendingMessage,
+#alterationApprovedMessage {
+    animation: fadeIn 0.5s ease;
+    backdrop-filter: blur(10px);
+}
+
+#alterationPendingMessage {
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+#alterationApprovedMessage {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+#alterationPendingMessage .fa-clock,
+#alterationApprovedMessage .fa-check-circle {
+    font-size: 1.2em;
+    animation: pulse 2s infinite;
+}
+
+#alterationSentDate,
+#approvalSentDate,
+#approvalDate {
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+/* NOVO: Coluna Entregues - gradiente verde */
+.card-gradient-entregue {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+/* Ajuste para o novo bloco Entregues */
+.bg-gradient-to-r.from-green-600.to-emerald-600 {
+    background-image: linear-gradient(to right, #059669, #10b981);
+}
+
+/* Melhorias para os checkboxes em telas menores */
+@media (max-width: 640px) {
+    .size-checkbox-item {
+        padding: 10px;
+        gap: 8px;
+    }
+    
+    .size-quantity-input {
+        width: 90px;
+        padding: 6px 8px;
+        font-size: 0.8rem;
+    }
+    
+    .size-checkbox-label {
+        font-size: 0.85rem;
+    }
+    
+    #sizeCheckboxContainer {
+        max-height: 250px;
+    }
+}
+
+/* Melhorias para telas grandes */
+@media (min-width: 1920px) {
+    .size-checkbox-item {
+        padding: 16px;
+        gap: 16px;
+    }
+    
+    .size-checkbox-label {
+        font-size: 1.1rem;
+    }
+    
+    .size-quantity-input {
+        width: 150px;
+        padding: 10px 14px;
+        font-size: 1rem;
+    }
+    
+    #sizeCheckboxContainer {
+        max-height: 400px;
+    }
+}
+
+/* Animação para quando marcar/desmarcar checkbox */
+.size-checkbox-item input[type="checkbox"]:checked + .size-checkbox-label {
+    color: #60a5fa;
+    font-weight: 600;
+}
+
+.size-checkbox-item input[type="checkbox"]:checked ~ .size-quantity-input {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: rgba(59, 130, 246, 0.5);
+}
+
+/* Efeito de hover no checkbox */
+.size-checkbox-item input[type="checkbox"]:hover {
+    transform: scale(1.1);
+}
+
+/* Transição suave para o input de quantidade */
+.size-quantity-input {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Estilo para quando o input de quantidade está focado */
+.size-quantity-input:focus {
+    transform: scale(1.02);
+}
+
+/* Suporte para modo escuro */
+@media (prefers-color-scheme: dark) {
+    .size-checkbox-item {
+        background: rgba(255, 255, 255, 0.03);
+    }
+    
+    .size-checkbox-item:hover {
+        background: rgba(255, 255, 255, 0.08);
+    }
+}
