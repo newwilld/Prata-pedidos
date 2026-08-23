@@ -64,7 +64,7 @@ body {
 
 /* Drag and Drop styles */
 .kanban-column { 
-    min-height: 300px;
+    min-height: 600px;
     transition: all 0.3s ease;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 1.5rem;
@@ -996,7 +996,7 @@ select:invalid {
 
 /* Garantir que as colunas do kanban tenham altura correta */
 .kanban-column {
-    min-height: 300px;
+    min-height: 600px;
     height: 100%;
     max-height: 100%;
     overflow-y: auto !important; /* Scroll interno ativado */
