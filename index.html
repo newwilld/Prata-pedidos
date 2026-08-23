@@ -441,10 +441,10 @@
                     </div>
                 </div>
 
-                <!-- Botão Excluir Cliente -->
+                <!-- Botão Excluir Pedido (ALTERADO) -->
                 <div class="mt-4 border-t border-gray-200 pt-4">
                     <button onclick="deleteClient()" class="w-full bg-red-50 text-red-600 font-bold py-4 rounded-2xl hover:bg-red-100 transition flex items-center justify-center gap-2">
-                        <i class="fas fa-trash"></i> Excluir Cliente
+                        <i class="fas fa-trash"></i> Excluir Pedido
                     </button>
                 </div>
             </div>
@@ -499,7 +499,7 @@
                     </div>
                     
                     <!-- Botão Adicionar Mais Itens na Edição -->
-                    <button type="button" onclick="closeClientOrderModal(); document.getElementById('productTypeSelect').focus();" class="w-full border border-dashed border-white/20 text-white/70 hover:text-white hover:border-white/50 hover:bg-white/5 py-4 rounded-xl transition flex items-center justify-center gap-2 text-sm font-medium">
+                    <button type="button" onclick="prepararAdicaoItemExistente()" class="w-full border border-dashed border-white/20 text-white/70 hover:text-white hover:border-white/50 hover:bg-white/5 py-4 rounded-xl transition flex items-center justify-center gap-2 text-sm font-medium">
                         <i class="fas fa-plus-circle"></i> Adicionar Mais Itens a Este Pedido
                     </button>
                 </div>
@@ -510,13 +510,34 @@
                 </div>
             </div>
             
-            <div class="p-6 border-t border-white/10 bg-white/5 flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div class="text-lg font-bold text-white w-full sm:w-auto text-center sm:text-left">
-                    Total: <span id="clientModalTotalValue" class="text-green-400">R$ 0,00</span>
+            <div class="p-6 border-t border-white/10 bg-white/5 flex flex-col gap-4">
+                <div class="flex justify-between items-center">
+                    <div class="text-lg font-bold text-white">
+                        Total: <span id="clientModalTotalValue" class="text-green-400">R$ 0,00</span>
+                    </div>
                 </div>
-                <div class="flex w-full sm:w-auto gap-3">
-                    <button type="button" onclick="closeClientOrderModal()" class="flex-1 sm:flex-none px-6 py-3 text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition">Cancelar</button>
-                    <button type="button" onclick="salvarEdicaoPedidoCliente()" class="flex-1 sm:flex-none px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm font-bold rounded-xl hover:from-blue-600 hover:to-purple-700 transition shadow-lg">Salvar Modificações</button>
+                
+                <!-- Grid de botões de ação -->
+                <div class="grid grid-cols-2 gap-3">
+                    <button type="button" onclick="salvarEdicaoPedidoCliente()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold px-4 py-3 rounded-xl transition flex items-center justify-center gap-2">
+                        <i class="fas fa-save"></i> Salvar Alterações
+                    </button>
+                    
+                    <button type="button" onclick="excluirPedidoCliente()" class="bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:text-red-300 font-bold px-4 py-3 rounded-xl transition flex items-center justify-center gap-2">
+                        <i class="fas fa-trash"></i> Excluir Pedido
+                    </button>
+                    
+                    <button type="button" onclick="closeClientOrderModal()" class="col-span-2 bg-white/10 text-white/70 hover:text-white hover:bg-white/20 font-bold px-4 py-3 rounded-xl transition flex items-center justify-center gap-2">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                </div>
+                
+                <!-- Aviso de restrição -->
+                <div id="editRestrictionWarning" class="hidden bg-amber-500/10 border border-amber-500/20 rounded-xl p-3">
+                    <p class="text-sm text-amber-400 flex items-center gap-2">
+                        <i class="fas fa-info-circle"></i>
+                        Este pedido não pode ser editado pois não está mais com status "Pendente".
+                    </p>
                 </div>
             </div>
         </div>
