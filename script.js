@@ -849,10 +849,8 @@ window.salvarEdicaoPedidoCliente = async function() {
             notifications.push(`@${clientName} editou o produto: ${originalOrder.product} → ${legacyProduct}`);
         }
         
-        // Notificação de mudança de valor total
-        if (originalOrder && originalOrder.totalEstimated !== newTotal) {
-            notifications.push(`@${clientName} editou o valor total do pedido: R$ ${originalOrder.totalEstimated?.toFixed(2) || '0.00'} → R$ ${newTotal.toFixed(2)}`);
-        }
+        // ❌ REMOVIDO: Notificação de mudança de valor total (preço)
+        // O preço é consequência da quantidade, não precisa notificar
         
         // Notificação de mudança de observações
         if (originalOrder && (originalOrder.generalObs || originalOrder.obs || '') !== generalObs) {
