@@ -979,8 +979,10 @@ select:invalid {
 }
 /* Ajustes para a tela do Admin */
 #adminScreen {
-    height: 100vh;
-    overflow: hidden;
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;  /* Permite scroll na página */
+    overflow-x: hidden;
 }
 
 #adminScreen .flex-1 {
@@ -989,9 +991,10 @@ select:invalid {
 }
 
 #adminPedidosView {
-    min-height: 0;
-    height: 100%;
-    overflow: hidden;
+    min-height: 800px;  /* Altura mínima para o container */
+    height: auto;  /* Altura automática */
+    overflow-y: auto;  /* Scroll na página se necessário */
+    overflow-x: auto;  /* Scroll horizontal para os 3 blocos */
 }
 
 /* Garantir que as colunas do kanban tenham altura correta */
