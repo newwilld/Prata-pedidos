@@ -37,7 +37,7 @@
     </header>
 
     <!-- Conteúdo Principal -->
-    <main class="flex-1 relative">
+   <main class="flex-1 relative min-h-screen">
         
         <!-- Tela de Login / Registro -->
         <div id="authScreen" class="absolute inset-0 z-20 flex items-center justify-center p-4 overflow-y-auto">
@@ -245,7 +245,7 @@
         </div>
 
         <!-- Tela do Admin (Master) -->
-        <div id="adminScreen" class="hidden h-full flex-col overflow-hidden">
+        <div id="adminScreen" class="hidden h-screen flex-col overflow-hidden">
             <!-- Abas Admin -->
             <div class="bg-white/10 backdrop-blur-lg border-b border-white/20 px-4 sm:px-6 flex-shrink-0 flex overflow-x-auto">
                 <button onclick="switchAdminTab('pedidos')" id="tabPedidos" class="px-6 py-5 text-sm font-bold border-b-4 border-blue-500 text-white whitespace-nowrap transition">
