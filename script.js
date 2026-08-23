@@ -2295,23 +2295,170 @@ window.marcarTodosItensExcluidos = function() {
     updateItemsConfigDisplay(config);
 };
 
-// Função para exibir todos os itens
+// Função atualizada para exibir todos os itens com checkboxes
 window.exibirTodosItens = function() {
     const itemsListContainer = document.getElementById('allItemsList');
+    const allItemsCheckboxList = document.getElementById('allItemsCheckboxList');
     
-    if (!itemsListContainer) return;
+    if (!itemsListContainer || !allItemsCheckboxList) return;
     
     const allItems = getAllCatalogItems();
     
-    itemsListContainer.innerHTML = allItems.map((item, index) => `
-        <div class="bg-white border border-gray-200 rounded-lg p-3 flex items-center justify-between">
-            <div>
+    // Obtém configuração atual
+    const allowTodos = document.getElementById('itemsAllowedTodos').checked;
+    const allowPizza = document.getElementById('itemsAllowedPizza').checked;
+    const allowTorta = document.getElementById('itemsAllowedTorta').checked;
+    const allowCorreio = document.getElementById('itemsAllowedCorreio').checked;
+    
+    allItemsCheckboxList.innerHTML = allItems.map((item, index) => {
+        // Verifica se o item está permitido baseado na configuração atual
+        let isChecked = false;
+        
+        if (allowTodos) {
+            isChecked = true;
+        } else {
+            if (allowPizza && item.category === 'Caixa de pizza') isChecked = true;
+            if (allowTorta && item.category === 'Caixa de torta') isChecked = true;
+            if (allowCorreio && item.category === 'Caixa correio') isChecked = true;
+        }
+        
+        return `
+        <div class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg item-searchable" data-item-name="${item.name.toLowerCase()}" data-item-category="${item.category.toLowerCase()}" data-item-model="${item.model.toLowerCase()}">
+            <input type="checkbox" id="item-check-${index}" class="w-4 h-4 text-green-600 rounded item-individual-check" ${isChecked ? 'checked' : ''}>
+            <label for="item-check-${index}" class="flex-1 cursor-pointer">
                 <p class="text-sm font-medium text-gray-900">${item.name}</p>
                 <p class="text-xs text-gray-500">${item.category} > ${item.model}</p>
-            </div>
+            </label>
             <span class="text-sm font-bold text-gray-700">R$ ${item.price.toFixed(2)}</span>
-        </div>
-    `).join('');
+        </div>`;
+    }).join('');
     
     itemsListContainer.classList.remove('hidden');
+    
+    // Limpa o campo de busca
+    const searchInput = document.getElementById('searchItemsInput');
+    if (searchInput) searchInput.value = '';
+};
+
+// Função para filtrar itens na lista
+window.filterItemsList = function() {
+    const searchTerm = document.getElementById('searchItemsInput').value.toLowerCase().trim();
+    const items = document.querySelectorAll('.item-searchable');
+    
+    items.forEach(item => {
+        const itemName = item.getAttribute('data-item-name') || '';
+        const itemCategory = item.getAttribute('data-item-category') || '';
+        const itemModel = item.getAttribute('data-item-model') || '';
+        
+        if (searchTerm === '' || 
+            itemName.includes(searchTerm) || 
+            itemCategory.includes(searchTerm) || 
+            itemModel.includes(searchTerm)) {
+            item.style.display = 'flex';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+};
+
+// Função para salvar itens selecionados individualmente
+window.salvarItensSelecionadosIndividualmente = async function() {
+    const clientUid = document.getElementById('editClientUid').value;
+    
+    if (!clientUid || clientUid === 'undefined' || clientUid === '') {
+        showToast('Cliente não identificado.', 'error');
+        return;
+    }
+    
+    const allItems = getAllCatalogItems();
+    const checkedItems = document.querySelectorAll('.item-individual-check:checked');
+    
+    if (checkedItems.length === 0) {
+        showToast('Selecione pelo menos um item.', 'error');
+        return;
+    }
+    
+    // Verifica se todos os itens estão marcados
+    if (checkedItems.length === allItems.length) {
+        // Se todos estão marcados, salva como "todos"
+        const itemsConfig = {
+            allowedItems: ['todos'],
+            excludedItems: []
+        };
+        
+        try {
+            await update(ref(db, `users/${clientUid}/itemsConfig`), itemsConfig);
+            
+            // Atualiza checkboxes principais
+            document.getElementById('itemsAllowedTodos').checked = true;
+            document.getElementById('itemsAllowedPizza').checked = false;
+            document.getElementById('itemsAllowedTorta').checked = false;
+            document.getElementById('itemsAllowedCorreio').checked = false;
+            
+            updateItemsConfigDisplay(itemsConfig);
+            showToast('Configuração de itens salva com sucesso!', 'success');
+            
+            // Recarrega lista de clientes se estiver visível
+            if(!document.getElementById('adminClientsView').classList.contains('hidden')){
+                renderClientsList();
+            }
+            
+            // Esconde a lista de itens
+            document.getElementById('allItemsList').classList.add('hidden');
+            
+        } catch(err) {
+            console.error("Erro ao salvar configuração de itens:", err);
+            showToast('Erro ao salvar configuração de itens.', 'error');
+        }
+        return;
+    }
+    
+    // Coleta categorias únicas dos itens marcados
+    const selectedCategories = new Set();
+    checkedItems.forEach((checkbox, index) => {
+        // Encontra o item correspondente
+        const allCheckboxes = document.querySelectorAll('.item-individual-check');
+        const checkboxIndex = Array.from(allCheckboxes).indexOf(checkbox);
+        
+        if (checkboxIndex >= 0 && checkboxIndex < allItems.length) {
+            selectedCategories.add(allItems[checkboxIndex].category);
+        }
+    });
+    
+    const allowedItems = Array.from(selectedCategories);
+    
+    if (allowedItems.length === 0) {
+        showToast('Erro ao identificar itens selecionados.', 'error');
+        return;
+    }
+    
+    const itemsConfig = {
+        allowedItems: allowedItems,
+        excludedItems: []
+    };
+    
+    try {
+        await update(ref(db, `users/${clientUid}/itemsConfig`), itemsConfig);
+        
+        // Atualiza checkboxes principais
+        document.getElementById('itemsAllowedTodos').checked = false;
+        document.getElementById('itemsAllowedPizza').checked = allowedItems.includes('Caixa de pizza');
+        document.getElementById('itemsAllowedTorta').checked = allowedItems.includes('Caixa de torta');
+        document.getElementById('itemsAllowedCorreio').checked = allowedItems.includes('Caixa correio');
+        
+        updateItemsConfigDisplay(itemsConfig);
+        showToast('Configuração de itens salva com sucesso!', 'success');
+        
+        // Recarrega lista de clientes se estiver visível
+        if(!document.getElementById('adminClientsView').classList.contains('hidden')){
+            renderClientsList();
+        }
+        
+        // Esconde a lista de itens
+        document.getElementById('allItemsList').classList.add('hidden');
+        
+    } catch(err) {
+        console.error("Erro ao salvar configuração de itens:", err);
+        showToast('Erro ao salvar configuração de itens.', 'error');
+    }
 };
