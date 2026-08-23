@@ -61,7 +61,7 @@ const productCatalog = {
             { name: '35cm grande', price: 3.35 },
             { name: '40cm família', price: 3.70 }
         ],
-        'Americana': [
+        'Sextavada/Americana': [
             { name: '20cm brotinho', price: 1.98 },
             { name: '25cm pequena', price: 2.10 },
             { name: '30cm média', price: 2.40 },
@@ -73,7 +73,7 @@ const productCatalog = {
             { name: '35cm grande', price: 2.65 },
             { name: '40cm família', price: 3.10 }
         ],
-        'Quadrada Branca': [
+        'Quadrada': [
             { name: '20x20x5cm (Broto)', price: 2.10 },
             { name: '25x25x5,5cm (Pequena)', price: 2.40 },
             { name: '30x30x4,0cm (média)', price: 2.50 },
