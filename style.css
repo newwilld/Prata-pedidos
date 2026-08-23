@@ -1292,3 +1292,364 @@ body {
         background: rgba(255, 255, 255, 0.08);
     }
 }
+
+/* ============================================= */
+/* NOVAS OTIMIZAÇÕES: CONTROLE DE ITENS PERMITIDOS */
+/* ============================================= */
+
+/* Checkboxes personalizados para configuração de itens */
+#itemsAllowedTodos,
+#itemsAllowedPizza,
+#itemsAllowedTorta,
+#itemsAllowedCorreio {
+    accent-color: #10b981;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 20px;
+    height: 20px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+#itemsAllowedTodos:hover,
+#itemsAllowedPizza:hover,
+#itemsAllowedTorta:hover,
+#itemsAllowedCorreio:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
+#itemsAllowedTodos:checked,
+#itemsAllowedPizza:checked,
+#itemsAllowedTorta:checked,
+#itemsAllowedCorreio:checked {
+    animation: checkPulse 0.5s ease-out;
+}
+
+@keyframes checkPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}
+
+/* Container da lista de itens com busca */
+#allItemsList {
+    animation: slideDown 0.3s ease-out;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        max-height: 1000px;
+    }
+}
+
+/* Campo de busca */
+#searchItemsInput {
+    transition: all 0.3s ease;
+    border: 2px solid #e5e7eb;
+    background: white;
+}
+
+#searchItemsInput:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+#searchItemsInput::placeholder {
+    color: #9ca3af;
+}
+
+/* Container dos itens com checkbox */
+#allItemsCheckboxList {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+#allItemsCheckboxList::-webkit-scrollbar {
+    width: 6px;
+}
+
+#allItemsCheckboxList::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+#allItemsCheckboxList::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+#allItemsCheckboxList::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Itens pesquisáveis */
+.item-searchable {
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    border-radius: 8px;
+}
+
+.item-searchable:hover {
+    background-color: #f3f4f6 !important;
+    border-color: #e5e7eb;
+}
+
+/* Checkbox de categoria */
+.category-check {
+    accent-color: #3b82f6;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 18px;
+    height: 18px;
+}
+
+.category-check:hover {
+    transform: scale(1.1);
+}
+
+/* Checkbox individual de item */
+.item-individual-check {
+    accent-color: #10b981;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 18px;
+    height: 18px;
+}
+
+.item-individual-check:hover {
+    transform: scale(1.1);
+}
+
+.item-individual-check:checked {
+    animation: checkPulse 0.5s ease-out;
+}
+
+/* Tags de itens permitidos (verde) */
+#allowedItemsDisplay .bg-green-100 {
+    background-color: #d1fae5 !important;
+    color: #065f46 !important;
+    border: 1px solid #6ee7b7;
+    transition: all 0.2s ease;
+}
+
+#allowedItemsDisplay .bg-green-100:hover {
+    background-color: #a7f3d0 !important;
+    transform: translateY(-1px);
+}
+
+/* Tags de itens excluídos (vermelho) */
+#excludedItemsDisplay .bg-red-100 {
+    background-color: #fee2e2 !important;
+    color: #991b1b !important;
+    border: 1px solid #fca5a5;
+    transition: all 0.2s ease;
+}
+
+#excludedItemsDisplay .bg-red-100:hover {
+    background-color: #fecaca !important;
+    transform: translateY(-1px);
+}
+
+/* Animações para as tags */
+#allowedItemsDisplay span,
+#excludedItemsDisplay span {
+    animation: fadeInScale 0.3s ease-out;
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Botões de ação da configuração de itens */
+button[onclick="marcarTodosItens()"],
+button[onclick="exibirTodosItens()"],
+button[onclick="salvarClientItemsConfig()"] {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+button[onclick="marcarTodosItens()"]:hover,
+button[onclick="exibirTodosItens()"]:hover,
+button[onclick="salvarClientItemsConfig()"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+button[onclick="marcarTodosItens()"]:active,
+button[onclick="exibirTodosItens()"]:active,
+button[onclick="salvarClientItemsConfig()"]:active {
+    transform: translateY(0);
+}
+
+/* Botões da lista de itens */
+button[onclick="adicionarItensSelecionadosAExcluidos()"],
+button[onclick="salvarItensSelecionadosIndividualmente()"] {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+button[onclick="adicionarItensSelecionadosAExcluidos()"]:hover,
+button[onclick="salvarItensSelecionadosIndividualmente()"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+button[onclick="adicionarItensSelecionadosAExcluidos()"]:active,
+button[onclick="salvarItensSelecionadosIndividualmente()"]:active {
+    transform: translateY(0);
+}
+
+/* Coluna de itens permitidos na tabela de clientes */
+#clientsTableBody td:last-child {
+    min-width: 150px;
+}
+
+#clientsTableBody .text-green-400 {
+    background-color: rgba(16, 185, 129, 0.1);
+    padding: 4px 8px;
+    border-radius: 9999px;
+    display: inline-block;
+}
+
+#clientsTableBody .text-yellow-400 {
+    background-color: rgba(245, 158, 11, 0.1);
+    padding: 4px 8px;
+    border-radius: 9999px;
+    display: inline-block;
+}
+
+/* Melhorias de acessibilidade */
+input[type="checkbox"]:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+button:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* Labels clicáveis */
+label {
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Prevenção de seleção de texto nos botões */
+button {
+    user-select: none;
+}
+
+/* Responsividade para a lista de itens */
+@media (max-width: 640px) {
+    #allItemsCheckboxList {
+        max-height: 40vh;
+    }
+    
+    .item-searchable {
+        padding: 0.75rem;
+    }
+    
+    .item-searchable .flex-1 {
+        font-size: 0.875rem;
+    }
+    
+    button[onclick="adicionarItensSelecionadosAExcluidos()"],
+    button[onclick="salvarItensSelecionadosIndividualmente()"] {
+        padding: 0.75rem;
+        font-size: 0.75rem;
+    }
+    
+    #allItemsList {
+        padding: 12px;
+    }
+    
+    #searchItemsInput {
+        font-size: 0.875rem;
+    }
+}
+
+/* Responsividade para telas grandes */
+@media (min-width: 1920px) {
+    #allItemsCheckboxList {
+        max-height: 60vh;
+    }
+    
+    .item-searchable {
+        padding: 1rem;
+    }
+    
+    #searchItemsInput {
+        font-size: 1.1rem;
+        padding: 0.75rem 1rem;
+    }
+    
+    #allItemsList {
+        padding: 20px;
+    }
+}
+
+/* Ajuste para o container da configuração de itens */
+.bg-green-50 {
+    background-color: #f0fdf4 !important;
+    border-color: #bbf7d0 !important;
+}
+
+/* Melhorias visuais para a seção de itens permitidos */
+#allowedItemsDisplay,
+#excludedItemsDisplay {
+    min-height: 30px;
+    padding: 4px 0;
+}
+
+#allowedItemsDisplay:empty::after {
+    content: 'Nenhum item permitido';
+    color: #9ca3af;
+    font-style: italic;
+}
+
+#excludedItemsDisplay:empty::after {
+    content: 'Nenhum item excluído';
+    color: #9ca3af;
+    font-style: italic;
+}
+
+/* Animação para quando salvar configuração */
+@keyframes saveSuccess {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.save-success {
+    animation: saveSuccess 0.5s ease;
+}
