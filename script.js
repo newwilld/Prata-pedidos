@@ -714,6 +714,60 @@ window.abrirModalCliente = function(orderId) {
     document.getElementById('clientModalOrderId').value = order.id;
     document.getElementById('clientModalStatus').textContent = (order.status === 'novo' ? 'Pendente' : order.status === 'producao' ? 'Em Produção' : 'Finalizado');
 
+    // VERIFICA SE O CLIENTE PODE EDITAR O PEDIDO
+    const podeEditar = order.status === 'novo'; // Só pode editar se estiver "Pendente"
+    
+    // Seleciona os botões de ação no modal
+    const btnEditar = document.querySelector('button[onclick="salvarEdicaoPedidoCliente()"]');
+    const btnExcluir = document.querySelector('button[onclick*="excluir"]');
+    const btnAdicionar = document.querySelector('button[onclick*="prepararAdicaoItemExistente"]');
+    const btnRepetir = document.querySelector('button[onclick="repetirPedidoCliente()"]');
+    
+    // Habilita ou desabilita os botões de edição
+    if (btnEditar) btnEditar.disabled = !podeEditar;
+    if (btnExcluir) btnExcluir.disabled = !podeEditar;
+    if (btnAdicionar) btnAdicionar.disabled = !podeEditar;
+    
+    // Aplica classes visuais para indicar estado desabilitado
+    [btnEditar, btnExcluir, btnAdicionar].forEach(btn => {
+        if (btn) {
+            if (!podeEditar) {
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+                btn.title = 'Pedido não pode ser editado - status: ' + (order.status === 'producao' ? 'Em Produção' : 'Finalizado');
+            } else {
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                btn.title = '';
+            }
+        }
+    });
+    
+    // Desabilita os inputs de quantidade se não puder editar
+    const qtyInputs = document.querySelectorAll('.item-qty-input');
+    qtyInputs.forEach(input => {
+        input.disabled = !podeEditar;
+        if (!podeEditar) {
+            input.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+    });
+    
+    // Desabilita os botões de remover item
+    const removeButtons = document.querySelectorAll('button[onclick="removerItemModalCliente(this)"]');
+    removeButtons.forEach(btn => {
+        btn.disabled = !podeEditar;
+        if (!podeEditar) {
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+    });
+    
+    // Desabilita o campo de observações se não puder editar
+    const obsField = document.getElementById('clientModalObs');
+    if (obsField) {
+        obsField.disabled = !podeEditar;
+        if (!podeEditar) {
+            obsField.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+    }
+
     const itemsList = document.getElementById('clientModalItemsList');
     
     // Tratativa para pedido antigo vs pedido novo (com array)
@@ -734,6 +788,9 @@ window.abrirModalCliente = function(orderId) {
 
     itemsList.innerHTML = items.map((item, index) => {
         const qtyNum = item.quantityNumber || parseInt(item.quantity) || 0;
+        const disabledAttr = !podeEditar ? 'disabled' : '';
+        const disabledClass = !podeEditar ? 'opacity-50 cursor-not-allowed' : '';
+        
         return `
         <div class="modal-cart-item flex flex-col sm:flex-row justify-between sm:items-center bg-white/5 p-4 rounded-xl border border-white/10 gap-3" data-unit-price="${item.unitPrice || 0}">
             <div class="flex-1">
@@ -745,40 +802,77 @@ window.abrirModalCliente = function(orderId) {
             </div>
             <div class="flex items-center gap-3">
                 <label class="text-xs text-white/50">Qtd:</label>
-                <input type="number" min="1" value="${qtyNum}" oninput="recalcularTotalModalCliente()" class="item-qty-input w-24 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-400">
-                <button type="button" onclick="removerItemModalCliente(this)" class="text-red-400 hover:text-red-300 bg-red-400/10 p-2 rounded-lg transition"><i class="fas fa-trash"></i></button>
+                <input type="number" min="1" value="${qtyNum}" oninput="recalcularTotalModalCliente()" class="item-qty-input w-24 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-400 ${disabledClass}" ${disabledAttr}>
+                <button type="button" onclick="removerItemModalCliente(this)" class="text-red-400 hover:text-red-300 bg-red-400/10 p-2 rounded-lg transition ${disabledClass}" ${disabledAttr}><i class="fas fa-trash"></i></button>
             </div>
         </div>`;
     }).join('');
 
-    document.getElementById('clientModalObs').value = order.generalObs || (order.items ? '' : order.obs) || '';
+    const obsValue = order.generalObs || (order.items ? '' : order.obs) || '';
+    const obsField2 = document.getElementById('clientModalObs');
+    if (obsField2) {
+        obsField2.value = obsValue;
+        obsField2.disabled = !podeEditar;
+        if (!podeEditar) {
+            obsField2.classList.add('opacity-50', 'cursor-not-allowed');
+        } else {
+            obsField2.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+    }
     
     recalcularTotalModalCliente();
     document.getElementById('clientOrderModal').classList.remove('hidden');
 };
 
-window.closeClientOrderModal = function() {
-    document.getElementById('clientOrderModal').classList.add('hidden');
-};
-
-window.removerItemModalCliente = function(btn) {
-    btn.closest('.modal-cart-item').remove();
-    recalcularTotalModalCliente();
-};
-
-window.recalcularTotalModalCliente = function() {
-    const items = document.querySelectorAll('#clientModalItemsList .modal-cart-item');
-    let total = 0;
-    items.forEach(el => {
-        const unitPrice = parseFloat(el.getAttribute('data-unit-price')) || 0;
-        const qty = parseInt(el.querySelector('.item-qty-input').value) || 0;
-        total += (unitPrice * qty);
-    });
-    document.getElementById('clientModalTotalValue').textContent = `R$ ${total.toFixed(2)}`;
+// Função para excluir pedido pelo cliente
+window.excluirPedidoCliente = async function() {
+    const orderId = document.getElementById('clientModalOrderId').value;
+    const order = globalClientOrders[orderId] || globalOrders[orderId];
+    
+    if (!order) {
+        showToast('Pedido não encontrado.', 'error');
+        return;
+    }
+    
+    // Verifica se o pedido está em status "Pendente" (novo)
+    if (order.status !== 'novo') {
+        showToast('Não é possível excluir este pedido. Apenas pedidos pendentes podem ser excluídos.', 'error');
+        return;
+    }
+    
+    if (!confirm('Tem certeza que deseja excluir este pedido? Esta ação não pode ser desfeita.')) {
+        return;
+    }
+    
+    try {
+        await remove(ref(db, `orders/${orderId}`));
+        
+        // Cria notificação de exclusão
+        const clientName = currentUserData.name || 'Cliente';
+        const productInfo = order.items && order.items.length > 0 
+            ? (order.items.length === 1 ? order.items[0].product : `${order.items.length} itens`)
+            : order.product || 'Produto não especificado';
+        
+        await createNotification(`@${clientName} excluiu o pedido: ${productInfo}`);
+        
+        showToast('Pedido excluído com sucesso!', 'success');
+        closeClientOrderModal();
+    } catch (error) {
+        console.error(error);
+        showToast('Erro ao excluir pedido.', 'error');
+    }
 };
 
 window.salvarEdicaoPedidoCliente = async function() {
     const orderId = document.getElementById('clientModalOrderId').value;
+    const order = globalClientOrders[orderId] || globalOrders[orderId];
+    
+    // Verifica se o pedido pode ser editado
+    if (!order || order.status !== 'novo') {
+        showToast('Não é possível editar este pedido. Apenas pedidos pendentes podem ser editados.', 'error');
+        return;
+    }
+    
     const itemsEls = document.querySelectorAll('#clientModalItemsList .modal-cart-item');
     
     if (itemsEls.length === 0) {
@@ -848,9 +942,6 @@ window.salvarEdicaoPedidoCliente = async function() {
         } else if (originalOrder && originalOrder.product !== legacyProduct) {
             notifications.push(`@${clientName} editou o produto: ${originalOrder.product} → ${legacyProduct}`);
         }
-        
-        // ❌ REMOVIDO: Notificação de mudança de valor total (preço)
-        // O preço é consequência da quantidade, não precisa notificar
         
         // Notificação de mudança de observações
         if (originalOrder && (originalOrder.generalObs || originalOrder.obs || '') !== generalObs) {
