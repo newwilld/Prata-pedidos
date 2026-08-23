@@ -24,14 +24,20 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 body { 
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
-    overflow-y: auto;
-    overflow-x: hidden;
+    min-height: -webkit-fill-available;
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+    -webkit-overflow-scrolling: touch;
 }
 
 /* Animações */
@@ -64,14 +70,12 @@ body {
 
 /* Drag and Drop styles */
 .kanban-column { 
-    min-height: 800px !important;
-    height: auto !important;
-    max-height: none !important;
-    overflow-y: visible !important;
+    min-height: 300px;
     transition: all 0.3s ease;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 1.5rem;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
 }
 
 .draggable-card {
@@ -527,180 +531,460 @@ select::-webkit-scrollbar-thumb:hover {
     }
 }
 
-/* Mobile otimizado */
+/* ============ OTIMIZAÇÕES MOBILE - CORRIGIDAS ============ */
 @media (max-width: 768px) {
-    .draggable-card.dragging-touch { 
-        opacity: 0.7; 
-        transform: scale(0.95); 
+    /* Manter body com overflow hidden mas permitir scroll no main */
+    body {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
     }
     
-    .kanban-column {
-        min-height: 200px;
+    /* Main com rolagem vertical */
+    main {
+        height: 100%;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior-y: contain;
     }
     
-    #productTypeSelect,
-    #modelSelect,
-    #sizeSelect,
-    #productSelect {
-        max-height: 300px;
-        font-size: 0.9em;
+    /* Header compacto */
+    header {
+        flex-shrink: 0;
     }
     
-    #productTypeSelect option,
-    #modelSelect option,
-    #sizeSelect option,
-    #productSelect option {
-        padding: 8px 10px;
+    header .max-w-\[1920px\] {
+        height: 4rem !important;
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
     }
     
-    #productTypeSelect optgroup,
-    #modelSelect optgroup,
-    #sizeSelect optgroup,
-    #productSelect optgroup {
-        font-size: 0.85em;
-        padding: 6px 0;
+    header img {
+        width: 2.75rem !important;
+        height: 2.75rem !important;
     }
     
-    #totalDisplayValue {
-        font-size: 1.5rem;
+    header h1 {
+        font-size: 1.1rem !important;
     }
     
-    #totalDisplayContainer {
-        padding: 1rem;
+    header p {
+        font-size: 0.65rem !important;
     }
     
-    #orderObs {
-        min-height: 60px;
-        font-size: 0.9em;
+    /* TELA DO CLIENTE - LAYOUT EMPILHADO COM ROLAGEM CORRETA */
+    #clientScreen {
+        display: flex !important;
+        flex-direction: column !important;
+        height: auto !important;
+        min-height: 100% !important;
+        overflow: visible !important;
     }
     
+    /* Formulário */
+    #clientScreen > div:first-child {
+        width: 100% !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        border-right: none !important;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.2) !important;
+        flex-shrink: 0 !important;
+        position: relative !important;
+        z-index: 1 !important;
+    }
+    
+    #clientScreen > div:first-child .p-6 {
+        padding: 0.75rem !important;
+        overflow: visible !important;
+    }
+    
+    /* Histórico */
+    #clientScreen > div:last-child {
+        width: 100% !important;
+        height: auto !important;
+        min-height: 70vh !important;
+        flex: 1 !important;
+        overflow: visible !important;
+        position: relative !important;
+        z-index: 1 !important;
+        background: transparent !important;
+    }
+    
+    /* Header do histórico */
+    #clientScreen > div:last-child .p-6:first-child {
+        padding: 0.75rem !important;
+        position: sticky !important;
+        top: 0 !important;
+        background: rgba(30, 41, 59, 0.95) !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
+        z-index: 10 !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+    
+    /* Container dos cards */
+    #clientScreen > div:last-child .p-6:last-child {
+        padding: 0.75rem !important;
+        overflow: visible !important;
+    }
+    
+    /* Grid de pedidos */
+    #clientOrdersList {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem !important;
+        overflow: visible !important;
+    }
+    
+    /* Cards de pedido */
+    #clientOrdersList > div {
+        padding: 0.875rem !important;
+        border-radius: 0.875rem !important;
+        margin-bottom: 0 !important;
+        cursor: pointer !important;
+        min-height: 80px !important;
+        background: rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    }
+    
+    #clientOrdersList > div:active {
+        transform: scale(0.98) !important;
+        background: rgba(255, 255, 255, 0.15) !important;
+    }
+    
+    /* Formulário compacto */
+    #orderForm {
+        max-height: none !important;
+        overflow: visible !important;
+    }
+    
+    #orderForm .space-y-5 > * + * {
+        margin-top: 0.625rem !important;
+    }
+    
+    #orderForm input,
+    #orderForm select,
+    #orderForm textarea {
+        padding-top: 0.75rem !important;
+        padding-bottom: 0.75rem !important;
+        font-size: 16px !important;
+        border-radius: 0.875rem !important;
+    }
+    
+    /* Botões */
+    button {
+        min-height: 48px !important;
+        touch-action: manipulation !important;
+    }
+    
+    /* Carrinho */
     #cartContainer {
         padding: 0.75rem !important;
+        border-radius: 0.875rem !important;
+        max-height: 200px !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
     }
     
     #cartItemsList {
         max-height: 120px !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        font-size: 0.8rem !important;
     }
     
-    #clientOrderModal .modal-cart-item {
+    /* TELA ADMIN */
+    #adminScreen {
+        height: auto !important;
+        min-height: 100% !important;
+        overflow: visible !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    
+    /* Abas admin */
+    #adminScreen > div:first-child {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 20 !important;
+        background: rgba(30, 41, 59, 0.95) !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+        flex-shrink: 0 !important;
+    }
+    
+    #adminScreen > div:first-child::-webkit-scrollbar {
+        display: none !important;
+    }
+    
+    #adminScreen > div:first-child button {
+        padding: 0.875rem 1rem !important;
+        font-size: 0.8rem !important;
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+        min-height: 48px !important;
+    }
+    
+    /* Conteúdo admin */
+    #adminScreen > div:nth-child(2) {
+        flex: 1 !important;
+        overflow: visible !important;
+        padding: 0.75rem !important;
+        position: relative !important;
+        height: auto !important;
+    }
+    
+    /* Kanban empilhado */
+    #adminPedidosView {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.75rem !important;
+        padding: 0 !important;
+        position: relative !important;
+        overflow: visible !important;
+        height: auto !important;
+    }
+    
+    #adminPedidosView > div {
+        width: 100% !important;
+        min-width: 100% !important;
+        max-height: none !important;
+        flex: none !important;
+        margin-bottom: 0.5rem !important;
+        border-radius: 1rem !important;
+        background: rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    }
+    
+    /* Headers kanban */
+    #adminPedidosView > div > div:first-child {
+        padding: 0.75rem !important;
+        border-radius: 1rem 1rem 0 0 !important;
+    }
+    
+    #adminPedidosView > div > div:first-child h3 {
+        font-size: 0.9rem !important;
+    }
+    
+    /* Cards kanban */
+    .kanban-column {
+        min-height: 100px !important;
+        max-height: 300px !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior-y: contain;
+        padding: 0.5rem !important;
+        border-radius: 0 0 1rem 1rem !important;
+        background: transparent !important;
+    }
+    
+    .kanban-column .draggable-card,
+    .kanban-column > div {
+        padding: 0.75rem !important;
+        border-radius: 0.75rem !important;
+        font-size: 0.8rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    /* Modais */
+    #adminEditModal,
+    #clientOrderModal {
+        align-items: flex-end !important;
+        padding: 0 !important;
+    }
+    
+    #adminEditModal > div,
+    #clientOrderModal > div {
+        max-height: 95vh !important;
+        width: 100% !important;
+        border-radius: 1.25rem 1.25rem 0 0 !important;
+        margin: 0 !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    #adminEditModal .p-6,
+    #clientOrderModal .p-6 {
+        padding: 0.875rem !important;
+    }
+    
+    /* Scrollbar fina */
+    ::-webkit-scrollbar {
+        width: 4px;
+        height: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 2px;
+    }
+    
+    /* Prevenir scroll horizontal */
+    body, main, #clientScreen, #adminScreen {
+        overflow-x: hidden !important;
+        max-width: 100vw !important;
+    }
+}
+
+/* ============ TELAS MUITO PEQUENAS ============ */
+@media (max-width: 375px) {
+    header h1 {
+        font-size: 1rem !important;
+    }
+    
+    header img {
+        width: 2.5rem !important;
+        height: 2.5rem !important;
+    }
+    
+    #clientScreen > div:last-child {
+        min-height: 60vh !important;
+    }
+    
+    .kanban-column {
+        max-height: 250px !important;
+    }
+    
+    #clientOrdersList > div {
         padding: 0.75rem !important;
     }
-    
-    #clientOrderModal .item-qty-input {
-        width: 70px !important;
-    }
-    
-    #clientModalTotalValue {
-        font-size: 1.25rem !important;
-    }
-    
-    button[onclick="repetirPedidoCliente()"] {
-        font-size: 0.8rem !important;
-        padding: 0.5rem 0.75rem !important;
+}
+
+/* ============ OTIMIZAÇÕES iOS ============ */
+@supports (-webkit-touch-callout: none) {
+    @media (max-width: 768px) {
+        main,
+        #clientScreen > div:last-child,
+        .kanban-column,
+        #cartContainer,
+        #cartItemsList {
+            -webkit-overflow-scrolling: touch !important;
+        }
     }
 }
 
-/* Efeitos de brilho */
-.glow-effect {
-    position: relative;
-}
-
-.glow-effect::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-    animation: glow 3s infinite;
-}
-
-@keyframes glow {
-    0%, 100% { transform: translate(0, 0); }
-    50% { transform: translate(10%, 10%); }
-}
-
-/* Ajustes para o select em telas maiores */
-@media (min-width: 1024px) {
-    #productTypeSelect,
-    #modelSelect,
-    #sizeSelect,
-    #productSelect {
-        font-size: 0.95em;
+/* ============ ACESSIBILIDADE TOUCH ============ */
+@media (hover: none) and (pointer: coarse) {
+    button, 
+    select, 
+    input[type="submit"],
+    #clientOrdersList > div {
+        cursor: default !important;
     }
     
-    #productTypeSelect optgroup,
-    #modelSelect optgroup,
-    #sizeSelect optgroup,
-    #productSelect optgroup {
-        font-size: 0.88em;
+    button:active,
+    #clientOrdersList > div:active {
+        opacity: 0.8 !important;
+    }
+}
+
+/* ============ MODO TV ============ */
+@media (min-width: 1920px) {
+    body {
+        font-size: 18px;
+    }
+    
+    .draggable-card {
+        padding: 24px !important;
+        border-radius: 20px !important;
+    }
+    
+    .kanban-column {
+        min-height: 500px;
     }
     
     #totalDisplayValue {
-        font-size: 2.25rem;
+        font-size: 2.5rem;
     }
 }
 
-/* Hover states para os grupos */
-#productTypeSelect optgroup:hover,
-#modelSelect optgroup:hover,
-#sizeSelect optgroup:hover,
-#productSelect optgroup:hover {
-    background-color: #e2e8f0;
-    cursor: pointer;
+/* Animações para o carrinho */
+#cartContainer.fade-in {
+    animation: cartSlideIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
-/* Estilo para quando os selects estão focados */
-#productTypeSelect:focus,
-#modelSelect:focus,
-#sizeSelect:focus,
-#productSelect:focus {
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+@keyframes cartSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
-/* Ajuste para o dropdown quando aberto */
-#productTypeSelect:focus-visible,
-#modelSelect:focus-visible,
-#sizeSelect:focus-visible,
-#productSelect:focus-visible {
-    outline: none;
-    border-color: #3b82f6;
+/* Estilo para itens do carrinho */
+#cartItemsList li {
+    animation: itemSlideIn 0.3s ease;
 }
 
-/* Animação especial para o valor total quando atualizado */
-@keyframes valueUpdate {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
+@keyframes itemSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
-#totalDisplayValue.value-updated {
-    animation: valueUpdate 0.3s ease;
+/* Botão de remover item */
+#cartItemsList button,
+#clientModalItemsList button[onclick="removerItemModalCliente(this)"] {
+    transition: all 0.2s ease;
 }
 
-/* Estilo para o container do valor total no formulário */
-#orderForm #totalDisplayContainer {
-    margin-top: 0.5rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+#cartItemsList button:hover,
+#clientModalItemsList button[onclick="removerItemModalCliente(this)"]:hover {
+    transform: scale(1.2);
+    background: rgba(239, 68, 68, 0.2);
+    border-radius: 0.5rem;
 }
 
-#orderForm #totalDisplayContainer.hidden {
-    opacity: 0;
-    transform: translateY(-10px);
-    pointer-events: none;
+/* Responsividade modal */
+@media (max-width: 640px) {
+    #clientOrderModal .modal-cart-item {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+    }
+    
+    #clientOrderModal .modal-cart-item > div:last-child {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    #clientModalObs {
+        font-size: 0.9rem !important;
+    }
 }
 
-/* Estilos adicionais para os novos campos de cascata */
+/* Melhorias de performance */
+.draggable-card,
+.kanban-column,
+#totalDisplayContainer,
+#modelContainer,
+#sizeContainer,
+#cartContainer,
+.modal-cart-item {
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+}
+
+/* Selects */
 #productTypeSelect,
 #modelSelect,
 #sizeSelect {
     width: 100%;
     appearance: none;
-    padding-left: 1rem;
-    padding-right: 1rem;
-    padding-top: 1rem;
-    padding-bottom: 1rem;
+    padding: 1rem;
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 1rem;
@@ -722,10 +1006,8 @@ select::-webkit-scrollbar-thumb:hover {
     outline: none;
     box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
     border-color: rgba(255, 255, 255, 0.4);
-    background: rgba(255, 255, 255, 0.15);
 }
 
-/* Estilo para as opções dentro dos selects */
 #productTypeSelect option,
 #modelSelect option,
 #sizeSelect option {
@@ -735,347 +1017,16 @@ select::-webkit-scrollbar-thumb:hover {
     font-weight: 500;
 }
 
-#productTypeSelect option:hover,
-#modelSelect option:hover,
-#sizeSelect option:hover {
-    background-color: #e0e7ff;
-}
-
-/* Estilos específicos para o select de produto (categoria principal) */
-#productTypeSelect {
-    font-weight: 600;
-    letter-spacing: 0.3px;
-}
-
-#productTypeSelect option {
-    font-weight: 500;
-    padding: 12px;
-    border-bottom: 1px solid #f1f5f9;
-}
-
-#productTypeSelect option:last-child {
-    border-bottom: none;
-}
-
-/* Estilos para o select de modelo */
-#modelSelect {
-    font-weight: 500;
-}
-
-#modelSelect option {
-    padding: 10px 12px;
-    font-size: 0.95em;
-}
-
-/* Estilos para o select de tamanho */
-#sizeSelect {
-    font-weight: 500;
-}
-
-#sizeSelect option {
-    padding: 10px 12px;
-    font-size: 0.9em;
-    color: #475569;
-}
-
-#sizeSelect option:hover {
-    background-color: #f0f9ff;
-    color: #0369a1;
-}
-
-/* Melhorias de acessibilidade */
-#productTypeSelect:focus-visible,
-#modelSelect:focus-visible,
-#sizeSelect:focus-visible {
-    outline: 2px solid #3b82f6;
-    outline-offset: 2px;
-}
-
-/* Estilo para o container do formulário */
-#orderForm {
-    position: relative;
-}
-
-#orderForm > div {
-    position: relative;
-    z-index: 1;
-}
-
-/* Ajuste para o ícone de chevron nos selects */
-#productTypeSelect + i,
-#modelSelect + i,
-#sizeSelect + i {
-    pointer-events: none;
-    z-index: 2;
-}
-
-/* Melhorias de performance */
-.draggable-card,
-.kanban-column,
-#totalDisplayContainer,
-#modelContainer,
-#sizeContainer,
-#cartContainer,
-.modal-cart-item {
-    will-change: transform, opacity;
-    backface-visibility: hidden;
-}
-
-/* Suporte para modo escuro do sistema */
-@media (prefers-color-scheme: dark) {
-    :root {
-        --bg-main: #0f172a;
-        --bg-card: #1e293b;
-        --text-primary: #f8fafc;
-        --text-secondary: #cbd5e1;
-        --text-muted: #64748b;
-        --border-color: #334155;
-    }
-}
-
-/* Ajustes finais para melhor visualização */
-#productTypeSelect option:disabled,
-#modelSelect option:disabled,
-#sizeSelect option:disabled {
-    color: #94a3b8;
-    font-style: italic;
-}
-
-/* Estilo para quando não há opções disponíveis */
-#modelSelect option:only-child,
-#sizeSelect option:only-child {
-    color: #94a3b8;
-    font-style: italic;
-}
-
-/* Melhorar contraste e legibilidade */
-#productTypeSelect option,
-#modelSelect option,
-#sizeSelect option {
-    text-shadow: none;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-
-/* Animações suaves para mostrar/esconder elementos */
+/* Ajustes finais */
 .hidden {
     display: none !important;
 }
 
-.fade-in {
-    animation: fadeIn 0.3s ease-in-out;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Melhorar a aparência do select quando aberto */
 select:focus option:checked {
     background: linear-gradient(135deg, #3b82f6, #2563eb);
     color: white;
 }
 
-/* Estilo para o texto do placeholder nos selects */
 select:invalid {
     color: rgba(255, 255, 255, 0.6);
-}
-
-/* Ajustes para o modo TV */
-@media (min-width: 1920px) and (max-width: 2560px) {
-    #productTypeSelect,
-    #modelSelect,
-    #sizeSelect {
-        font-size: 1.2em;
-    }
-    
-    #productTypeSelect option,
-    #modelSelect option,
-    #sizeSelect option {
-        padding: 15px 18px;
-    }
-    
-    #totalDisplayValue {
-        font-size: 3rem;
-    }
-    
-    #unitPriceDisplay {
-        font-size: 1.1rem;
-    }
-}
-
-/* NOVO: Animações para o carrinho */
-#cartContainer.fade-in {
-    animation: cartSlideIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-}
-
-@keyframes cartSlideIn {
-    from {
-        opacity: 0;
-        transform: translateY(-20px) scale(0.95);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-/* NOVO: Estilo para itens do carrinho */
-#cartItemsList li {
-    animation: itemSlideIn 0.3s ease;
-}
-
-@keyframes itemSlideIn {
-    from {
-        opacity: 0;
-        transform: translateX(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-/* NOVO: Botão de remover item do carrinho */
-#cartItemsList button {
-    transition: all 0.2s ease;
-}
-
-#cartItemsList button:hover {
-    transform: scale(1.2);
-    background: rgba(239, 68, 68, 0.2);
-    border-radius: 0.5rem;
-}
-
-/* NOVO: Estilos para o botão de remover item no modal */
-#clientModalItemsList button[onclick="removerItemModalCliente(this)"] {
-    transition: all 0.2s ease;
-}
-
-#clientModalItemsList button[onclick="removerItemModalCliente(this)"]:hover {
-    transform: scale(1.1);
-    background: rgba(239, 68, 68, 0.2);
-}
-
-/* NOVO: Responsividade para o modal do cliente */
-@media (max-width: 640px) {
-    #clientOrderModal .modal-cart-item {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-    }
-    
-    #clientOrderModal .modal-cart-item > div:last-child {
-        width: 100%;
-        justify-content: space-between;
-    }
-    
-    #clientModalObs {
-        font-size: 0.9rem !important;
-    }
-}
-/* Ajustes para a tela do Admin - VERSÃO DEFINITIVA */
-#adminScreen {
-    height: auto !important;
-    min-height: 100vh !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-}
-
-#adminScreen .flex-1 {
-    min-height: 0;
-    overflow: visible !important;
-}
-
-#adminPedidosView {
-    min-height: 100vh !important;
-    height: auto !important;
-    overflow: visible !important;
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: stretch !important;
-}
-
-/* Colunas do kanban com altura mínima grande */
-#adminPedidosView > div {
-    min-height: 800px !important;
-    height: auto !important;
-    max-height: none !important;
-}
-
-/* Garantir que as colunas do kanban tenham altura correta */
-.kanban-column {
-    min-height: 800px !important;
-    height: auto !important;
-    max-height: none !important;
-    overflow-y: visible !important;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
-}
-
-/* Melhorar scroll no mobile */
-.kanban-column::-webkit-scrollbar {
-    width: 8px;
-}
-
-.kanban-column::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.kanban-column::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 10px;
-}
-
-.kanban-column::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.5);
-}
-/* Correção DEFINITIVA para Finalizados - Prioridade máxima */
-#adminPedidosView > div:last-child {
-    min-height: 400px !important;
-    height: 400px !important;
-    max-height: 400px !important;
-    overflow: hidden !important;
-    display: flex !important;
-    flex-direction: column !important;
-}
-
-#kanban-finalizado {
-    min-height: 0 !important;
-    height: auto !important;
-    max-height: none !important;
-    flex: 1 !important;
-    overflow-y: scroll !important;
-    overflow-x: hidden !important;
-    -webkit-overflow-scrolling: touch !important;
-    scrollbar-width: thin !important;
-    scrollbar-color: rgba(255, 255, 255, 0.5) transparent !important;
-    display: block !important;
-}
-
-/* Barra de rolagem SEMPRE visível */
-#kanban-finalizado::-webkit-scrollbar {
-    width: 10px !important;
-    display: block !important;
-}
-
-#kanban-finalizado::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1) !important;
-    border-radius: 10px !important;
-}
-
-#kanban-finalizado::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.5) !important;
-    border-radius: 10px !important;
-}
-
-#kanban-finalizado::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.7) !important;
 }
