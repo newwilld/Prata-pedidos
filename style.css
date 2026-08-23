@@ -31,6 +31,8 @@ body {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
     overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
 }
 
 /* Animações */
@@ -108,6 +110,7 @@ body {
     display: flex; 
     flex-direction: column; 
     gap: 10px;
+    max-width: calc(100vw - 40px);
 }
 
 .toast { 
@@ -179,7 +182,7 @@ body {
     -moz-appearance: textfield;
 }
 
-/* NOVO: Estilos para o Carrinho de Itens */
+/* Estilos para o Carrinho de Itens */
 #cartContainer {
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.25);
@@ -217,9 +220,10 @@ body {
     letter-spacing: -0.5px;
 }
 
-/* NOVO: Estilos para o Modal do Cliente */
+/* Estilos para o Modal do Cliente */
 #clientOrderModal {
     backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
 }
 
 #clientOrderModal .modal-cart-item {
@@ -454,7 +458,7 @@ select::-webkit-scrollbar-thumb:hover {
     border-color: #3b82f6;
 }
 
-/* NOVO: Estilos para o campo de observação no modal do cliente */
+/* Estilos para o campo de observação no modal do cliente */
 #clientModalObs {
     resize: none;
     min-height: 60px;
@@ -522,23 +526,68 @@ select::-webkit-scrollbar-thumb:hover {
     }
 }
 
-/* Mobile otimizado */
+/* Mobile otimizado - TELAS PEQUENAS */
 @media (max-width: 768px) {
+    body {
+        overflow: hidden;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+    }
+    
     .draggable-card.dragging-touch { 
         opacity: 0.7; 
         transform: scale(0.95); 
     }
     
     .kanban-column {
-        min-height: 200px;
+        min-height: 150px;
+        max-height: 300px;
+        border-radius: 1rem;
+        padding: 0.5rem !important;
+    }
+    
+    #adminPedidosView {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 0.5rem;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    #adminPedidosView > div {
+        width: 100%;
+        min-width: unset;
+        max-height: 350px;
+    }
+    
+    .draggable-card {
+        padding: 0.75rem !important;
+        border-radius: 0.75rem !important;
+        margin-bottom: 0.5rem;
+        touch-action: manipulation;
+        cursor: grab;
+    }
+    
+    .draggable-card:active {
+        cursor: grabbing;
+    }
+    
+    .draggable-card[draggable="true"] {
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
     }
     
     #productTypeSelect,
     #modelSelect,
     #sizeSelect,
     #productSelect {
-        max-height: 300px;
-        font-size: 0.9em;
+        max-height: 250px;
+        font-size: 0.85em;
+        padding: 0.75rem !important;
     }
     
     #productTypeSelect option,
@@ -546,52 +595,175 @@ select::-webkit-scrollbar-thumb:hover {
     #sizeSelect option,
     #productSelect option {
         padding: 8px 10px;
+        font-size: 0.9em;
     }
     
     #productTypeSelect optgroup,
     #modelSelect optgroup,
     #sizeSelect optgroup,
     #productSelect optgroup {
-        font-size: 0.85em;
+        font-size: 0.8em;
         padding: 6px 0;
     }
     
     #totalDisplayValue {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
     }
     
     #totalDisplayContainer {
-        padding: 1rem;
+        padding: 0.75rem;
+        border-radius: 1rem;
     }
     
     #orderObs {
-        min-height: 60px;
-        font-size: 0.9em;
+        min-height: 50px;
+        font-size: 0.85em;
+        padding: 0.75rem 0.75rem 0.75rem 2.5rem !important;
     }
     
     #cartContainer {
-        padding: 0.75rem !important;
+        padding: 0.6rem !important;
+        border-radius: 1rem;
     }
     
     #cartItemsList {
-        max-height: 120px !important;
+        max-height: 100px !important;
+        font-size: 0.8em;
     }
     
     #clientOrderModal .modal-cart-item {
-        padding: 0.75rem !important;
+        padding: 0.6rem !important;
+        border-radius: 0.75rem;
     }
     
     #clientOrderModal .item-qty-input {
-        width: 70px !important;
+        width: 60px !important;
+        padding: 0.4rem 0.5rem !important;
+        font-size: 0.85em;
     }
     
     #clientModalTotalValue {
-        font-size: 1.25rem !important;
+        font-size: 1.1rem !important;
     }
     
     button[onclick="repetirPedidoCliente()"] {
-        font-size: 0.8rem !important;
+        font-size: 0.75rem !important;
         padding: 0.5rem 0.75rem !important;
+    }
+    
+    /* Modais no mobile */
+    #clientOrderModal,
+    #adminEditModal {
+        padding: 0.5rem !important;
+    }
+    
+    #clientOrderModal > div,
+    #adminEditModal > div {
+        border-radius: 1rem !important;
+        max-height: 98vh !important;
+    }
+    
+    /* Headers dos modais */
+    #clientOrderModal .p-6,
+    #adminEditModal .p-6 {
+        padding: 1rem !important;
+    }
+    
+    /* Conteúdo dos modais */
+    #clientOrderModal .p-6.space-y-5,
+    #adminEditModal .p-6.space-y-5 {
+        padding: 1rem !important;
+        gap: 0.75rem !important;
+    }
+    
+    /* Footer dos modais */
+    #clientOrderModal .border-t,
+    #adminEditModal .border-t {
+        padding: 0.75rem !important;
+    }
+    
+    /* Botões nos modais */
+    #clientOrderModal button,
+    #adminEditModal button {
+        padding: 0.6rem 0.75rem !important;
+        font-size: 0.85em !important;
+    }
+    
+    /* Toast no mobile */
+    #toast-container {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+    
+    .toast {
+        padding: 12px 16px;
+        font-size: 0.85em;
+        border-radius: 12px;
+    }
+    
+    /* Tabela de clientes no mobile */
+    #clientsTableBody td,
+    #clientsTableBody th {
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.8em;
+    }
+    
+    /* Selects mais compactos */
+    select {
+        font-size: 0.85em !important;
+    }
+    
+    /* Botões do formulário */
+    #orderForm button {
+        padding: 0.7rem 1rem !important;
+        font-size: 0.9em !important;
+    }
+    
+    /* Inputs mais compactos */
+    #orderForm input,
+    #orderForm textarea,
+    #orderForm select {
+        font-size: 0.85em !important;
+    }
+}
+
+/* Telas muito pequenas (iPhone SE, etc) */
+@media (max-width: 380px) {
+    #adminPedidosView {
+        padding: 0.25rem;
+        gap: 0.5rem;
+    }
+    
+    .kanban-column {
+        max-height: 250px;
+    }
+    
+    .draggable-card {
+        padding: 0.5rem !important;
+        font-size: 0.8em;
+    }
+    
+    #clientOrderModal .modal-cart-item {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.5rem !important;
+    }
+    
+    #clientOrderModal .modal-cart-item > div:last-child {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    #clientModalObs {
+        font-size: 0.8rem !important;
+        min-height: 40px !important;
+    }
+    
+    button[onclick="repetirPedidoCliente()"] {
+        font-size: 0.7rem !important;
+        padding: 0.4rem 0.6rem !important;
     }
 }
 
@@ -906,7 +1078,7 @@ select:invalid {
     }
 }
 
-/* NOVO: Animações para o carrinho */
+/* Animações para o carrinho */
 #cartContainer.fade-in {
     animation: cartSlideIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
@@ -922,7 +1094,7 @@ select:invalid {
     }
 }
 
-/* NOVO: Estilo para itens do carrinho */
+/* Estilo para itens do carrinho */
 #cartItemsList li {
     animation: itemSlideIn 0.3s ease;
 }
@@ -938,7 +1110,7 @@ select:invalid {
     }
 }
 
-/* NOVO: Botão de remover item do carrinho */
+/* Botão de remover item do carrinho */
 #cartItemsList button {
     transition: all 0.2s ease;
 }
@@ -949,7 +1121,7 @@ select:invalid {
     border-radius: 0.5rem;
 }
 
-/* NOVO: Estilos para o botão de remover item no modal */
+/* Estilos para o botão de remover item no modal */
 #clientModalItemsList button[onclick="removerItemModalCliente(this)"] {
     transition: all 0.2s ease;
 }
@@ -959,8 +1131,8 @@ select:invalid {
     background: rgba(239, 68, 68, 0.2);
 }
 
-/* NOVO: Responsividade para o modal do cliente */
-@media (max-width: 640px) {
+/* Responsividade para o modal do cliente em telas muito pequenas */
+@media (max-width: 380px) {
     #clientOrderModal .modal-cart-item {
         flex-direction: column !important;
         align-items: flex-start !important;
@@ -972,6 +1144,37 @@ select:invalid {
     }
     
     #clientModalObs {
-        font-size: 0.9rem !important;
+        font-size: 0.8rem !important;
+        min-height: 40px !important;
+    }
+    
+    button[onclick="repetirPedidoCliente()"] {
+        font-size: 0.7rem !important;
+        padding: 0.4rem 0.6rem !important;
+    }
+}
+
+/* Ajustes para o scroll suave no mobile */
+@media (hover: none) and (pointer: coarse) {
+    .kanban-column {
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+        overscroll-behavior: contain;
+    }
+    
+    #cartItemsList,
+    #clientModalItemsList,
+    #clientOrderHistory {
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+    }
+    
+    .kanban-column::-webkit-scrollbar {
+        width: 4px;
+    }
+    
+    .kanban-column::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 2px;
     }
 }
