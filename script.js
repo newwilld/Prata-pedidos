@@ -546,23 +546,7 @@ function filterProductTypeOptions() {
     }
 }
 
-// Função para verificar se um item está permitido para o cliente
-function isItemAllowed(itemName) {
-    if (!currentUserData || currentUserData.role === 'admin') return true;
-    
-    const config = currentClientItemsConfig;
-    if (!config || !config.allowedItems || config.allowedItems.length === 0) return true;
-    
-    if (config.allowedItems.includes('todos')) return true;
-    
-    // Verifica se o item está na lista de permitidos
-    return config.allowedItems.some(allowed => {
-        if (allowed === 'Caixa de pizza' && itemName.includes('Caixa de pizza')) return true;
-        if (allowed === 'Caixa de torta' && itemName.includes('Caixa de torta')) return true;
-        if (allowed === 'Caixa correio' && itemName.includes('Caixa correio')) return true;
-        return itemName.includes(allowed);
-    });
-}
+
 
 window.handleSizeCheckboxChange = function(index) {
     const checkbox = document.getElementById(`size-check-${index}`);
