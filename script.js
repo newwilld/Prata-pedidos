@@ -39,7 +39,8 @@ let editingOrderId = null; // ID de um pedido existente sendo editado no form pr
 let listenersInitialized = false;
 let isViewingFromClientList = false; // Flag para identificar origem do modal admin
 let selectedSizes = {}; // Para armazenar os tamanhos selecionados com checkboxes
-let currentClientItemsConfig = { allowedItems: [], excludedItems: [] }; // Configuração de itens do cliente atual
+let currentClientItemsConfig = { allowedItems: ['todos'], excludedItems: [] }; // Configuração de itens do cliente atual
+let editingClientItemsConfig = { allowedItems: ['todos'], excludedItems: [] }; // Configuração em edição no modal
 
 // Dados dos produtos em cascata (Categoria > Modelo > Tamanho/Especificação)
 const productCatalog = {
@@ -173,6 +174,18 @@ function isItemAllowed(itemName) {
         if (allowed === 'Caixa correio' && itemName.includes('Caixa correio')) return true;
         return itemName.includes(allowed);
     });
+}
+
+// Função para verificar se uma categoria está permitida
+function isCategoryAllowed(category) {
+    if (!currentUserData || currentUserData.role === 'admin') return true;
+    
+    const config = currentClientItemsConfig;
+    if (!config || !config.allowedItems || config.allowedItems.length === 0) return true;
+    
+    if (config.allowedItems.includes('todos')) return true;
+    
+    return config.allowedItems.includes(category);
 }
 
 // Funções de UI Auxiliares
@@ -396,7 +409,7 @@ function applyItemsFilter() {
     const allOptions = productTypeSelect.options;
     for (let i = 0; i < allOptions.length; i++) {
         const option = allOptions[i];
-        if (option.value && !isItemAllowed(option.value)) {
+        if (option.value && !isCategoryAllowed(option.value)) {
             option.disabled = true;
             option.style.display = 'none';
         } else {
@@ -2035,14 +2048,18 @@ function renderClientsList() {
     document.getElementById('totalClientsCount').innerText = clientArray.length;
     
     if(clientArray.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-12 text-white/50">Nenhum cliente registrado.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-12 text-white/50">Nenhum cliente registrado.</td></tr>';
         return;
     }
     
     tbody.innerHTML = clientArray.map(client => {
         const displayName = client.name && client.name !== 'undefined' ? client.name : 'Cliente sem nome';
         const displayEmail = client.email && client.email !== 'undefined' && client.email !== 'N/A' ? client.email : 'N/A';
-        const allowedItems = client.itemsConfig && client.itemsConfig.allowedItems ? client.itemsConfig.allowedItems.join(', ') : 'todos';
+        
+        // Obtém as categorias permitidas
+        const allowedConfig = client.itemsConfig?.allowedItems || ['todos'];
+        const allowedText = allowedConfig.includes('todos') ? 'Todos os itens' : allowedConfig.join(', ');
+        const allowedColor = allowedConfig.includes('todos') ? 'text-green-400' : 'text-yellow-400';
         
         return `
         <tr class="hover:bg-white/5 transition cursor-pointer" onclick="openClientModal('${client.uid}')">
@@ -2066,8 +2083,8 @@ function renderClientsList() {
                 ${client.lastOrderDate ? window.formatDateTime(client.lastOrderDate).split(' às')[0] : 'Nunca comprou'}
             </td>
             <td class="px-6 py-5 text-white/70">
-                <span class="text-xs ${allowedItems === 'todos' ? 'text-green-400' : 'text-yellow-400'}">
-                    ${allowedItems}
+                <span class="text-xs ${allowedColor}">
+                    ${allowedText}
                 </span>
             </td>
         </tr>
@@ -2173,16 +2190,33 @@ function loadClientItemsConfigForEdit(clientUid) {
             config = snapshot.val();
         }
         
-        // Atualiza os checkboxes no modal
-        document.getElementById('itemsAllowedTodos').checked = config.allowedItems.includes('todos');
-        document.getElementById('itemsAllowedPizza').checked = config.allowedItems.includes('Caixa de pizza');
-        document.getElementById('itemsAllowedTorta').checked = config.allowedItems.includes('Caixa de torta');
-        document.getElementById('itemsAllowedCorreio').checked = config.allowedItems.includes('Caixa correio');
+        // Salva a configuração atual em edição
+        editingClientItemsConfig = { ...config };
         
+        // Atualiza os checkboxes no modal
+        updateItemsConfigCheckboxes(config);
         updateItemsConfigDisplay(config);
+        
+        // Esconde a lista de itens individuais
+        const itemsListContainer = document.getElementById('allItemsList');
+        if (itemsListContainer) itemsListContainer.classList.add('hidden');
+        
     }).catch(err => {
         console.error("Erro ao carregar configuração de itens:", err);
     });
+}
+
+// Função para atualizar checkboxes principais
+function updateItemsConfigCheckboxes(config) {
+    const allowTodos = document.getElementById('itemsAllowedTodos');
+    const allowPizza = document.getElementById('itemsAllowedPizza');
+    const allowTorta = document.getElementById('itemsAllowedTorta');
+    const allowCorreio = document.getElementById('itemsAllowedCorreio');
+    
+    if (allowTodos) allowTodos.checked = config.allowedItems?.includes('todos') || false;
+    if (allowPizza) allowPizza.checked = config.allowedItems?.includes('Caixa de pizza') || false;
+    if (allowTorta) allowTorta.checked = config.allowedItems?.includes('Caixa de torta') || false;
+    if (allowCorreio) allowCorreio.checked = config.allowedItems?.includes('Caixa correio') || false;
 }
 
 // Função para atualizar display da configuração de itens
@@ -2192,13 +2226,13 @@ function updateItemsConfigDisplay(config) {
     
     if (!allowedItemsContainer || !excludedItemsContainer) return;
     
-    if (config.allowedItems.includes('todos')) {
+    if (config.allowedItems?.includes('todos')) {
         allowedItemsContainer.innerHTML = '<span class="text-green-600 font-bold">Todos os itens permitidos</span>';
         excludedItemsContainer.innerHTML = '<span class="text-gray-500">Nenhum item excluído</span>';
-    } else {
+    } else if (config.allowedItems && config.allowedItems.length > 0) {
         allowedItemsContainer.innerHTML = config.allowedItems.map(item => 
             `<span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold mr-2 mb-2 inline-block">${item}</span>`
-        ).join('') || '<span class="text-gray-500">Nenhum item permitido</span>';
+        ).join('');
         
         // Calcula itens excluídos (todos menos os permitidos)
         const allCategories = Object.keys(productCatalog);
@@ -2207,6 +2241,13 @@ function updateItemsConfigDisplay(config) {
         excludedItemsContainer.innerHTML = excludedCategories.map(item => 
             `<span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold mr-2 mb-2 inline-block">${item}</span>`
         ).join('') || '<span class="text-gray-500">Nenhum item excluído</span>';
+    } else {
+        allowedItemsContainer.innerHTML = '<span class="text-gray-500">Nenhum item permitido</span>';
+        
+        const allCategories = Object.keys(productCatalog);
+        excludedItemsContainer.innerHTML = allCategories.map(item => 
+            `<span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold mr-2 mb-2 inline-block">${item}</span>`
+        ).join('');
     }
 }
 
@@ -2234,7 +2275,7 @@ window.saveClientItemsConfig = async function() {
         if (allowCorreio) allowedItems.push('Caixa correio');
     }
     
-    if (allowedItems.length === 0 && !allowTodos) {
+    if (allowedItems.length === 0) {
         showToast('Selecione pelo menos um tipo de item para permitir.', 'error');
         return;
     }
@@ -2266,36 +2307,29 @@ window.saveClientItemsConfig = async function() {
     }
 };
 
-// Função para marcar todos os itens (menos os permitidos)
-window.marcarTodosItensExcluidos = function() {
-    const allowTodos = document.getElementById('itemsAllowedTodos');
+// Função para marcar todos os itens específicos
+window.marcarTodosItens = function() {
     const allowPizza = document.getElementById('itemsAllowedPizza');
     const allowTorta = document.getElementById('itemsAllowedTorta');
     const allowCorreio = document.getElementById('itemsAllowedCorreio');
+    const allowTodos = document.getElementById('itemsAllowedTodos');
     
-    // Se "todos" estiver marcado, desmarca e marca apenas os itens específicos
-    if (allowTodos.checked) {
-        allowTodos.checked = false;
-        allowPizza.checked = true;
-        allowTorta.checked = true;
-        allowCorreio.checked = true;
-    } else {
-        // Marca todos os itens
-        allowPizza.checked = true;
-        allowTorta.checked = true;
-        allowCorreio.checked = true;
-    }
+    // Desmarca "todos" e marca todas as categorias específicas
+    if (allowTodos) allowTodos.checked = false;
+    if (allowPizza) allowPizza.checked = true;
+    if (allowTorta) allowTorta.checked = true;
+    if (allowCorreio) allowCorreio.checked = true;
     
     // Atualiza visualização
     const config = {
-        allowedItems: allowPizza.checked ? ['Caixa de pizza', 'Caixa de torta', 'Caixa correio'] : [],
+        allowedItems: ['Caixa de pizza', 'Caixa de torta', 'Caixa correio'],
         excludedItems: []
     };
     
     updateItemsConfigDisplay(config);
 };
 
-// Função atualizada para exibir todos os itens com checkboxes
+// Função para exibir todos os itens com checkboxes
 window.exibirTodosItens = function() {
     const itemsListContainer = document.getElementById('allItemsList');
     const allItemsCheckboxList = document.getElementById('allItemsCheckboxList');
@@ -2304,40 +2338,110 @@ window.exibirTodosItens = function() {
     
     const allItems = getAllCatalogItems();
     
-    // Obtém configuração atual
-    const allowTodos = document.getElementById('itemsAllowedTodos').checked;
-    const allowPizza = document.getElementById('itemsAllowedPizza').checked;
-    const allowTorta = document.getElementById('itemsAllowedTorta').checked;
-    const allowCorreio = document.getElementById('itemsAllowedCorreio').checked;
+    // Obtém configuração atual dos checkboxes
+    const allowTodos = document.getElementById('itemsAllowedTodos')?.checked || false;
+    const allowPizza = document.getElementById('itemsAllowedPizza')?.checked || false;
+    const allowTorta = document.getElementById('itemsAllowedTorta')?.checked || false;
+    const allowCorreio = document.getElementById('itemsAllowedCorreio')?.checked || false;
     
-    allItemsCheckboxList.innerHTML = allItems.map((item, index) => {
-        // Verifica se o item está permitido baseado na configuração atual
-        let isChecked = false;
-        
+    // Agrupa itens por categoria para melhor visualização
+    const itemsByCategory = {};
+    allItems.forEach(item => {
+        if (!itemsByCategory[item.category]) {
+            itemsByCategory[item.category] = [];
+        }
+        itemsByCategory[item.category].push(item);
+    });
+    
+    let html = '';
+    let globalIndex = 0;
+    
+    Object.keys(itemsByCategory).forEach(category => {
+        // Verifica se a categoria está permitida
+        let categoryAllowed = false;
         if (allowTodos) {
-            isChecked = true;
+            categoryAllowed = true;
         } else {
-            if (allowPizza && item.category === 'Caixa de pizza') isChecked = true;
-            if (allowTorta && item.category === 'Caixa de torta') isChecked = true;
-            if (allowCorreio && item.category === 'Caixa correio') isChecked = true;
+            if (allowPizza && category === 'Caixa de pizza') categoryAllowed = true;
+            if (allowTorta && category === 'Caixa de torta') categoryAllowed = true;
+            if (allowCorreio && category === 'Caixa correio') categoryAllowed = true;
         }
         
-        return `
-        <div class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg item-searchable" data-item-name="${item.name.toLowerCase()}" data-item-category="${item.category.toLowerCase()}" data-item-model="${item.model.toLowerCase()}">
-            <input type="checkbox" id="item-check-${index}" class="w-4 h-4 text-green-600 rounded item-individual-check" ${isChecked ? 'checked' : ''}>
-            <label for="item-check-${index}" class="flex-1 cursor-pointer">
-                <p class="text-sm font-medium text-gray-900">${item.name}</p>
-                <p class="text-xs text-gray-500">${item.category} > ${item.model}</p>
-            </label>
-            <span class="text-sm font-bold text-gray-700">R$ ${item.price.toFixed(2)}</span>
+        html += `
+        <div class="mb-4">
+            <div class="flex items-center gap-2 mb-2">
+                <input type="checkbox" id="category-check-${category.replace(/[^a-zA-Z0-9]/g, '-')}" 
+                       class="w-4 h-4 text-blue-600 rounded category-check" 
+                       ${categoryAllowed ? 'checked' : ''}
+                       onchange="toggleCategoryItems('${category}', this.checked)">
+                <label for="category-check-${category.replace(/[^a-zA-Z0-9]/g, '-')}" 
+                       class="font-bold text-gray-900 cursor-pointer">${category}</label>
+            </div>
+            <div class="pl-6 space-y-1">`;
+        
+        itemsByCategory[category].forEach(item => {
+            const isChecked = allowTodos || 
+                (allowPizza && item.category === 'Caixa de pizza') ||
+                (allowTorta && item.category === 'Caixa de torta') ||
+                (allowCorreio && item.category === 'Caixa correio');
+            
+            html += `
+            <div class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg item-searchable" 
+                 data-item-name="${item.name.toLowerCase()}" 
+                 data-item-category="${item.category.toLowerCase()}" 
+                 data-item-model="${item.model.toLowerCase()}"
+                 data-category="${item.category}">
+                <input type="checkbox" id="item-check-${globalIndex}" 
+                       class="w-4 h-4 text-green-600 rounded item-individual-check" 
+                       data-category="${item.category}"
+                       ${isChecked ? 'checked' : ''}>
+                <label for="item-check-${globalIndex}" class="flex-1 cursor-pointer">
+                    <p class="text-sm font-medium text-gray-900">${item.name}</p>
+                    <p class="text-xs text-gray-500">${item.category} > ${item.model}</p>
+                </label>
+                <span class="text-sm font-bold text-gray-700">R$ ${item.price.toFixed(2)}</span>
+            </div>`;
+            globalIndex++;
+        });
+        
+        html += `
+            </div>
         </div>`;
-    }).join('');
+    });
     
+    allItemsCheckboxList.innerHTML = html;
     itemsListContainer.classList.remove('hidden');
     
     // Limpa o campo de busca
     const searchInput = document.getElementById('searchItemsInput');
     if (searchInput) searchInput.value = '';
+    
+    // Adiciona botão de excluir selecionados
+    const existingButton = document.getElementById('addToExcludedButton');
+    if (!existingButton) {
+        const buttonContainer = document.createElement('div');
+        buttonContainer.id = 'addToExcludedButton';
+        buttonContainer.className = 'mt-4 flex gap-2';
+        buttonContainer.innerHTML = `
+            <button type="button" onclick="adicionarItensSelecionadosAExcluidos()" 
+                    class="flex-1 bg-red-500 text-white px-4 py-3 rounded-lg font-bold hover:bg-red-600 transition flex items-center justify-center gap-2">
+                <i class="fas fa-ban"></i> Adicionar itens selecionados a lista de excluídos
+            </button>
+            <button type="button" onclick="salvarItensSelecionadosIndividualmente()" 
+                    class="flex-1 bg-green-500 text-white px-4 py-3 rounded-lg font-bold hover:bg-green-600 transition flex items-center justify-center gap-2">
+                <i class="fas fa-save"></i> Salvar itens permitidos
+            </button>
+        `;
+        itemsListContainer.appendChild(buttonContainer);
+    }
+};
+
+// Função para alternar categoria inteira
+window.toggleCategoryItems = function(category, isChecked) {
+    const items = document.querySelectorAll(`.item-individual-check[data-category="${category}"]`);
+    items.forEach(item => {
+        item.checked = isChecked;
+    });
 };
 
 // Função para filtrar itens na lista
@@ -2359,6 +2463,44 @@ window.filterItemsList = function() {
             item.style.display = 'none';
         }
     });
+};
+
+// Função para adicionar itens selecionados à lista de excluídos
+window.adicionarItensSelecionadosAExcluidos = function() {
+    const checkedItems = document.querySelectorAll('.item-individual-check');
+    const allItems = getAllCatalogItems();
+    const itemsToExclude = new Set();
+    
+    // Itens não marcados serão excluídos
+    checkedItems.forEach((checkbox, index) => {
+        if (!checkbox.checked && index < allItems.length) {
+            itemsToExclude.add(allItems[index].category);
+        }
+    });
+    
+    // Atualiza os checkboxes principais baseado nos itens não excluídos
+    const allCategories = Object.keys(productCatalog);
+    const allowedCategories = allCategories.filter(cat => !itemsToExclude.has(cat));
+    
+    // Atualiza checkboxes
+    const allowTodos = document.getElementById('itemsAllowedTodos');
+    const allowPizza = document.getElementById('itemsAllowedPizza');
+    const allowTorta = document.getElementById('itemsAllowedTorta');
+    const allowCorreio = document.getElementById('itemsAllowedCorreio');
+    
+    if (allowTodos) allowTodos.checked = false;
+    if (allowPizza) allowPizza.checked = allowedCategories.includes('Caixa de pizza');
+    if (allowTorta) allowTorta.checked = allowedCategories.includes('Caixa de torta');
+    if (allowCorreio) allowCorreio.checked = allowedCategories.includes('Caixa correio');
+    
+    // Atualiza display
+    const config = {
+        allowedItems: allowedCategories,
+        excludedItems: Array.from(itemsToExclude)
+    };
+    
+    updateItemsConfigDisplay(config);
+    showToast('Itens selecionados adicionados à lista de excluídos!', 'success');
 };
 
 // Função para salvar itens selecionados individualmente
@@ -2390,11 +2532,7 @@ window.salvarItensSelecionadosIndividualmente = async function() {
             await update(ref(db, `users/${clientUid}/itemsConfig`), itemsConfig);
             
             // Atualiza checkboxes principais
-            document.getElementById('itemsAllowedTodos').checked = true;
-            document.getElementById('itemsAllowedPizza').checked = false;
-            document.getElementById('itemsAllowedTorta').checked = false;
-            document.getElementById('itemsAllowedCorreio').checked = false;
-            
+            updateItemsConfigCheckboxes(itemsConfig);
             updateItemsConfigDisplay(itemsConfig);
             showToast('Configuração de itens salva com sucesso!', 'success');
             
@@ -2415,13 +2553,10 @@ window.salvarItensSelecionadosIndividualmente = async function() {
     
     // Coleta categorias únicas dos itens marcados
     const selectedCategories = new Set();
-    checkedItems.forEach((checkbox, index) => {
-        // Encontra o item correspondente
-        const allCheckboxes = document.querySelectorAll('.item-individual-check');
-        const checkboxIndex = Array.from(allCheckboxes).indexOf(checkbox);
-        
-        if (checkboxIndex >= 0 && checkboxIndex < allItems.length) {
-            selectedCategories.add(allItems[checkboxIndex].category);
+    checkedItems.forEach(checkbox => {
+        const category = checkbox.getAttribute('data-category');
+        if (category) {
+            selectedCategories.add(category);
         }
     });
     
@@ -2434,18 +2569,14 @@ window.salvarItensSelecionadosIndividualmente = async function() {
     
     const itemsConfig = {
         allowedItems: allowedItems,
-        excludedItems: []
+        excludedItems: Object.keys(productCatalog).filter(cat => !allowedItems.includes(cat))
     };
     
     try {
         await update(ref(db, `users/${clientUid}/itemsConfig`), itemsConfig);
         
         // Atualiza checkboxes principais
-        document.getElementById('itemsAllowedTodos').checked = false;
-        document.getElementById('itemsAllowedPizza').checked = allowedItems.includes('Caixa de pizza');
-        document.getElementById('itemsAllowedTorta').checked = allowedItems.includes('Caixa de torta');
-        document.getElementById('itemsAllowedCorreio').checked = allowedItems.includes('Caixa correio');
-        
+        updateItemsConfigCheckboxes(itemsConfig);
         updateItemsConfigDisplay(itemsConfig);
         showToast('Configuração de itens salva com sucesso!', 'success');
         
