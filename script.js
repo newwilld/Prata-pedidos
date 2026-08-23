@@ -718,19 +718,26 @@ window.abrirModalCliente = function(orderId) {
     const podeEditar = order.status === 'novo'; // Só pode editar se estiver "Pendente"
     
     // Seleciona os botões de ação no modal
-    const btnEditar = document.querySelector('button[onclick="salvarEdicaoPedidoCliente()"]');
-    const btnExcluir = document.querySelector('button[onclick*="excluir"]');
-    const btnAdicionar = document.querySelector('button[onclick*="prepararAdicaoItemExistente"]');
+    const btnSalvar = document.querySelector('button[onclick="salvarEdicaoPedidoCliente()"]');
+    const btnAdicionar = document.querySelector('button[onclick="prepararAdicaoItemExistente()"]');
+    const btnExcluir = document.querySelector('button[onclick="excluirPedidoCliente()"]');
     const btnRepetir = document.querySelector('button[onclick="repetirPedidoCliente()"]');
     
-    // Habilita ou desabilita os botões de edição
-    if (btnEditar) btnEditar.disabled = !podeEditar;
-    if (btnExcluir) btnExcluir.disabled = !podeEditar;
-    if (btnAdicionar) btnAdicionar.disabled = !podeEditar;
+    // Controla o aviso de restrição
+    const warningDiv = document.getElementById('editRestrictionWarning');
+    if (warningDiv) {
+        if (!podeEditar) {
+            warningDiv.classList.remove('hidden');
+        } else {
+            warningDiv.classList.add('hidden');
+        }
+    }
     
-    // Aplica classes visuais para indicar estado desabilitado
-    [btnEditar, btnExcluir, btnAdicionar].forEach(btn => {
+    // Habilita ou desabilita os botões de edição (exceto "Repetir Pedido" que sempre funciona)
+    const botoesEdicao = [btnSalvar, btnAdicionar, btnExcluir];
+    botoesEdicao.forEach(btn => {
         if (btn) {
+            btn.disabled = !podeEditar;
             if (!podeEditar) {
                 btn.classList.add('opacity-50', 'cursor-not-allowed');
                 btn.title = 'Pedido não pode ser editado - status: ' + (order.status === 'producao' ? 'Em Produção' : 'Finalizado');
@@ -741,21 +748,31 @@ window.abrirModalCliente = function(orderId) {
         }
     });
     
+    // O botão "Repetir Pedido" sempre fica habilitado
+    if (btnRepetir) {
+        btnRepetir.disabled = false;
+        btnRepetir.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+    
     // Desabilita os inputs de quantidade se não puder editar
-    const qtyInputs = document.querySelectorAll('.item-qty-input');
+    const qtyInputs = document.querySelectorAll('#clientModalItemsList .item-qty-input');
     qtyInputs.forEach(input => {
         input.disabled = !podeEditar;
         if (!podeEditar) {
             input.classList.add('opacity-50', 'cursor-not-allowed');
+        } else {
+            input.classList.remove('opacity-50', 'cursor-not-allowed');
         }
     });
     
     // Desabilita os botões de remover item
-    const removeButtons = document.querySelectorAll('button[onclick="removerItemModalCliente(this)"]');
+    const removeButtons = document.querySelectorAll('#clientModalItemsList button[onclick="removerItemModalCliente(this)"]');
     removeButtons.forEach(btn => {
         btn.disabled = !podeEditar;
         if (!podeEditar) {
             btn.classList.add('opacity-50', 'cursor-not-allowed');
+        } else {
+            btn.classList.remove('opacity-50', 'cursor-not-allowed');
         }
     });
     
@@ -765,6 +782,8 @@ window.abrirModalCliente = function(orderId) {
         obsField.disabled = !podeEditar;
         if (!podeEditar) {
             obsField.classList.add('opacity-50', 'cursor-not-allowed');
+        } else {
+            obsField.classList.remove('opacity-50', 'cursor-not-allowed');
         }
     }
 
@@ -809,19 +828,38 @@ window.abrirModalCliente = function(orderId) {
     }).join('');
 
     const obsValue = order.generalObs || (order.items ? '' : order.obs) || '';
-    const obsField2 = document.getElementById('clientModalObs');
-    if (obsField2) {
-        obsField2.value = obsValue;
-        obsField2.disabled = !podeEditar;
+    if (obsField) {
+        obsField.value = obsValue;
+        obsField.disabled = !podeEditar;
         if (!podeEditar) {
-            obsField2.classList.add('opacity-50', 'cursor-not-allowed');
+            obsField.classList.add('opacity-50', 'cursor-not-allowed');
         } else {
-            obsField2.classList.remove('opacity-50', 'cursor-not-allowed');
+            obsField.classList.remove('opacity-50', 'cursor-not-allowed');
         }
     }
     
     recalcularTotalModalCliente();
     document.getElementById('clientOrderModal').classList.remove('hidden');
+};
+
+window.closeClientOrderModal = function() {
+    document.getElementById('clientOrderModal').classList.add('hidden');
+};
+
+window.removerItemModalCliente = function(btn) {
+    btn.closest('.modal-cart-item').remove();
+    recalcularTotalModalCliente();
+};
+
+window.recalcularTotalModalCliente = function() {
+    const items = document.querySelectorAll('#clientModalItemsList .modal-cart-item');
+    let total = 0;
+    items.forEach(el => {
+        const unitPrice = parseFloat(el.getAttribute('data-unit-price')) || 0;
+        const qty = parseInt(el.querySelector('.item-qty-input').value) || 0;
+        total += (unitPrice * qty);
+    });
+    document.getElementById('clientModalTotalValue').textContent = `R$ ${total.toFixed(2)}`;
 };
 
 // Função para excluir pedido pelo cliente
@@ -995,8 +1033,15 @@ window.repetirPedidoCliente = async function() {
 
 window.prepararAdicaoItemExistente = function() {
     const orderId = document.getElementById('clientModalOrderId').value;
+    const order = globalClientOrders[orderId] || globalOrders[orderId];
+    
+    // Verifica se o pedido pode ser editado
+    if (!order || order.status !== 'novo') {
+        showToast('Não é possível editar este pedido. Apenas pedidos pendentes podem ser editados.', 'error');
+        return;
+    }
+    
     editingOrderId = orderId;
-    const order = globalClientOrders[orderId];
     
     // Passa os itens do pedido para o carrinho principal
     if (order.items) {
@@ -1025,20 +1070,6 @@ window.prepararAdicaoItemExistente = function() {
     submitBtn.innerHTML = '<i class="fas fa-save"></i> Atualizar Pedido Existente';
     showToast('Adicione novos itens no formulário e clique em Atualizar Pedido.', 'info');
 };
-
-// Vincula dinamicamente a função ao botão do modal
-document.addEventListener('DOMContentLoaded', () => {
-    const modalClient = document.getElementById('clientOrderModal');
-    if (modalClient) {
-        const addMoreBtn = modalClient.querySelector('button .fa-plus-circle');
-        if (addMoreBtn && addMoreBtn.parentElement) {
-            addMoreBtn.parentElement.onclick = function(e) {
-                e.preventDefault();
-                prepararAdicaoItemExistente();
-            };
-        }
-    }
-});
 
 // -----------------------------------------------------------------------------
 // RESTANTE DO CÓDIGO ADMIN MASTER
@@ -1567,7 +1598,7 @@ window.deleteClient = async function() {
     
     const displayNome = (clientName && clientName !== 'undefined') ? clientName : 'Sem Nome / Undefined';
 
-    if (!confirm(`Tem certeza que deseja excluir o cliente ${displayNome}? Esta ação não pode ser desfeita.`)) {
+    if (!confirm(`Tem certeza que deseja excluir o pedido do cliente ${displayNome}? Esta ação não pode ser desfeita.`)) {
         return;
     }
     
@@ -1586,25 +1617,9 @@ window.deleteClient = async function() {
             await remove(ref(db, `orders/${orderId}`));
         }
         
-        if (clientUid && clientUid !== 'undefined') {
-            await remove(ref(db, `users/${clientUid}`));
-        } else if (clientUid === 'undefined') {
-            await remove(ref(db, `users/undefined`));
-        }
+        await createNotification(`Pedido do cliente ${displayNome} foi excluído por @${currentUserData.name}`);
         
-        if (clientName && clientName !== 'undefined') {
-            const notificationKeys = Object.keys(globalNotifications);
-            for (const notifKey of notificationKeys) {
-                const notif = globalNotifications[notifKey];
-                if (notif.message && notif.message.includes(clientName)) {
-                    await remove(ref(db, `notifications/${notifKey}`));
-                }
-            }
-        }
-        
-        await createNotification(`Cliente ${displayNome} foi excluído por @${currentUserData.name}`);
-        
-        showToast(`Cliente e pedidos removidos do sistema com sucesso!`, 'success');
+        showToast(`Pedido removido do sistema com sucesso!`, 'success');
         closeEditModal();
         
         setTimeout(() => {
@@ -1615,8 +1630,8 @@ window.deleteClient = async function() {
         }, 500);
         
     } catch(err) {
-        console.error("Erro ao excluir cliente:", err);
-        showToast('Erro ao excluir cliente. Verifique o console para mais detalhes.', 'error');
+        console.error("Erro ao excluir pedido:", err);
+        showToast('Erro ao excluir pedido. Verifique o console para mais detalhes.', 'error');
     }
 };
 
