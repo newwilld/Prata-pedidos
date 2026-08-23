@@ -38,6 +38,7 @@ let currentCart = []; // Carrinho de compras atual
 let editingOrderId = null; // ID de um pedido existente sendo editado no form principal
 let listenersInitialized = false;
 let isViewingFromClientList = false; // Flag para identificar origem do modal admin
+let selectedSizes = {}; // NOVO: Para armazenar os tamanhos selecionados com checkboxes
 
 // Dados dos produtos em cascata (Categoria > Modelo > Tamanho/Especificação)
 const productCatalog = {
@@ -331,20 +332,16 @@ window.handleProductTypeChange = function() {
     const productType = document.getElementById('productTypeSelect').value;
     const modelContainer = document.getElementById('modelContainer');
     const sizeContainer = document.getElementById('sizeContainer');
-    const quantityContainer = document.getElementById('quantityContainer');
+    const sizeCheckboxContainer = document.getElementById('sizeCheckboxContainer');
     
     const modelSelect = document.getElementById('modelSelect');
-    const sizeSelect = document.getElementById('sizeSelect');
-    const quantitySelect = document.getElementById('quantitySelect');
     
     modelSelect.innerHTML = '<option value="" disabled selected class="text-gray-900">Selecione o modelo...</option>';
-    sizeSelect.innerHTML = '<option value="" disabled selected class="text-gray-900">Selecione o tamanho...</option>';
-    quantitySelect.value = "";
+    sizeCheckboxContainer.innerHTML = '';
+    selectedSizes = {};
     
     modelContainer.classList.add('hidden');
     sizeContainer.classList.add('hidden');
-    quantityContainer.classList.add('hidden');
-    document.getElementById('customQuantityContainer').classList.add('hidden');
     document.getElementById('totalDisplayContainer').classList.add('hidden');
     
     if (productType && productCatalog[productType]) {
@@ -364,164 +361,207 @@ window.handleModelChange = function() {
     const productType = document.getElementById('productTypeSelect').value;
     const model = document.getElementById('modelSelect').value;
     const sizeContainer = document.getElementById('sizeContainer');
-    const quantityContainer = document.getElementById('quantityContainer');
-    const sizeSelect = document.getElementById('sizeSelect');
+    const sizeCheckboxContainer = document.getElementById('sizeCheckboxContainer');
     
-    sizeSelect.innerHTML = '<option value="" disabled selected class="text-gray-900">Selecione o tamanho...</option>';
-    quantityContainer.classList.add('hidden');
-    document.getElementById('customQuantityContainer').classList.add('hidden');
+    sizeCheckboxContainer.innerHTML = '';
+    selectedSizes = {};
     document.getElementById('totalDisplayContainer').classList.add('hidden');
     
     if (productType && model && productCatalog[productType][model]) {
         const sizes = productCatalog[productType][model];
-        sizes.forEach(size => {
-            const option = document.createElement('option');
-            option.value = size.name;
-            option.textContent = `${size.name} - R$ ${size.price.toFixed(2)}`;
-            option.dataset.price = size.price;
-            option.className = 'text-gray-900';
-            sizeSelect.appendChild(option);
+        
+        // Cria os checkboxes para cada tamanho
+        sizes.forEach((size, index) => {
+            const div = document.createElement('div');
+            div.className = 'size-checkbox-item';
+            div.id = `size-item-${index}`;
+            
+            div.innerHTML = `
+                <input type="checkbox" id="size-check-${index}" class="size-checkbox" onchange="handleSizeCheckboxChange(${index})">
+                <label for="size-check-${index}" class="size-checkbox-label">${size.name} - R$ ${size.price.toFixed(2)}</label>
+                <select id="size-quantity-${index}" class="size-quantity-input" disabled onchange="updateTotalDisplayCheckbox()">
+                    <option value="500">500 unidades</option>
+                    <option value="1000">1.000 unidades</option>
+                    <option value="2000">2.000 unidades</option>
+                    <option value="3000">3.000 unidades</option>
+                    <option value="4000">4.000 unidades</option>
+                    <option value="5000">5.000 unidades</option>
+                    <option value="Outra">Outra quantidade</option>
+                </select>
+                <input type="number" id="size-custom-quantity-${index}" class="size-quantity-input hidden" min="1" placeholder="Qtd" style="width: 100px;" oninput="updateTotalDisplayCheckbox()">
+            `;
+            
+            sizeCheckboxContainer.appendChild(div);
+            
+            // Armazena os dados do tamanho
+            selectedSizes[index] = {
+                name: size.name,
+                price: size.price,
+                checked: false,
+                quantity: 0
+            };
         });
+        
         sizeContainer.classList.remove('hidden');
     }
 };
 
-window.handleSizeChange = function() {
-    const sizeSelect = document.getElementById('sizeSelect');
-    const quantityContainer = document.getElementById('quantityContainer');
+window.handleSizeCheckboxChange = function(index) {
+    const checkbox = document.getElementById(`size-check-${index}`);
+    const quantitySelect = document.getElementById(`size-quantity-${index}`);
+    const customQuantity = document.getElementById(`size-custom-quantity-${index}`);
+    const itemDiv = document.getElementById(`size-item-${index}`);
     
-    if (sizeSelect.value) {
-        quantityContainer.classList.remove('hidden');
-        document.getElementById('quantitySelect').value = "";
-        document.getElementById('customQuantityContainer').classList.add('hidden');
-        document.getElementById('customQuantityInput').removeAttribute('required');
-        document.getElementById('totalDisplayContainer').classList.add('hidden');
+    if (checkbox.checked) {
+        quantitySelect.disabled = false;
+        itemDiv.classList.add('checked');
+        selectedSizes[index].checked = true;
+        
+        // Se a quantidade não foi definida, define como 1000 por padrão
+        if (!selectedSizes[index].quantity) {
+            quantitySelect.value = '1000';
+            selectedSizes[index].quantity = 1000;
+        }
+    } else {
+        quantitySelect.disabled = true;
+        customQuantity.classList.add('hidden');
+        itemDiv.classList.remove('checked');
+        selectedSizes[index].checked = false;
+        selectedSizes[index].quantity = 0;
     }
+    
+    updateTotalDisplayCheckbox();
 };
 
-window.updateTotalDisplay = function() {
-    const sizeSelect = document.getElementById('sizeSelect');
-    const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
+window.handleQuantityChange = function() {
+    // Função mantida para compatibilidade, mas não é mais usada diretamente
+};
+
+window.updateTotalDisplayCheckbox = function() {
+    const sizeCheckboxContainer = document.getElementById('sizeCheckboxContainer');
+    const checkboxes = sizeCheckboxContainer.querySelectorAll('.size-checkbox');
+    let totalValue = 0;
+    let hasSelection = false;
     
-    if (!selectedOption || !selectedOption.dataset.price) return;
+    checkboxes.forEach((checkbox, index) => {
+        if (checkbox.checked) {
+            const quantitySelect = document.getElementById(`size-quantity-${index}`);
+            const customQuantity = document.getElementById(`size-custom-quantity-${index}`);
+            
+            let quantity = 0;
+            
+            if (quantitySelect.value === 'Outra') {
+                customQuantity.classList.remove('hidden');
+                quantity = parseInt(customQuantity.value) || 0;
+            } else {
+                customQuantity.classList.add('hidden');
+                quantity = parseInt(quantitySelect.value) || 0;
+            }
+            
+            if (quantity > 0) {
+                selectedSizes[index].quantity = quantity;
+                totalValue += selectedSizes[index].price * quantity;
+                hasSelection = true;
+            }
+        }
+    });
     
-    const unitPrice = parseFloat(selectedOption.dataset.price);
-    
-    let quantity = 0;
-    const quantitySelect = document.getElementById('quantitySelect');
-    const qValue = quantitySelect.value;
-    
-    if (qValue === 'Outra') {
-        const customQty = document.getElementById('customQuantityInput').value;
-        quantity = parseInt(customQty) || 0;
-    } else if (qValue) {
-        quantity = parseInt(qValue) || 0;
-    }
-    
-    const totalValue = unitPrice * quantity;
     const totalDisplayContainer = document.getElementById('totalDisplayContainer');
     const totalDisplayValue = document.getElementById('totalDisplayValue');
     const unitPriceDisplay = document.getElementById('unitPriceDisplay');
     
-    if (quantity > 0) {
+    if (hasSelection && totalValue > 0) {
         totalDisplayContainer.classList.remove('hidden');
         totalDisplayValue.textContent = `R$ ${totalValue.toFixed(2)}`;
-        unitPriceDisplay.textContent = `${quantity} unidades × R$ ${unitPrice.toFixed(2)} por unidade`;
+        unitPriceDisplay.textContent = 'Valor total dos itens selecionados';
     } else {
         totalDisplayContainer.classList.add('hidden');
     }
 };
 
-window.handleQuantityChange = function() {
-    const q = document.getElementById('quantitySelect').value;
-    const cContainer = document.getElementById('customQuantityContainer');
-    const cInput = document.getElementById('customQuantityInput');
+// NOVO: Função para obter os tamanhos selecionados
+function getSelectedSizes() {
+    const selectedItems = [];
     
-    if (q === 'Outra') {
-        cContainer.classList.remove('hidden');
-        cInput.setAttribute('required', 'true');
-        cInput.focus();
-    } else {
-        cContainer.classList.add('hidden');
-        cInput.removeAttribute('required');
-    }
-    updateTotalDisplay();
-};
+    Object.keys(selectedSizes).forEach(index => {
+        if (selectedSizes[index].checked && selectedSizes[index].quantity > 0) {
+            selectedItems.push({
+                name: selectedSizes[index].name,
+                price: selectedSizes[index].price,
+                quantity: selectedSizes[index].quantity
+            });
+        }
+    });
+    
+    return selectedItems;
+}
 
 // -----------------------------------------------------------------------------
 // SISTEMA DE CARRINHO E MÚLTIPLOS ITENS NO PEDIDO DO CLIENTE
 // -----------------------------------------------------------------------------
 window.adicionarAoCarrinho = function() {
-    const sizeSelect = document.getElementById('sizeSelect');
-    if (!sizeSelect || !sizeSelect.value) {
-        showToast('Selecione um produto e tamanho antes de adicionar.', 'error');
-        return;
-    }
-
     const productType = document.getElementById('productTypeSelect').value;
     const model = document.getElementById('modelSelect').value;
-    const sizeOption = sizeSelect.options[sizeSelect.selectedIndex];
-    const productValue = sizeSelect.value;
-    const productText = sizeOption.textContent;
-    const unitPrice = parseFloat(sizeOption.dataset.price);
-
-    let quantitySelect = document.getElementById('quantitySelect').value;
-    let quantityNumber = 0;
-
-    if(quantitySelect === 'Outra') {
-        quantityNumber = parseInt(document.getElementById('customQuantityInput').value) || 0;
-    } else {
-        quantityNumber = parseInt(quantitySelect) || 0;
-    }
-
-    if (quantityNumber <= 0) {
-        showToast('Informe uma quantidade válida.', 'error');
+    
+    if (!productType || !model) {
+        showToast('Selecione um produto e modelo antes de adicionar.', 'error');
         return;
     }
-
-    const totalEstimated = unitPrice * quantityNumber;
+    
+    const selectedSizeItems = getSelectedSizes();
+    
+    if (selectedSizeItems.length === 0) {
+        showToast('Marque pelo menos um tamanho com quantidade.', 'error');
+        return;
+    }
+    
     const obs = document.getElementById('orderObs').value.trim();
-
-    // Adiciona ao carrinho em memória
-    currentCart.push({
-        productType,
-        model,
-        product: productValue,
-        productFullDescription: productText,
-        quantity: quantityNumber + ' unidades',
-        quantityNumber: quantityNumber,
-        unitPrice: unitPrice,
-        totalEstimated: totalEstimated,
-        obs: obs
+    let totalEstimated = 0;
+    
+    // Adiciona cada tamanho selecionado como um item no carrinho
+    selectedSizeItems.forEach(sizeItem => {
+        const itemTotal = sizeItem.price * sizeItem.quantity;
+        totalEstimated += itemTotal;
+        
+        currentCart.push({
+            productType,
+            model,
+            product: sizeItem.name,
+            productFullDescription: `${sizeItem.name} - R$ ${sizeItem.price.toFixed(2)}`,
+            quantity: sizeItem.quantity + ' unidades',
+            quantityNumber: sizeItem.quantity,
+            unitPrice: sizeItem.price,
+            totalEstimated: itemTotal,
+            obs: obs
+        });
     });
-
+    
     renderCart();
-
-    // Resetar campos para permitir adição de novos itens
-    document.getElementById('sizeSelect').selectedIndex = 0;
-    document.getElementById('quantitySelect').value = "";
-    document.getElementById('customQuantityInput').value = "";
-    document.getElementById('orderObs').value = "";
-    document.getElementById('quantityContainer').classList.add('hidden');
-    document.getElementById('customQuantityContainer').classList.add('hidden');
+    
+    // Resetar campos
+    document.getElementById('sizeCheckboxContainer').innerHTML = '';
+    selectedSizes = {};
+    document.getElementById('modelSelect').selectedIndex = 0;
+    document.getElementById('orderObs').value = '';
+    document.getElementById('sizeContainer').classList.add('hidden');
     document.getElementById('totalDisplayContainer').classList.add('hidden');
-
-    showToast('Item adicionado ao pedido.', 'success');
+    
+    showToast(`${selectedSizeItems.length} item(ns) adicionado(s) ao pedido.`, 'success');
 };
 
 function renderCart() {
     const container = document.getElementById('cartContainer');
     const list = document.getElementById('cartItemsList');
     const subtotalEl = document.getElementById('cartSubtotal');
-
+    
     if (currentCart.length === 0) {
         container.classList.add('hidden');
         return;
     }
-
+    
     container.classList.remove('hidden');
     let subtotal = 0;
-
+    
     list.innerHTML = currentCart.map((item, index) => {
         subtotal += item.totalEstimated;
         return `
@@ -536,7 +576,7 @@ function renderCart() {
             </li>
         `;
     }).join('');
-
+    
     subtotalEl.textContent = `R$ ${subtotal.toFixed(2)}`;
 }
 
@@ -548,25 +588,25 @@ window.removerDoCarrinho = function(index) {
 window.submitOrder = async function(e) {
     e.preventDefault();
     if (!currentUserData) return;
-
+    
     // Se o cliente preencheu algo e clicou em Enviar direto, captura o item para o carrinho antes.
-    const sizeSelect = document.getElementById('sizeSelect');
-    if (sizeSelect && sizeSelect.value) {
+    const selectedSizeItems = getSelectedSizes();
+    if (selectedSizeItems.length > 0) {
         window.adicionarAoCarrinho();
     }
-
+    
     if (currentCart.length === 0) {
         showToast('Adicione pelo menos um item ao pedido.', 'error');
         return;
     }
-
+    
     const btn = e.target.querySelector('button[type="submit"]');
     const originalText = btn.innerHTML;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
     btn.disabled = true;
-
+    
     const totalOrderValue = currentCart.reduce((acc, item) => acc + item.totalEstimated, 0);
-
+    
     try {
         if (editingOrderId) {
             // Editando um pedido existente a partir da home
@@ -574,14 +614,12 @@ window.submitOrder = async function(e) {
             await update(orderRef, {
                 items: currentCart,
                 totalEstimated: totalOrderValue,
-                // Fallbacks
                 product: currentCart.length === 1 ? currentCart[0].product : `${currentCart.length} itens`,
                 quantity: currentCart.length === 1 ? currentCart[0].quantity : `Diversas`,
                 obs: currentCart.length === 1 ? currentCart[0].obs : ''
             });
             showToast('Pedido atualizado com os novos itens!', 'success');
             
-            // Restaura o botão original
             btn.innerHTML = '<i class="fas fa-paper-plane"></i> Finalizar Pedido Completo';
             editingOrderId = null;
         } else {
@@ -597,12 +635,11 @@ window.submitOrder = async function(e) {
                 priority: "Média",
                 status: "novo",
                 createdAt: Date.now(),
-                // Propriedades antigas de fallback
                 product: currentCart.length === 1 ? currentCart[0].product : `${currentCart.length} itens`,
                 quantity: currentCart.length === 1 ? currentCart[0].quantity : `Diversas`,
                 obs: currentCart.length === 1 ? currentCart[0].obs : ''
             };
-
+            
             const ordersListRef = ref(db, 'orders');
             await push(ordersListRef, newOrder);
             
@@ -616,13 +653,13 @@ window.submitOrder = async function(e) {
         document.getElementById('orderForm').reset();
         document.getElementById('modelContainer').classList.add('hidden');
         document.getElementById('sizeContainer').classList.add('hidden');
-        document.getElementById('quantityContainer').classList.add('hidden');
-        document.getElementById('customQuantityContainer').classList.add('hidden');
+        document.getElementById('sizeCheckboxContainer').innerHTML = '';
         document.getElementById('totalDisplayContainer').classList.add('hidden');
         
+        selectedSizes = {};
         currentCart = [];
         renderCart();
-
+        
     } catch (error) {
         console.error(error);
         showToast('Erro ao processar pedido.', 'error');
@@ -638,7 +675,7 @@ window.submitOrder = async function(e) {
 function initClientListeners() {
     const ordersRef = ref(db, 'orders');
     onValue(ordersRef, (snapshot) => {
-        globalClientOrders = {}; // Limpa cache
+        globalClientOrders = {};
         const data = snapshot.val();
         const myOrders = [];
         if (data) {
@@ -646,7 +683,7 @@ function initClientListeners() {
                 if (data[key].userId === currentUserData.uid) {
                     const orderObj = { id: key, ...data[key] };
                     myOrders.push(orderObj);
-                    globalClientOrders[key] = orderObj; // Alimentando cache local
+                    globalClientOrders[key] = orderObj;
                 }
             });
         }
@@ -663,14 +700,20 @@ function renderClientOrders(orders) {
         list.innerHTML = '<div class="col-span-full text-center py-10 bg-white/10 rounded-3xl border border-white/20 text-white/70"><i class="fas fa-box-open text-4xl mb-4 text-white/30 block"></i>Nenhum pedido realizado ainda.</div>';
         return;
     }
-
+    
     const statusColors = { 
         'novo': 'from-purple-600 to-indigo-600', 
         'producao': 'from-pink-600 to-rose-600', 
-        'finalizado': 'from-cyan-600 to-blue-600' 
+        'finalizado': 'from-cyan-600 to-blue-600',
+        'entregue': 'from-green-600 to-emerald-600' 
     };
-    const statusText = { 'novo': 'Pendente', 'producao': 'Em Produção', 'finalizado': 'Finalizado' };
-
+    const statusText = { 
+        'novo': 'Pendente', 
+        'producao': 'Em Produção', 
+        'finalizado': 'Finalizado',
+        'entregue': 'Entregue' 
+    };
+    
     list.innerHTML = orders.map(order => {
         const estimatedValue = order.totalEstimated ? 
             `<div class="text-sm font-bold text-white mt-2">Valor Total: R$ ${order.totalEstimated.toFixed(2)}</div>` : '';
@@ -687,7 +730,7 @@ function renderClientOrders(orders) {
         }
         
         return `
-        <div class="bg-gradient-to-br ${statusColors[order.status]} p-6 rounded-3xl shadow-xl flex flex-col gap-4 relative overflow-hidden cursor-pointer hover:scale-[1.02] transition-transform" onclick="abrirModalCliente('${order.id}')">
+        <div class="bg-gradient-to-br ${statusColors[order.status] || statusColors['novo']} p-6 rounded-3xl shadow-xl flex flex-col gap-4 relative overflow-hidden cursor-pointer hover:scale-[1.02] transition-transform" onclick="abrirModalCliente('${order.id}')">
             <div class="flex justify-between items-start">
                 <div>
                     <span class="text-xs font-semibold text-white/70 uppercase tracking-wider">${window.formatDateTime(order.createdAt).split(' às')[0]}</span>
@@ -695,7 +738,7 @@ function renderClientOrders(orders) {
                     ${estimatedValue}
                 </div>
                 <span class="text-xs px-3 py-1.5 rounded-full font-bold bg-white/20 text-white text-center">
-                    ${statusText[order.status]}
+                    ${statusText[order.status] || statusText['novo']}
                 </span>
             </div>
             <div class="text-sm text-white/90 flex items-center gap-2">
@@ -711,20 +754,50 @@ function renderClientOrders(orders) {
 window.abrirModalCliente = function(orderId) {
     const order = globalClientOrders[orderId] || globalOrders[orderId];
     if (!order) return;
-
-    document.getElementById('clientModalOrderId').value = order.id;
-    document.getElementById('clientModalStatus').textContent = (order.status === 'novo' ? 'Pendente' : order.status === 'producao' ? 'Em Produção' : 'Finalizado');
-
-    // VERIFICA SE O CLIENTE PODE EDITAR O PEDIDO
-    const podeEditar = order.status === 'novo'; // Só pode editar se estiver "Pendente"
     
-    // Seleciona os botões de ação no modal
+    document.getElementById('clientModalOrderId').value = order.id;
+    document.getElementById('clientModalStatus').textContent = (order.status === 'novo' ? 'Pendente' : order.status === 'producao' ? 'Em Produção' : order.status === 'finalizado' ? 'Finalizado' : 'Entregue');
+    
+    // NOVO: Exibir mensagens de status de alteração
+    const alterationPendingMessage = document.getElementById('alterationPendingMessage');
+    const alterationApprovedMessage = document.getElementById('alterationApprovedMessage');
+    const alterationSentDate = document.getElementById('alterationSentDate');
+    const approvalSentDate = document.getElementById('approvalSentDate');
+    const approvalDate = document.getElementById('approvalDate');
+    
+    // Verifica se há alteração pendente
+    if (order.alterationStatus === 'pending') {
+        alterationPendingMessage.classList.remove('hidden');
+        alterationApprovedMessage.classList.add('hidden');
+        if (order.alterationSentAt) {
+            alterationSentDate.textContent = window.formatDateTime(order.alterationSentAt);
+        }
+    } 
+    // Verifica se há alteração aprovada
+    else if (order.alterationStatus === 'approved') {
+        alterationPendingMessage.classList.add('hidden');
+        alterationApprovedMessage.classList.remove('hidden');
+        if (order.alterationSentAt) {
+            approvalSentDate.textContent = window.formatDateTime(order.alterationSentAt);
+        }
+        if (order.alterationApprovedAt) {
+            approvalDate.textContent = window.formatDateTime(order.alterationApprovedAt);
+        }
+    }
+    // Sem alterações
+    else {
+        alterationPendingMessage.classList.add('hidden');
+        alterationApprovedMessage.classList.add('hidden');
+    }
+    
+    // VERIFICA SE O CLIENTE PODE EDITAR O PEDIDO
+    const podeEditar = order.status === 'novo';
+    
     const btnSalvar = document.querySelector('button[onclick="salvarEdicaoPedidoCliente()"]');
     const btnAdicionar = document.querySelector('button[onclick="prepararAdicaoItemExistente()"]');
     const btnExcluir = document.querySelector('button[onclick="excluirPedidoCliente()"]');
     const btnRepetir = document.querySelector('button[onclick="repetirPedidoCliente()"]');
     
-    // Controla o aviso de restrição
     const warningDiv = document.getElementById('editRestrictionWarning');
     if (warningDiv) {
         if (!podeEditar) {
@@ -734,14 +807,13 @@ window.abrirModalCliente = function(orderId) {
         }
     }
     
-    // Habilita ou desabilita os botões de edição (exceto "Repetir Pedido" que sempre funciona)
     const botoesEdicao = [btnSalvar, btnAdicionar, btnExcluir];
     botoesEdicao.forEach(btn => {
         if (btn) {
             btn.disabled = !podeEditar;
             if (!podeEditar) {
                 btn.classList.add('opacity-50', 'cursor-not-allowed');
-                btn.title = 'Pedido não pode ser editado - status: ' + (order.status === 'producao' ? 'Em Produção' : 'Finalizado');
+                btn.title = 'Pedido não pode ser editado - status: ' + (order.status === 'producao' ? 'Em Produção' : order.status === 'finalizado' ? 'Finalizado' : 'Entregue');
             } else {
                 btn.classList.remove('opacity-50', 'cursor-not-allowed');
                 btn.title = '';
@@ -749,13 +821,11 @@ window.abrirModalCliente = function(orderId) {
         }
     });
     
-    // O botão "Repetir Pedido" sempre fica habilitado
     if (btnRepetir) {
         btnRepetir.disabled = false;
         btnRepetir.classList.remove('opacity-50', 'cursor-not-allowed');
     }
     
-    // Desabilita os inputs de quantidade se não puder editar
     const qtyInputs = document.querySelectorAll('#clientModalItemsList .item-qty-input');
     qtyInputs.forEach(input => {
         input.disabled = !podeEditar;
@@ -766,7 +836,6 @@ window.abrirModalCliente = function(orderId) {
         }
     });
     
-    // Desabilita os botões de remover item
     const removeButtons = document.querySelectorAll('#clientModalItemsList button[onclick="removerItemModalCliente(this)"]');
     removeButtons.forEach(btn => {
         btn.disabled = !podeEditar;
@@ -777,7 +846,6 @@ window.abrirModalCliente = function(orderId) {
         }
     });
     
-    // Desabilita o campo de observações se não puder editar
     const obsField = document.getElementById('clientModalObs');
     if (obsField) {
         obsField.disabled = !podeEditar;
@@ -787,10 +855,9 @@ window.abrirModalCliente = function(orderId) {
             obsField.classList.remove('opacity-50', 'cursor-not-allowed');
         }
     }
-
+    
     const itemsList = document.getElementById('clientModalItemsList');
     
-    // Tratativa para pedido antigo vs pedido novo (com array)
     let items = [];
     if (order.items && Array.isArray(order.items)) {
         items = [...order.items];
@@ -805,7 +872,7 @@ window.abrirModalCliente = function(orderId) {
             obs: order.obs || ''
         }];
     }
-
+    
     itemsList.innerHTML = items.map((item, index) => {
         const qtyNum = item.quantityNumber || parseInt(item.quantity) || 0;
         const disabledAttr = !podeEditar ? 'disabled' : '';
@@ -827,7 +894,7 @@ window.abrirModalCliente = function(orderId) {
             </div>
         </div>`;
     }).join('');
-
+    
     const obsValue = order.generalObs || (order.items ? '' : order.obs) || '';
     if (obsField) {
         obsField.value = obsValue;
@@ -863,7 +930,6 @@ window.recalcularTotalModalCliente = function() {
     document.getElementById('clientModalTotalValue').textContent = `R$ ${total.toFixed(2)}`;
 };
 
-// Função para excluir pedido pelo cliente
 window.excluirPedidoCliente = async function() {
     const orderId = document.getElementById('clientModalOrderId').value;
     const order = globalClientOrders[orderId] || globalOrders[orderId];
@@ -873,7 +939,6 @@ window.excluirPedidoCliente = async function() {
         return;
     }
     
-    // Verifica se o pedido está em status "Pendente" (novo)
     if (order.status !== 'novo') {
         showToast('Não é possível excluir este pedido. Apenas pedidos pendentes podem ser excluídos.', 'error');
         return;
@@ -884,11 +949,9 @@ window.excluirPedidoCliente = async function() {
     }
     
     try {
-        // Captura informações antes de excluir
         const clientName = currentUserData.name || order.clientName || 'Cliente sem nome';
         const clientEmail = currentUserData.email || order.clientEmail || 'N/A';
         
-        // Prepara informações dos itens
         let itemsInfo = '';
         if (order.items && order.items.length > 0) {
             itemsInfo = order.items.map(item => 
@@ -900,10 +963,8 @@ window.excluirPedidoCliente = async function() {
         
         const totalValue = order.totalEstimated ? `R$ ${order.totalEstimated.toFixed(2)}` : 'N/A';
         
-        // Remove o pedido
         await remove(ref(db, `orders/${orderId}`));
         
-        // Cria notificação detalhada de exclusão
         await createNotification(
             `Pedido do cliente ${clientName} foi excluído por @${clientName} (${clientEmail})\n` +
             `📦 Pedido: ${itemsInfo}\n` +
@@ -923,7 +984,6 @@ window.salvarEdicaoPedidoCliente = async function() {
     const orderId = document.getElementById('clientModalOrderId').value;
     const order = globalClientOrders[orderId] || globalOrders[orderId];
     
-    // Verifica se o pedido pode ser editado
     if (!order || order.status !== 'novo') {
         showToast('Não é possível editar este pedido. Apenas pedidos pendentes podem ser editados.', 'error');
         return;
@@ -935,10 +995,10 @@ window.salvarEdicaoPedidoCliente = async function() {
         showToast('O pedido não pode ficar vazio. Adicione itens ou exclua se não quiser mais.', 'error');
         return;
     }
-
+    
     let newItems = [];
     let newTotal = 0;
-
+    
     itemsEls.forEach(el => {
         const qtyNumber = parseInt(el.querySelector('.item-qty-input').value) || 0;
         const unitPrice = parseFloat(el.getAttribute('data-unit-price')) || 0;
@@ -950,7 +1010,7 @@ window.salvarEdicaoPedidoCliente = async function() {
         
         const totalEst = qtyNumber * unitPrice;
         newTotal += totalEst;
-
+        
         newItems.push({
             productType: productType,
             model: model,
@@ -963,9 +1023,9 @@ window.salvarEdicaoPedidoCliente = async function() {
             obs: obs
         });
     });
-
+    
     const generalObs = document.getElementById('clientModalObs').value;
-
+    
     try {
         const orderRef = ref(db, `orders/${orderId}`);
         const originalOrder = globalClientOrders[orderId] || globalOrders[orderId];
@@ -973,49 +1033,54 @@ window.salvarEdicaoPedidoCliente = async function() {
         const legacyProduct = newItems.length === 1 ? newItems[0].product : `${newItems.length} itens`;
         const legacyQty = newItems.length === 1 ? newItems[0].quantity : 'Diversas';
         const legacyObs = newItems.length === 1 ? newItems[0].obs : '';
-
+        
+        // NOVO: Marca o pedido como "alteração pendente de aprovação"
         await update(orderRef, {
             items: newItems,
             totalEstimated: newTotal,
             generalObs: generalObs,
             product: legacyProduct,
             quantity: legacyQty,
-            obs: generalObs || legacyObs
+            obs: generalObs || legacyObs,
+            alterationStatus: 'pending',
+            alterationSentAt: Date.now(),
+            alterationApprovedAt: null
         });
-
+        
         // NOTIFICAÇÃO DE EDIÇÃO PELO CLIENTE
         const clientName = currentUserData.name || 'Cliente';
-        const notifications = [];
         
-        // Notificação de mudança de produtos/itens
-        if (originalOrder && originalOrder.items && Array.isArray(originalOrder.items)) {
-            const oldItemsSummary = originalOrder.items.map(i => `${i.quantityNumber}x ${i.product}`).join(', ');
-            const newItemsSummary = newItems.map(i => `${i.quantityNumber}x ${i.product}`).join(', ');
-            
-            if (oldItemsSummary !== newItemsSummary) {
-                notifications.push(`@${clientName} editou os itens do pedido: ${oldItemsSummary} → ${newItemsSummary}`);
-            }
-        } else if (originalOrder && originalOrder.product !== legacyProduct) {
-            notifications.push(`@${clientName} editou o produto: ${originalOrder.product} → ${legacyProduct}`);
-        }
+        const itemsSummary = newItems.map(i => `${i.quantityNumber}x ${i.product}`).join(', ');
+        const totalDisplay = `R$ ${newTotal.toFixed(2)}`;
         
-        // Notificação de mudança de observações
-        if (originalOrder && (originalOrder.generalObs || originalOrder.obs || '') !== generalObs) {
-            const oldObs = originalOrder.generalObs || originalOrder.obs || 'N/A';
-            const newObsDisplay = generalObs || 'N/A';
-            notifications.push(`@${clientName} editou as observações do pedido: ${oldObs} → ${newObsDisplay}`);
-        }
+        await createNotification(
+            `@${clientName} solicitou alterações no pedido\n` +
+            `📦 Novos itens: ${itemsSummary}\n` +
+            `💰 Novo total: ${totalDisplay}\n` +
+            `⏰ Aguardando aprovação do Admin`
+        );
         
-        // Cria todas as notificações
-        for (const notificationMessage of notifications) {
-            await createNotification(notificationMessage);
-        }
-
-        showToast('Modificações do pedido salvas!', 'success');
+        showToast('Alterações enviadas para aprovação!', 'success');
         closeClientOrderModal();
     } catch (error) {
         console.error(error);
         showToast('Erro ao atualizar pedido.', 'error');
+    }
+};
+
+// NOVO: Função para aprovar alteração (chamada pelo admin)
+window.aprovarAlteracaoPedido = async function(orderId) {
+    try {
+        const orderRef = ref(db, `orders/${orderId}`);
+        await update(orderRef, {
+            alterationStatus: 'approved',
+            alterationApprovedAt: Date.now()
+        });
+        
+        showToast('Alteração aprovada com sucesso!', 'success');
+    } catch (error) {
+        console.error(error);
+        showToast('Erro ao aprovar alteração.', 'error');
     }
 };
 
@@ -1028,13 +1093,15 @@ window.repetirPedidoCliente = async function() {
     const origBtnHtml = btn.innerHTML;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Copiando...';
     btn.disabled = true;
-
-    // Clona e reseta status
+    
     const clonedOrder = { ...originalOrder };
     delete clonedOrder.id; 
     clonedOrder.status = 'novo';
     clonedOrder.createdAt = Date.now();
-
+    delete clonedOrder.alterationStatus;
+    delete clonedOrder.alterationSentAt;
+    delete clonedOrder.alterationApprovedAt;
+    
     try {
         const ordersListRef = ref(db, 'orders');
         await push(ordersListRef, clonedOrder);
@@ -1053,7 +1120,6 @@ window.prepararAdicaoItemExistente = function() {
     const orderId = document.getElementById('clientModalOrderId').value;
     const order = globalClientOrders[orderId] || globalOrders[orderId];
     
-    // Verifica se o pedido pode ser editado
     if (!order || order.status !== 'novo') {
         showToast('Não é possível editar este pedido. Apenas pedidos pendentes podem ser editados.', 'error');
         return;
@@ -1061,7 +1127,6 @@ window.prepararAdicaoItemExistente = function() {
     
     editingOrderId = orderId;
     
-    // Passa os itens do pedido para o carrinho principal
     if (order.items) {
         currentCart = [...order.items];
     } else {
@@ -1083,7 +1148,6 @@ window.prepararAdicaoItemExistente = function() {
     
     document.getElementById('productTypeSelect').focus();
     
-    // Altera o botão de submissão
     const submitBtn = document.querySelector('button[type="submit"]');
     submitBtn.innerHTML = '<i class="fas fa-save"></i> Atualizar Pedido Existente';
     showToast('Adicione novos itens no formulário e clique em Atualizar Pedido.', 'info');
@@ -1133,7 +1197,7 @@ function initAdminListeners() {
     }, (error) => {
         console.error("Erro ao carregar pedidos:", error);
     });
-
+    
     const usersRef = ref(db, 'users');
     onValue(usersRef, (snapshot) => {
         globalUsers = {};
@@ -1151,7 +1215,7 @@ function initAdminListeners() {
     }, (error) => {
         console.error("Erro ao carregar usuários:", error);
     });
-
+    
     const notificationsRef = ref(db, 'notifications');
     onValue(notificationsRef, (snapshot) => {
         globalNotifications = {};
@@ -1171,7 +1235,7 @@ function initAdminListeners() {
 }
 
 function renderKanban() {
-    const cols = { novo: [], producao: [], finalizado: [] };
+    const cols = { novo: [], producao: [], finalizado: [], entregue: [] };
     
     Object.values(globalOrders).forEach(order => {
         if(cols[order.status]) {
@@ -1180,16 +1244,18 @@ function renderKanban() {
             cols['novo'].push(order);
         }
     });
-
+    
     cols.novo.sort((a,b) => a.createdAt - b.createdAt);
     cols.producao.sort((a,b) => a.createdAt - b.createdAt);
     cols.finalizado.sort((a,b) => b.createdAt - a.createdAt);
-
+    cols.entregue.sort((a,b) => b.createdAt - a.createdAt);
+    
     document.getElementById('countNovos').innerText = cols.novo.length;
     document.getElementById('countProducao').innerText = cols.producao.length;
     document.getElementById('countFinalizado').innerText = cols.finalizado.length;
-
-    ['novo', 'producao', 'finalizado'].forEach(status => {
+    document.getElementById('countEntregue').innerText = cols.entregue.length;
+    
+    ['novo', 'producao', 'finalizado', 'entregue'].forEach(status => {
         const container = document.getElementById(`kanban-${status}`);
         if (cols[status].length === 0) {
             container.innerHTML = `<div class="text-center py-8 text-white/50 font-medium">Nenhum pedido</div>`;
@@ -1203,7 +1269,8 @@ function createKanbanCard(order) {
     const statusGradients = {
         'novo': 'from-purple-600 to-indigo-700',
         'producao': 'from-pink-600 to-rose-700',
-        'finalizado': 'from-cyan-600 to-blue-700'
+        'finalizado': 'from-cyan-600 to-blue-700',
+        'entregue': 'from-green-600 to-emerald-700'
     };
     
     const prioColors = {
@@ -1212,7 +1279,6 @@ function createKanbanCard(order) {
         'Alta': 'bg-red-500/20 text-red-200'
     };
     
-    // Ajuste de visualização para lidar com múltiplos itens (carrinho)
     let displayProductHtml = '';
     let displayQty = '';
     
@@ -1239,8 +1305,19 @@ function createKanbanCard(order) {
     const obsDisplay = finalObs ? 
         `<div class="text-xs text-white/80 mb-2 flex items-start gap-1"><i class="fas fa-comment-dots text-white/60 mt-0.5"></i> ${finalObs}</div>` : '';
     
+    // NOVO: Indicador de alteração pendente
+    const alterationPending = order.alterationStatus === 'pending' ? 
+        `<div class="bg-yellow-500/20 text-yellow-200 text-xs px-3 py-2 rounded-lg mb-2 flex items-center gap-2">
+            <i class="fas fa-clock"></i> Alteração pendente de aprovação
+        </div>` : '';
+    
+    const alterationApproved = order.alterationStatus === 'approved' ? 
+        `<div class="bg-green-500/20 text-green-200 text-xs px-3 py-2 rounded-lg mb-2 flex items-center gap-2">
+            <i class="fas fa-check-circle"></i> Alteração aprovada
+        </div>` : '';
+    
     return `
-    <div id="order-${order.id}" class="draggable-card bg-gradient-to-br ${statusGradients[order.status]} p-5 rounded-2xl border border-white/20 shadow-xl hover:shadow-2xl transition-all relative overflow-hidden group" 
+    <div id="order-${order.id}" class="draggable-card bg-gradient-to-br ${statusGradients[order.status] || statusGradients['novo']} p-5 rounded-2xl border border-white/20 shadow-xl hover:shadow-2xl transition-all relative overflow-hidden group" 
          draggable="true" 
          ondragstart="drag(event)" 
          ondragend="dragEnd(event)"
@@ -1255,6 +1332,9 @@ function createKanbanCard(order) {
             <span class="text-[10px] text-white/70 font-medium uppercase tracking-wider">${window.formatDateTime(order.createdAt).split(' às')[0]}</span>
         </div>
         
+        ${alterationPending}
+        ${alterationApproved}
+        
         ${displayProductHtml}
         
         <div class="text-sm text-white/80 mb-2 flex items-center gap-2">
@@ -1262,6 +1342,13 @@ function createKanbanCard(order) {
         </div>
         ${estimatedValue}
         ${obsDisplay}
+        
+        ${order.alterationStatus === 'pending' ? `
+        <div class="mt-2 mb-2">
+            <button onclick="aprovarAlteracaoPedido('${order.id}')" class="w-full bg-green-500 text-white text-sm font-bold px-4 py-2 rounded-xl hover:bg-green-600 transition flex items-center justify-center gap-2">
+                <i class="fas fa-check"></i> Aceitar Alteração
+            </button>
+        </div>` : ''}
         
         <div class="pt-4 border-t border-white/20 mt-2">
             <button onclick="openEditModal('${order.id}')" class="flex items-center gap-2 text-sm font-semibold text-white/90 hover:text-white hover:bg-white/10 px-3 py-2 rounded-xl transition w-full text-left">
@@ -1361,7 +1448,7 @@ window.drop = async function(ev, targetStatus) {
     ev.preventDefault();
     const columns = document.querySelectorAll('.kanban-column');
     columns.forEach(col => col.classList.remove('drag-over'));
-
+    
     const cardId = ev.dataTransfer.getData("text");
     if(!cardId) return;
     
@@ -1386,11 +1473,10 @@ async function handleDrop(rawId, targetStatus) {
 window.openEditModal = function(orderId) {
     const order = globalOrders[orderId];
     if(!order) return;
-
-    // Define flag: veio do quadro de pedidos
+    
     isViewingFromClientList = false;
     updateDeleteButtonVisibility();
-
+    
     document.getElementById('editOrderId').value = orderId;
     document.getElementById('editClientUid').value = order.userId || '';
     document.getElementById('editClientName').value = order.clientName || '';
@@ -1398,7 +1484,6 @@ window.openEditModal = function(orderId) {
     document.getElementById('editClientEmail').value = order.clientEmail || '';
     document.getElementById('editClientCompany').value = order.clientCompany || '';
     
-    // Tratando campos para o caso de ter múltiplos itens
     let productString = order.product || '';
     let quantityString = order.quantity || '';
     const prodInput = document.getElementById('editProduct');
@@ -1422,7 +1507,7 @@ window.openEditModal = function(orderId) {
             quantityString = order.items[0].quantity;
         }
     }
-
+    
     prodInput.value = productString;
     qtyInput.value = quantityString;
     
@@ -1459,9 +1544,15 @@ function loadClientOrderHistory(userId) {
         const statusColors = { 
             'novo': 'bg-purple-100 text-purple-700', 
             'producao': 'bg-pink-100 text-pink-700', 
-            'finalizado': 'bg-cyan-100 text-cyan-700' 
+            'finalizado': 'bg-cyan-100 text-cyan-700',
+            'entregue': 'bg-green-100 text-green-700' 
         };
-        const statusText = { 'novo': 'Pendente', 'producao': 'Em Produção', 'finalizado': 'Finalizado' };
+        const statusText = { 
+            'novo': 'Pendente', 
+            'producao': 'Em Produção', 
+            'finalizado': 'Finalizado',
+            'entregue': 'Entregue' 
+        };
         
         const estimatedValue = order.totalEstimated ? 
             `<p class="text-sm font-bold text-gray-700 mt-1">Valor Total: R$ ${order.totalEstimated.toFixed(2)}</p>` : '';
@@ -1479,8 +1570,8 @@ function loadClientOrderHistory(userId) {
                     <i class="fas fa-calendar-alt mr-1"></i>${window.formatDateTime(order.createdAt)}
                 </p>
             </div>
-            <span class="text-xs px-3 py-1.5 rounded-full font-bold ${statusColors[order.status]} ml-3">
-                ${statusText[order.status]}
+            <span class="text-xs px-3 py-1.5 rounded-full font-bold ${statusColors[order.status] || statusColors['novo']} ml-3">
+                ${statusText[order.status] || statusText['novo']}
             </span>
         </div>`;
     }).join('');
@@ -1502,7 +1593,7 @@ window.saveClientEdit = async function() {
     const newProduct = document.getElementById('editProduct').value;
     const newQuantity = document.getElementById('editQuantity').value;
     const newObs = document.getElementById('editObs').value;
-
+    
     try {
         const orderRef = ref(db, `orders/${orderId}`);
         const originalOrder = globalOrders[orderId];
@@ -1542,65 +1633,54 @@ window.saveClientEdit = async function() {
             });
         }
         
-        // NOTIFICAÇÕES DE EDIÇÕES
         const adminName = currentUserData.name || 'AdminMaster';
         const targetClientName = newClientName || 'Cliente';
         const notifications = [];
         
-        // Notificação de mudança de status
         if (originalOrder && originalOrder.status !== newStatus) {
-            const statusText = { 'novo': 'Pendente', 'producao': 'Em Produção', 'finalizado': 'Finalizado' };
+            const statusText = { 'novo': 'Pendente', 'producao': 'Em Produção', 'finalizado': 'Finalizado', 'entregue': 'Entregue' };
             notifications.push(`@${adminName} editou o status de @${targetClientName}: ${statusText[originalOrder.status]} → ${statusText[newStatus]}`);
         }
         
-        // Notificação de mudança de nome
         if (originalOrder && originalOrder.clientName !== newClientName) {
             notifications.push(`@${adminName} editou o nome de @${originalOrder.clientName}: ${originalOrder.clientName} → ${newClientName}`);
         }
         
-        // Notificação de mudança de telefone
         if (originalOrder && originalOrder.clientPhone !== newClientPhone) {
             const oldPhone = originalOrder.clientPhone || 'N/A';
             const newPhone = newClientPhone || 'N/A';
             notifications.push(`@${adminName} editou o telefone de @${targetClientName}: ${oldPhone} → ${newPhone}`);
         }
         
-        // Notificação de mudança de email
         if (originalOrder && originalOrder.clientEmail !== newClientEmail) {
             notifications.push(`@${adminName} editou o email de @${targetClientName}: ${originalOrder.clientEmail} → ${newClientEmail}`);
         }
         
-        // Notificação de mudança de empresa
         if (originalOrder && originalOrder.clientCompany !== newClientCompany) {
             const oldCompany = originalOrder.clientCompany || 'N/A';
             const newCompany = newClientCompany || 'N/A';
             notifications.push(`@${adminName} editou a empresa de @${targetClientName}: ${oldCompany} → ${newCompany}`);
         }
         
-        // Notificação de mudança de produto
         if (originalOrder && !document.getElementById('editProduct').readOnly && originalOrder.product !== newProduct) {
             notifications.push(`@${adminName} editou o produto de @${targetClientName}: ${originalOrder.product} → ${newProduct}`);
         }
         
-        // Notificação de mudança de quantidade
         if (originalOrder && !document.getElementById('editQuantity').readOnly && originalOrder.quantity !== newQuantity) {
             notifications.push(`@${adminName} editou a quantidade de @${targetClientName}: ${originalOrder.quantity} → ${newQuantity}`);
         }
         
-        // Notificação de mudança de prioridade
         if (originalOrder && originalOrder.priority !== newPriority) {
             const oldPriority = originalOrder.priority || 'Média';
             notifications.push(`@${adminName} editou a prioridade de @${targetClientName}: ${oldPriority} → ${newPriority}`);
         }
         
-        // Notificação de mudança de observações
         if (originalOrder && (originalOrder.generalObs || originalOrder.obs) !== newObs) {
             const oldObs = originalOrder.generalObs || originalOrder.obs || 'N/A';
             const newObsDisplay = newObs || 'N/A';
             notifications.push(`@${adminName} editou as observações de @${targetClientName}: ${oldObs} → ${newObsDisplay}`);
         }
         
-        // Cria todas as notificações
         for (const notificationMessage of notifications) {
             await createNotification(notificationMessage);
         }
@@ -1613,7 +1693,6 @@ window.saveClientEdit = async function() {
     }
 };
 
-// Função para atualizar visibilidade do botão de exclusão
 function updateDeleteButtonVisibility() {
     const deleteBtn = document.getElementById('deleteButton');
     if (deleteBtn) {
@@ -1627,7 +1706,6 @@ function updateDeleteButtonVisibility() {
     }
 }
 
-// Função para excluir apenas o pedido individual (quadro de pedidos)
 window.deleteOrder = async function() {
     const orderId = document.getElementById('editOrderId').value;
     
@@ -1661,25 +1739,21 @@ window.deleteOrder = async function() {
     }
 };
 
-// Função para excluir cliente e todos seus pedidos (lista de clientes)
 window.deleteClient = async function() {
     const clientUid = document.getElementById('editClientUid').value;
     const clientName = document.getElementById('editClientName').value;
     const currentOrderId = document.getElementById('editOrderId').value;
     
-    // Captura o nome real do cliente - tenta primeiro do campo de edição, depois do pedido, depois do usuário
     let displayNome = (clientName && clientName !== 'undefined') ? clientName : 'Sem Nome';
     
-    // Se ainda não tem nome, tenta buscar do pedido atual
     if ((!displayNome || displayNome === 'Sem Nome') && currentOrderId && globalOrders[currentOrderId]) {
         displayNome = globalOrders[currentOrderId].clientName || displayNome;
     }
     
-    // Se ainda não tem nome, tenta buscar do usuário
     if ((!displayNome || displayNome === 'Sem Nome') && clientUid && globalUsers[clientUid]) {
         displayNome = globalUsers[clientUid].name || displayNome;
     }
-
+    
     if (!confirm(`Tem certeza que deseja excluir o pedido do cliente ${displayNome}? Esta ação não pode ser desfeita.`)) {
         return;
     }
@@ -1695,17 +1769,14 @@ window.deleteClient = async function() {
             return false;
         });
         
-        // Captura informações do admin
         const adminName = currentUserData.name || 'Administrador';
         const adminEmail = currentUserData.email || 'N/A';
         
         for (const orderId of ordersToDelete) {
             const order = globalOrders[orderId];
             
-            // Captura o nome real do cliente do pedido
             let orderClientName = order.clientName;
             if (!orderClientName || orderClientName === 'undefined') {
-                // Tenta buscar do usuário
                 if (order.userId && globalUsers[order.userId]) {
                     orderClientName = globalUsers[order.userId].name;
                 }
@@ -1714,7 +1785,6 @@ window.deleteClient = async function() {
                 }
             }
             
-            // Prepara informações dos itens
             let itemsInfo = '';
             if (order.items && order.items.length > 0) {
                 itemsInfo = order.items.map(item => 
@@ -1726,10 +1796,8 @@ window.deleteClient = async function() {
             
             const totalValue = order.totalEstimated ? `R$ ${order.totalEstimated.toFixed(2)}` : 'N/A';
             
-            // Remove o pedido
             await remove(ref(db, `orders/${orderId}`));
             
-            // Cria notificação detalhada de exclusão
             await createNotification(
                 `Pedido do cliente ${orderClientName} foi excluído por @${adminName} (${adminEmail})\n` +
                 `📦 Pedido: ${itemsInfo}\n` +
@@ -1817,7 +1885,6 @@ function renderClientsList() {
     const tbody = document.getElementById('clientsTableBody');
     const clientStats = {};
     
-    // Primeiro, adiciona todos os usuários cadastrados
     Object.values(globalUsers).forEach(user => {
         clientStats[user.uid] = {
             uid: user.uid,
@@ -1829,17 +1896,13 @@ function renderClientsList() {
             lastOrderDate: null
         };
     });
-
-    // Depois, adiciona estatísticas dos pedidos
+    
     Object.values(globalOrders).forEach(order => {
         const uid = order.userId;
         
-        // Ignora pedidos sem userId válido
         if (!uid || uid === 'undefined' || uid === 'null') return;
         
-        // Se o cliente não existe nas estatísticas, cria um novo
         if (!clientStats[uid]) {
-            // Só cria se tiver informações válidas
             if (order.clientName && order.clientName !== 'undefined' && order.clientName.trim() !== '') {
                 clientStats[uid] = { 
                     uid: uid,
@@ -1851,7 +1914,6 @@ function renderClientsList() {
                     lastOrderDate: null 
                 };
             } else {
-                // Se não tem nome válido, ignora este pedido
                 return;
             }
         }
@@ -1862,21 +1924,17 @@ function renderClientsList() {
             clientStats[uid].lastOrderDate = order.createdAt;
         }
     });
-
-    // Filtra clientes válidos
+    
     const clientArray = Object.values(clientStats)
         .filter(client => {
-            // Remove clientes sem UID válido
             if (!client.uid || client.uid === 'undefined' || client.uid === 'null') {
                 return false;
             }
             
-            // Remove clientes sem nome válido
             if (!client.name || client.name === 'undefined' || client.name === 'null' || client.name.trim() === '') {
                 return false;
             }
             
-            // Remove clientes sem email e sem pedidos
             if ((!client.email || client.email === 'N/A') && client.totalOrders === 0) {
                 return false;
             }
@@ -1886,12 +1944,12 @@ function renderClientsList() {
         .sort((a,b) => b.totalOrders - a.totalOrders);
     
     document.getElementById('totalClientsCount').innerText = clientArray.length;
-
+    
     if(clientArray.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" class="text-center py-12 text-white/50">Nenhum cliente registrado.</td></tr>';
         return;
     }
-
+    
     tbody.innerHTML = clientArray.map(client => {
         const displayName = client.name && client.name !== 'undefined' ? client.name : 'Cliente sem nome';
         const displayEmail = client.email && client.email !== 'undefined' && client.email !== 'N/A' ? client.email : 'N/A';
@@ -1922,7 +1980,6 @@ function renderClientsList() {
 }
 
 window.openClientModal = function(clientUid) {
-    // Define flag: veio da lista de clientes
     isViewingFromClientList = true;
     updateDeleteButtonVisibility();
     
@@ -1931,7 +1988,6 @@ window.openClientModal = function(clientUid) {
         .sort((a, b) => b.createdAt - a.createdAt);
     
     if (clientOrders.length > 0) {
-        // Abre o modal com o pedido mais recente, mas mantém flag de cliente
         const orderId = clientOrders[0].id;
         const order = globalOrders[orderId];
         
@@ -2008,197 +2064,3 @@ window.openClientModal = function(clientUid) {
         }
     }
 };
-/* NOVO: Estilos para os checkboxes de tamanho com quantidade */
-#sizeCheckboxContainer {
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-.size-checkbox-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 12px;
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-.size-checkbox-item:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.25);
-    transform: translateX(4px);
-}
-
-.size-checkbox-item.checked {
-    background: rgba(59, 130, 246, 0.15);
-    border-color: rgba(59, 130, 246, 0.4);
-}
-
-.size-checkbox-item input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-    accent-color: #3b82f6;
-    flex-shrink: 0;
-}
-
-.size-checkbox-label {
-    flex: 1;
-    color: white;
-    font-weight: 500;
-    font-size: 0.95rem;
-    cursor: pointer;
-    user-select: none;
-}
-
-.size-quantity-input {
-    width: 120px;
-    padding: 8px 12px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 8px;
-    color: white;
-    font-size: 0.9rem;
-    transition: all 0.3s ease;
-}
-
-.size-quantity-input:focus {
-    outline: none;
-    border-color: #3b82f6;
-    background: rgba(255, 255, 255, 0.15);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-}
-
-.size-quantity-input:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-
-/* NOVO: Estilos para mensagens de status de alteração */
-#alterationStatusArea {
-    margin-bottom: 1rem;
-}
-
-#alterationPendingMessage,
-#alterationApprovedMessage {
-    animation: fadeIn 0.5s ease;
-    backdrop-filter: blur(10px);
-}
-
-#alterationPendingMessage {
-    background: rgba(245, 158, 11, 0.1);
-    border: 1px solid rgba(245, 158, 11, 0.3);
-}
-
-#alterationApprovedMessage {
-    background: rgba(16, 185, 129, 0.1);
-    border: 1px solid rgba(16, 185, 129, 0.3);
-}
-
-#alterationPendingMessage .fa-clock,
-#alterationApprovedMessage .fa-check-circle {
-    font-size: 1.2em;
-    animation: pulse 2s infinite;
-}
-
-#alterationSentDate,
-#approvalSentDate,
-#approvalDate {
-    font-weight: 600;
-    letter-spacing: 0.3px;
-}
-
-/* NOVO: Coluna Entregues - gradiente verde */
-.card-gradient-entregue {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    color: white;
-}
-
-/* Ajuste para o novo bloco Entregues */
-.bg-gradient-to-r.from-green-600.to-emerald-600 {
-    background-image: linear-gradient(to right, #059669, #10b981);
-}
-
-/* Melhorias para os checkboxes em telas menores */
-@media (max-width: 640px) {
-    .size-checkbox-item {
-        padding: 10px;
-        gap: 8px;
-    }
-    
-    .size-quantity-input {
-        width: 90px;
-        padding: 6px 8px;
-        font-size: 0.8rem;
-    }
-    
-    .size-checkbox-label {
-        font-size: 0.85rem;
-    }
-    
-    #sizeCheckboxContainer {
-        max-height: 250px;
-    }
-}
-
-/* Melhorias para telas grandes */
-@media (min-width: 1920px) {
-    .size-checkbox-item {
-        padding: 16px;
-        gap: 16px;
-    }
-    
-    .size-checkbox-label {
-        font-size: 1.1rem;
-    }
-    
-    .size-quantity-input {
-        width: 150px;
-        padding: 10px 14px;
-        font-size: 1rem;
-    }
-    
-    #sizeCheckboxContainer {
-        max-height: 400px;
-    }
-}
-
-/* Animação para quando marcar/desmarcar checkbox */
-.size-checkbox-item input[type="checkbox"]:checked + .size-checkbox-label {
-    color: #60a5fa;
-    font-weight: 600;
-}
-
-.size-checkbox-item input[type="checkbox"]:checked ~ .size-quantity-input {
-    background: rgba(59, 130, 246, 0.2);
-    border-color: rgba(59, 130, 246, 0.5);
-}
-
-/* Efeito de hover no checkbox */
-.size-checkbox-item input[type="checkbox"]:hover {
-    transform: scale(1.1);
-}
-
-/* Transição suave para o input de quantidade */
-.size-quantity-input {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Estilo para quando o input de quantidade está focado */
-.size-quantity-input:focus {
-    transform: scale(1.02);
-}
-
-/* Suporte para modo escuro */
-@media (prefers-color-scheme: dark) {
-    .size-checkbox-item {
-        background: rgba(255, 255, 255, 0.03);
-    }
-    
-    .size-checkbox-item:hover {
-        background: rgba(255, 255, 255, 0.08);
-    }
-}
