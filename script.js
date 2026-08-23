@@ -138,24 +138,7 @@ const productCatalog = {
     }
 };
 
-// Função para obter todos os itens do catálogo
-function getAllCatalogItems() {
-    const allItems = [];
-    Object.keys(productCatalog).forEach(category => {
-        Object.keys(productCatalog[category]).forEach(model => {
-            productCatalog[category][model].forEach(size => {
-                allItems.push({
-                    category: category,
-                    model: model,
-                    name: size.name,
-                    price: size.price,
-                    fullName: `${category} > ${model} > ${size.name}`
-                });
-            });
-        });
-    });
-    return allItems;
-}
+
 
 // Função para obter todos os itens do catálogo
 function getAllCatalogItems() {
