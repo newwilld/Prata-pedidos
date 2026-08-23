@@ -414,7 +414,15 @@ function setupUIForUser() {
     document.getElementById('userNameDisplay').innerText = currentUserData.name;
     const badge = document.getElementById('userRoleBadge');
     
+    // Captura os elementos do cabeçalho
+    const headerTitulo = document.getElementById('headerTitulo');
+    const headerSubtitulo = document.getElementById('headerSubtitulo');
+    
     if (currentUserData.role === 'admin') {
+        // Se for admin, mantém o título original
+        if (headerTitulo) headerTitulo.innerText = 'Prata Embalagens';
+        if (headerSubtitulo) headerSubtitulo.innerText = 'Sistema de Gerenciamento';
+        
         badge.innerText = 'Admin Master';
         badge.className = 'text-xs px-3 py-1 rounded-full font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white';
         document.getElementById('adminScreen').classList.remove('hidden');
@@ -427,6 +435,15 @@ function setupUIForUser() {
             listenersInitialized = true;
         }
     } else {
+        // Se for cliente, mostra @Empresa e @Nome
+        if (headerTitulo) {
+            const empresaNome = currentUserData.company ? currentUserData.company : 'Área do Cliente';
+            headerTitulo.innerText = `@${empresaNome}`;
+        }
+        if (headerSubtitulo) {
+            headerSubtitulo.innerText = `@${currentUserData.name}`;
+        }
+        
         badge.innerText = 'Cliente';
         badge.className = 'text-xs px-3 py-1 rounded-full font-medium bg-white/20 text-white';
         document.getElementById('clientScreen').classList.remove('hidden');
