@@ -976,24 +976,6 @@ select:invalid {
         font-size: 0.9rem !important;
     }
 }
-/* Kanban expandido automaticamente */
-.kanban-column {
-    min-height: 500px;
-    max-height: none !important;
-    overflow-y: visible !important;
-    height: auto !important;
-}
-
-#adminPedidosView {
-    overflow-y: visible !important;
-    height: auto !important;
-}
-
-#adminScreen {
-    overflow-y: auto !important;
-    height: auto !important;
-    min-height: 100vh;
-}
 
 body {
     overflow-y: auto !important;
