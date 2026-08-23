@@ -61,18 +61,6 @@ const productCatalog = {
             { name: '35cm grande', price: 3.35 },
             { name: '40cm família', price: 3.70 }
         ],
-        'Sextavada/Americana': [
-            { name: '20cm brotinho', price: 1.98 },
-            { name: '25cm pequena', price: 2.10 },
-            { name: '30cm média', price: 2.40 },
-            { name: '35cm grande', price: 2.85 },
-            { name: '40cm família', price: 3.30 },
-            { name: '20cm brotinho', price: 1.88 },
-            { name: '25cm pequena', price: 2.00 },
-            { name: '30cm média', price: 2.20 },
-            { name: '35cm grande', price: 2.65 },
-            { name: '40cm família', price: 3.10 }
-        ],
         'Quadrada': [
             { name: '20x20x5cm (Broto)', price: 2.10 },
             { name: '25x25x5,5cm (Pequena)', price: 2.40 },
@@ -85,6 +73,18 @@ const productCatalog = {
             { name: '40x40x5,5cm (família)', price: 4.38 },
             { name: '40x40x7cm (família)', price: 4.70 },
             { name: '45x45x5cm (Gigante)', price: 5.25 }
+        ],
+        'Sextavada/Americana': [
+            { name: '20cm brotinho', price: 1.98 },
+            { name: '25cm pequena', price: 2.10 },
+            { name: '30cm média', price: 2.40 },
+            { name: '35cm grande', price: 2.85 },
+            { name: '40cm família', price: 3.30 },
+            { name: '20cm brotinho', price: 1.88 },
+            { name: '25cm pequena', price: 2.00 },
+            { name: '30cm média', price: 2.20 },
+            { name: '35cm grande', price: 2.65 },
+            { name: '40cm família', price: 3.10 }
         ]
     },
     'Caixa de torta': {
