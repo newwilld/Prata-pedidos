@@ -64,7 +64,7 @@ body {
 
 /* Drag and Drop styles */
 .kanban-column { 
-    min-height: 600px;
+    min-height: 800px;
     transition: all 0.3s ease;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 1.5rem;
