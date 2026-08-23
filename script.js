@@ -348,6 +348,9 @@ function setupUIForUser() {
         document.getElementById('clientScreen').classList.add('hidden');
         document.getElementById('clientScreen').classList.remove('flex');
         
+        // Restaura todas as opções para admin
+        restoreAllProductTypeOptions();
+        
         if (!listenersInitialized) {
             initAdminListeners();
             listenersInitialized = true;
@@ -370,24 +373,31 @@ function setupUIForUser() {
     }
 }
 
-// Função para aplicar filtro de itens no catálogo
-function applyItemsFilter() {
-    if (!currentUserData || currentUserData.role === 'admin') return;
-    
+// Função para restaurar todas as opções de produto (para admin)
+function restoreAllProductTypeOptions() {
     const productTypeSelect = document.getElementById('productTypeSelect');
     if (!productTypeSelect) return;
     
-    const allOptions = productTypeSelect.options;
-    for (let i = 0; i < allOptions.length; i++) {
-        const option = allOptions[i];
-        if (option.value && !isItemAllowed(option.value)) {
-            option.disabled = true;
-            option.style.display = 'none';
-        } else {
-            option.disabled = false;
-            option.style.display = '';
-        }
-    }
+    // Limpa o select
+    productTypeSelect.innerHTML = '';
+    
+    // Adiciona placeholder
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.disabled = true;
+    placeholder.selected = true;
+    placeholder.textContent = 'Selecione o tipo de produto...';
+    placeholder.className = 'text-gray-900';
+    productTypeSelect.appendChild(placeholder);
+    
+    // Adiciona todas as categorias
+    Object.keys(productCatalog).forEach(category => {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = category;
+        option.className = 'text-gray-900';
+        productTypeSelect.appendChild(option);
+    });
 }
 
 // Lógica de Formulário em Cascata
@@ -408,15 +418,6 @@ window.handleProductTypeChange = function() {
     document.getElementById('totalDisplayContainer').classList.add('hidden');
     
     if (productType && productCatalog[productType]) {
-        // VERIFICA SE O CLIENTE TEM PERMISSÃO PARA ESTA CATEGORIA
-        if (currentUserData && currentUserData.role === 'client') {
-            const isAllowed = isItemAllowed(productType);
-            if (!isAllowed) {
-                showToast('Este tipo de produto não está disponível para você.', 'error');
-                return;
-            }
-        }
-        
         const models = Object.keys(productCatalog[productType]);
         models.forEach(model => {
             // Verifica se algum item deste modelo está permitido
@@ -495,16 +496,24 @@ function filterProductTypeOptions() {
     const options = productTypeSelect.options;
     
     // Começa do índice 1 para pular o placeholder
-    for (let i = 1; i < options.length; i++) {
+    for (let i = options.length - 1; i >= 1; i--) {
         const optionValue = options[i].value;
         
         if (optionValue && !isItemAllowed(optionValue)) {
-            options[i].disabled = true;
-            options[i].style.display = 'none';
-        } else {
-            options[i].disabled = false;
-            options[i].style.display = '';
+            // Remove completamente a opção do select
+            productTypeSelect.remove(i);
         }
+    }
+    
+    // Se não houver opções disponíveis, mostra mensagem
+    if (productTypeSelect.options.length <= 1) {
+        const noOptions = document.createElement('option');
+        noOptions.value = '';
+        noOptions.disabled = true;
+        noOptions.selected = true;
+        noOptions.textContent = 'Nenhum produto disponível para você';
+        noOptions.className = 'text-gray-900';
+        productTypeSelect.appendChild(noOptions);
     }
 }
 
