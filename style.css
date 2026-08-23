@@ -64,7 +64,7 @@ body {
 
 /* Drag and Drop styles */
 .kanban-column { 
-    min-height: 300px;
+    min-height: 600px;
     transition: all 0.3s ease;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 1.5rem;
@@ -484,7 +484,7 @@ select::-webkit-scrollbar-thumb:hover {
     }
     
     .kanban-column {
-        min-height: 500px;
+        min-height: 600px;
     }
     
     #productTypeSelect,
@@ -976,4 +976,25 @@ select:invalid {
         font-size: 0.9rem !important;
     }
 }
+/* Kanban expandido automaticamente */
+.kanban-column {
+    min-height: 500px;
+    max-height: none !important;
+    overflow-y: visible !important;
+    height: auto !important;
+}
 
+#adminPedidosView {
+    overflow-y: visible !important;
+    height: auto !important;
+}
+
+#adminScreen {
+    overflow-y: auto !important;
+    height: auto !important;
+    min-height: 100vh;
+}
+
+body {
+    overflow-y: auto !important;
+}
