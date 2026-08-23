@@ -64,13 +64,11 @@ body {
 
 /* Drag and Drop styles */
 .kanban-column { 
-    min-height: 500px;
-    max-height: none !important;
-    overflow-y: visible !important;
-    height: auto !important;
+    min-height: 300px;
     transition: all 0.3s ease;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 1.5rem;
+    -webkit-overflow-scrolling: touch; /* Scroll suave no mobile */
 }
 
 .draggable-card {
@@ -979,18 +977,48 @@ select:invalid {
         font-size: 0.9rem !important;
     }
 }
-/* Ajustes para a tela do Admin - Kanban expandido automaticamente */
-#adminPedidosView {
-    overflow-y: visible !important;
-    height: auto !important;
-}
-
+/* Ajustes para a tela do Admin */
 #adminScreen {
-    overflow-y: auto !important;
-    height: auto !important;
-    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
 }
 
-body {
-    overflow-y: auto !important;
+#adminScreen .flex-1 {
+    min-height: 0;
+    overflow: hidden;
+}
+
+#adminPedidosView {
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* Garantir que as colunas do kanban tenham altura correta */
+.kanban-column {
+    min-height: 300px;
+    height: 100%;
+    max-height: 100%;
+    overflow-y: auto !important; /* Scroll interno ativado */
+    -webkit-overflow-scrolling: touch; /* Scroll suave no mobile */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+/* Melhorar scroll no mobile */
+.kanban-column::-webkit-scrollbar {
+    width: 8px;
+}
+
+.kanban-column::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.kanban-column::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+}
+
+.kanban-column::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
 }
