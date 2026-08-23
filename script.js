@@ -818,6 +818,8 @@ window.salvarEdicaoPedidoCliente = async function() {
 
     try {
         const orderRef = ref(db, `orders/${orderId}`);
+        const originalOrder = globalClientOrders[orderId] || globalOrders[orderId];
+        
         const legacyProduct = newItems.length === 1 ? newItems[0].product : `${newItems.length} itens`;
         const legacyQty = newItems.length === 1 ? newItems[0].quantity : 'Diversas';
         const legacyObs = newItems.length === 1 ? newItems[0].obs : '';
@@ -830,6 +832,39 @@ window.salvarEdicaoPedidoCliente = async function() {
             quantity: legacyQty,
             obs: generalObs || legacyObs
         });
+
+        // NOTIFICAÇÃO DE EDIÇÃO PELO CLIENTE
+        const clientName = currentUserData.name || 'Cliente';
+        const notifications = [];
+        
+        // Notificação de mudança de produtos/itens
+        if (originalOrder && originalOrder.items && Array.isArray(originalOrder.items)) {
+            const oldItemsSummary = originalOrder.items.map(i => `${i.quantityNumber}x ${i.product}`).join(', ');
+            const newItemsSummary = newItems.map(i => `${i.quantityNumber}x ${i.product}`).join(', ');
+            
+            if (oldItemsSummary !== newItemsSummary) {
+                notifications.push(`@${clientName} editou os itens do pedido: ${oldItemsSummary} → ${newItemsSummary}`);
+            }
+        } else if (originalOrder && originalOrder.product !== legacyProduct) {
+            notifications.push(`@${clientName} editou o produto: ${originalOrder.product} → ${legacyProduct}`);
+        }
+        
+        // Notificação de mudança de valor total
+        if (originalOrder && originalOrder.totalEstimated !== newTotal) {
+            notifications.push(`@${clientName} editou o valor total do pedido: R$ ${originalOrder.totalEstimated?.toFixed(2) || '0.00'} → R$ ${newTotal.toFixed(2)}`);
+        }
+        
+        // Notificação de mudança de observações
+        if (originalOrder && (originalOrder.generalObs || originalOrder.obs || '') !== generalObs) {
+            const oldObs = originalOrder.generalObs || originalOrder.obs || 'N/A';
+            const newObsDisplay = generalObs || 'N/A';
+            notifications.push(`@${clientName} editou as observações do pedido: ${oldObs} → ${newObsDisplay}`);
+        }
+        
+        // Cria todas as notificações
+        for (const notificationMessage of notifications) {
+            await createNotification(notificationMessage);
+        }
 
         showToast('Modificações do pedido salvas!', 'success');
         closeClientOrderModal();
