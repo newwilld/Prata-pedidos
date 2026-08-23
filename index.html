@@ -384,7 +384,7 @@
                     </div>
                 </div>
                 
-                <!-- NOVA SEÇÃO: Configuração de Itens Permitidos -->
+                <!-- SEÇÃO OTIMIZADA: Configuração de Itens Permitidos -->
                 <div class="bg-green-50 p-5 rounded-2xl border border-green-200 space-y-4">
                     <h4 class="font-bold text-gray-900 text-sm uppercase flex items-center gap-2">
                         <i class="fas fa-box-open text-green-600"></i> Itens Disponíveis para o Cliente
@@ -392,33 +392,39 @@
                     
                     <div class="space-y-3">
                         <label class="flex items-center gap-3 cursor-pointer">
-                            <input type="checkbox" id="itemsAllowedTodos" class="w-5 h-5 text-green-600 rounded" checked>
+                            <input type="checkbox" id="itemsAllowedTodos" class="w-5 h-5 text-green-600 rounded" checked onchange="handleItemsAllowedChange()">
                             <span class="text-sm font-medium text-gray-900">Todos os itens</span>
                         </label>
                         
                         <div class="border-t border-gray-200 pt-3 space-y-2">
                             <label class="flex items-center gap-3 cursor-pointer">
-                                <input type="checkbox" id="itemsAllowedPizza" class="w-5 h-5 text-green-600 rounded">
+                                <input type="checkbox" id="itemsAllowedPizza" class="w-5 h-5 text-green-600 rounded" onchange="handleItemsAllowedChange()">
                                 <span class="text-sm font-medium text-gray-900">Caixas de Pizza</span>
                             </label>
                             
                             <label class="flex items-center gap-3 cursor-pointer">
-                                <input type="checkbox" id="itemsAllowedTorta" class="w-5 h-5 text-green-600 rounded">
+                                <input type="checkbox" id="itemsAllowedTorta" class="w-5 h-5 text-green-600 rounded" onchange="handleItemsAllowedChange()">
                                 <span class="text-sm font-medium text-gray-900">Caixas de Torta</span>
                             </label>
                             
                             <label class="flex items-center gap-3 cursor-pointer">
-                                <input type="checkbox" id="itemsAllowedCorreio" class="w-5 h-5 text-green-600 rounded">
+                                <input type="checkbox" id="itemsAllowedCorreio" class="w-5 h-5 text-green-600 rounded" onchange="handleItemsAllowedChange()">
                                 <span class="text-sm font-medium text-gray-900">Caixas de Correio/Ecommerce</span>
                             </label>
                         </div>
                         
                         <div class="flex gap-3 pt-2">
-                            <button type="button" onclick="marcarTodosItensExcluidos()" class="flex-1 bg-blue-600 text-white text-sm font-bold px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-                                Marcar Todos (Exceto Permitidos)
+                            <button type="button" onclick="marcarTodosItens()" class="flex-1 bg-blue-600 text-white text-sm font-bold px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                                <i class="fas fa-check-double mr-2"></i> Marcar Todos
                             </button>
                             <button type="button" onclick="exibirTodosItens()" class="flex-1 bg-purple-600 text-white text-sm font-bold px-4 py-2 rounded-lg hover:bg-purple-700 transition">
-                                Exibir Todos os Itens
+                                <i class="fas fa-list mr-2"></i> Exibir Todos os Itens
+                            </button>
+                        </div>
+                        
+                        <div class="flex gap-3">
+                            <button type="button" onclick="salvarClientItemsConfig()" class="flex-1 bg-green-600 text-white text-sm font-bold px-4 py-2 rounded-lg hover:bg-green-700 transition">
+                                <i class="fas fa-save mr-2"></i> Salvar Configuração
                             </button>
                         </div>
                     </div>
@@ -426,7 +432,7 @@
                     <!-- Display dos Itens Permitidos (verde) -->
                     <div class="mt-4">
                         <h5 class="text-xs font-bold text-gray-700 uppercase mb-2">Itens Permitidos:</h5>
-                        <div id="allowedItemsDisplay" class="flex flex-wrap">
+                        <div id="allowedItemsDisplay" class="flex flex-wrap gap-1">
                             <span class="text-green-600 font-bold">Todos os itens permitidos</span>
                         </div>
                     </div>
@@ -434,32 +440,39 @@
                     <!-- Display dos Itens Excluídos (vermelho) -->
                     <div class="mt-4">
                         <h5 class="text-xs font-bold text-gray-700 uppercase mb-2">Itens Excluídos:</h5>
-                        <div id="excludedItemsDisplay" class="flex flex-wrap">
+                        <div id="excludedItemsDisplay" class="flex flex-wrap gap-1">
                             <span class="text-gray-500">Nenhum item excluído</span>
                         </div>
                     </div>
                     
-                 <!-- Lista de Todos os Itens com Checkboxes e Busca (oculta por padrão) -->
-<div id="allItemsList" class="hidden mt-4 space-y-3">
-    <!-- Campo de Busca -->
-    <div class="relative">
-        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-        <input type="text" id="searchItemsInput" oninput="filterItemsList()" 
-               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" 
-               placeholder="Pesquisar item...">
-    </div>
-    
-    <!-- Container dos Itens com Checkbox -->
-    <div id="allItemsCheckboxList" class="max-h-60 overflow-y-auto space-y-2">
-        <!-- Itens carregados dinamicamente com checkboxes -->
-    </div>
-    
-    <!-- Botão para Salvar Itens Selecionados Individualmente -->
-    <button onclick="salvarItensSelecionadosIndividualmente()" 
-            class="w-full bg-green-600 text-white text-sm font-bold px-4 py-2 rounded-lg hover:bg-green-700 transition">
-        <i class="fas fa-check"></i> Salvar Itens Selecionados
-    </button>
-</div>
+                    <!-- Lista de Todos os Itens com Checkboxes e Busca (oculta por padrão) -->
+                    <div id="allItemsList" class="hidden mt-4 space-y-3">
+                        <!-- Campo de Busca -->
+                        <div class="relative">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                            <input type="text" id="searchItemsInput" oninput="filterItemsList()" 
+                                   class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" 
+                                   placeholder="Pesquisar item...">
+                        </div>
+                        
+                        <!-- Container dos Itens com Checkbox -->
+                        <div id="allItemsCheckboxList" class="max-h-60 overflow-y-auto space-y-2 bg-white rounded-lg border border-gray-200 p-3">
+                            <!-- Itens carregados dinamicamente com checkboxes -->
+                        </div>
+                        
+                        <!-- Botões de Ação -->
+                        <div class="flex gap-2">
+                            <button onclick="adicionarItensSelecionadosAExcluidos()" 
+                                    class="flex-1 bg-red-500 text-white text-sm font-bold px-4 py-2 rounded-lg hover:bg-red-600 transition">
+                                <i class="fas fa-ban mr-2"></i> Excluir Selecionados
+                            </button>
+                            <button onclick="salvarItensSelecionadosIndividualmente()" 
+                                    class="flex-1 bg-green-600 text-white text-sm font-bold px-4 py-2 rounded-lg hover:bg-green-700 transition">
+                                <i class="fas fa-check mr-2"></i> Salvar Permitidos
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 
                 <!-- Informações do Pedido -->
                 <div class="grid grid-cols-2 gap-4 bg-gray-50 p-5 rounded-2xl border border-gray-200">
