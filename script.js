@@ -468,25 +468,38 @@ function applyItemsFilter() {
     if (!productTypeSelect) return;
     
     const allOptions = productTypeSelect.options;
+    const visibleOptions = [];
+    
     for (let i = 0; i < allOptions.length; i++) {
         const option = allOptions[i];
         if (option.value && !isCategoryAllowed(option.value)) {
             option.disabled = true;
             option.style.display = 'none';
+            option.hidden = true; // Adiciona propriedade hidden para compatibilidade mobile
         } else {
             option.disabled = false;
             option.style.display = '';
+            option.hidden = false; // Remove propriedade hidden
+            visibleOptions.push(option);
         }
     }
     
-    if (productTypeSelect.selectedIndex > -1) {
-        const selectedOption = productTypeSelect.options[productTypeSelect.selectedIndex];
-        if (selectedOption && selectedOption.style.display === 'none') {
-            productTypeSelect.selectedIndex = 0;
-            document.getElementById('modelContainer').classList.add('hidden');
-            document.getElementById('sizeContainer').classList.add('hidden');
-            document.getElementById('sizeCheckboxContainer').innerHTML = '';
-        }
+    // Força o select a re-renderizar no mobile
+    const currentValue = productTypeSelect.value;
+    productTypeSelect.innerHTML = '';
+    
+    visibleOptions.forEach(option => {
+        productTypeSelect.appendChild(option);
+    });
+    
+    // Restaura o valor selecionado se ainda for válido
+    if (currentValue && isCategoryAllowed(currentValue)) {
+        productTypeSelect.value = currentValue;
+    } else {
+        productTypeSelect.selectedIndex = 0;
+        document.getElementById('modelContainer').classList.add('hidden');
+        document.getElementById('sizeContainer').classList.add('hidden');
+        document.getElementById('sizeCheckboxContainer').innerHTML = '';
     }
 }
 
