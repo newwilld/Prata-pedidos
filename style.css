@@ -64,7 +64,10 @@ body {
 
 /* Drag and Drop styles */
 .kanban-column { 
-    min-height: 300px;
+    min-height: 500px;
+    max-height: none !important;
+    overflow-y: visible !important;
+    height: auto !important;
     transition: all 0.3s ease;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 1.5rem;
@@ -976,22 +979,18 @@ select:invalid {
         font-size: 0.9rem !important;
     }
 }
-/* Ajustes para a tela do Admin */
-#adminScreen {
-    height: 100vh;
-    overflow: hidden;
-}
-
-#adminScreen .flex-1 {
-    min-height: 0;
-}
-
+/* Ajustes para a tela do Admin - Kanban expandido automaticamente */
 #adminPedidosView {
-    min-height: 0;
+    overflow-y: visible !important;
+    height: auto !important;
 }
 
-/* Garantir que as colunas do kanban tenham altura correta */
-.kanban-column {
-    min-height: 0;
-    height: 100%;
+#adminScreen {
+    overflow-y: auto !important;
+    height: auto !important;
+    min-height: 100vh;
+}
+
+body {
+    overflow-y: auto !important;
 }
