@@ -139,40 +139,12 @@
                             </div>
                         </div>
 
-                        <!-- Seletor de Tamanho/Especificação (Cascata - depende do modelo) -->
+                        <!-- NOVO: Seletor de Tamanho/Especificação com Checkboxes -->
                         <div id="sizeContainer" class="hidden fade-in">
                             <label class="block text-sm font-medium text-white mb-2">Tamanho/Especificação</label>
-                            <div class="relative">
-                                <select id="sizeSelect" required onchange="handleSizeChange()" class="w-full appearance-none px-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white">
-                                    <option value="" disabled selected class="text-gray-900">Selecione o tamanho...</option>
-                                    <!-- Opções serão carregadas dinamicamente -->
-                                </select>
-                                <i class="fas fa-chevron-down absolute right-4 top-5 text-white/50 pointer-events-none"></i>
+                            <div id="sizeCheckboxContainer" class="space-y-3 bg-white/5 border border-white/20 rounded-2xl p-4">
+                                <!-- Os checkboxes serão carregados dinamicamente via JS -->
                             </div>
-                        </div>
-
-                        <!-- Seletor de Quantidade (Cascata) -->
-                        <div id="quantityContainer" class="hidden fade-in">
-                            <label class="block text-sm font-medium text-white mb-2">Quantidade</label>
-                            <div class="relative">
-                                <select id="quantitySelect" required onchange="handleQuantityChange()" class="w-full appearance-none px-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white">
-                                    <option value="" disabled selected class="text-gray-900">Escolha a quantidade...</option>
-                                    <option value="500" class="text-gray-900">500 unidades</option>
-                                    <option value="1000" class="text-gray-900">1.000 unidades</option>
-                                    <option value="2000" class="text-gray-900">2.000 unidades</option>
-                                    <option value="3000" class="text-gray-900">3.000 unidades</option>
-                                    <option value="4000" class="text-gray-900">4.000 unidades</option>
-                                    <option value="5000" class="text-gray-900">5.000 unidades</option>
-                                    <option value="Outra" class="text-gray-900">Outra quantidade (Digitar aqui)</option>
-                                </select>
-                                <i class="fas fa-chevron-down absolute right-4 top-5 text-white/50 pointer-events-none"></i>
-                            </div>
-                        </div>
-
-                        <!-- Campo de Quantidade Customizada -->
-                        <div id="customQuantityContainer" class="hidden fade-in">
-                            <label class="block text-sm font-medium text-white mb-2">Digite a Quantidade Específica</label>
-                            <input type="number" id="customQuantityInput" min="1" class="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50" placeholder="Ex: 1500" oninput="updateTotalDisplay()">
                         </div>
 
                         <!-- Campo de Observação -->
@@ -197,7 +169,7 @@
                             </div>
                         </div>
 
-                        <!-- NOVO: Container do Carrinho (Exibe itens já adicionados) -->
+                        <!-- Container do Carrinho (Exibe itens já adicionados) -->
                         <div id="cartContainer" class="hidden fade-in bg-white/5 border border-white/20 rounded-2xl p-4">
                             <h3 class="text-sm font-medium text-white mb-3 flex items-center gap-2">
                                 <i class="fas fa-shopping-basket text-blue-400"></i> Itens no Pedido Atual
@@ -267,7 +239,7 @@
                 <div id="adminPedidosView" class="absolute inset-0 p-4 sm:p-6 overflow-x-auto flex flex-col sm:flex-row gap-4 lg:gap-6">
                     
                     <!-- Coluna: Novos -->
-                    <div class="flex-1 min-w-[280px] lg:min-w-[350px] flex flex-col bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 shadow-2xl max-h-full">
+                    <div class="flex-1 min-w-[250px] lg:min-w-[300px] flex flex-col bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 shadow-2xl max-h-full">
                         <div class="p-5 border-b border-white/20 rounded-t-3xl flex items-center justify-between bg-gradient-to-r from-purple-600 to-indigo-600">
                             <h3 class="font-bold text-white text-lg flex items-center gap-3">
                                 <span class="w-4 h-4 rounded-full bg-white pulse"></span> Pendentes
@@ -280,7 +252,7 @@
                     </div>
 
                     <!-- Coluna: Produção -->
-                    <div class="flex-1 min-w-[280px] lg:min-w-[350px] flex flex-col bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 shadow-2xl max-h-full">
+                    <div class="flex-1 min-w-[250px] lg:min-w-[300px] flex flex-col bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 shadow-2xl max-h-full">
                         <div class="p-5 border-b border-white/20 rounded-t-3xl flex items-center justify-between bg-gradient-to-r from-pink-600 to-rose-600">
                             <h3 class="font-bold text-white text-lg flex items-center gap-3">
                                 <span class="w-4 h-4 rounded-full bg-white pulse"></span> Em Produção
@@ -293,7 +265,7 @@
                     </div>
 
                     <!-- Coluna: Finalizado -->
-                    <div class="flex-1 min-w-[280px] lg:min-w-[350px] flex flex-col bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 shadow-2xl max-h-full">
+                    <div class="flex-1 min-w-[250px] lg:min-w-[300px] flex flex-col bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 shadow-2xl max-h-full">
                         <div class="p-5 border-b border-white/20 rounded-t-3xl flex items-center justify-between bg-gradient-to-r from-cyan-600 to-blue-600">
                             <h3 class="font-bold text-white text-lg flex items-center gap-3">
                                 <span class="w-4 h-4 rounded-full bg-white pulse"></span> Finalizados
@@ -301,6 +273,19 @@
                             <span id="countFinalizado" class="bg-white/20 text-white text-sm font-bold px-4 py-2 rounded-full">0</span>
                         </div>
                         <div id="kanban-finalizado" class="kanban-column flex-1 overflow-y-auto p-4 space-y-4 transition-colors border-2 border-transparent rounded-b-3xl" ondragover="allowDrop(event)" ondrop="drop(event, 'finalizado')" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                             <!-- Cards -->
+                        </div>
+                    </div>
+
+                    <!-- NOVA Coluna: Entregues -->
+                    <div class="flex-1 min-w-[250px] lg:min-w-[300px] flex flex-col bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 shadow-2xl max-h-full">
+                        <div class="p-5 border-b border-white/20 rounded-t-3xl flex items-center justify-between bg-gradient-to-r from-green-600 to-emerald-600">
+                            <h3 class="font-bold text-white text-lg flex items-center gap-3">
+                                <span class="w-4 h-4 rounded-full bg-white pulse"></span> Entregues
+                            </h3>
+                            <span id="countEntregue" class="bg-white/20 text-white text-sm font-bold px-4 py-2 rounded-full">0</span>
+                        </div>
+                        <div id="kanban-entregue" class="kanban-column flex-1 overflow-y-auto p-4 space-y-4 transition-colors border-2 border-transparent rounded-b-3xl" ondragover="allowDrop(event)" ondrop="drop(event, 'entregue')" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
                              <!-- Cards -->
                         </div>
                     </div>
@@ -421,6 +406,7 @@
                         <option value="novo">Pendente</option>
                         <option value="producao">Em Produção</option>
                         <option value="finalizado">Finalizado</option>
+                        <option value="entregue">Entregue</option>
                     </select>
                 </div>
 
@@ -455,7 +441,7 @@
         </div>
     </div>
 
-    <!-- NOVO: Modal do Cliente (Visualizar e Editar Pedido) -->
+    <!-- Modal do Cliente (Visualizar e Editar Pedido) -->
     <div id="clientOrderModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
         <div class="bg-gray-900/95 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all max-h-[90vh] flex flex-col">
             <div class="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
@@ -467,6 +453,28 @@
             
             <div class="p-6 space-y-5 overflow-y-auto flex-1">
                 <input type="hidden" id="clientModalOrderId">
+                
+                <!-- NOVO: Área de Status de Alteração -->
+                <div id="alterationStatusArea" class="space-y-3">
+                    <!-- Mensagem de Pedido Alterado Sujeito a Aprovação -->
+                    <div id="alterationPendingMessage" class="hidden bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+                        <p class="text-sm text-yellow-400 flex items-center gap-2">
+                            <i class="fas fa-clock"></i>
+                            Pedido alterado sujeito a Aprovação!
+                        </p>
+                        <p class="text-xs text-yellow-300/70 mt-2">Enviado para aprovação em: <span id="alterationSentDate" class="font-bold"></span></p>
+                    </div>
+                    
+                    <!-- Mensagem de Alteração Aprovada -->
+                    <div id="alterationApprovedMessage" class="hidden bg-green-500/10 border border-green-500/30 rounded-xl p-4">
+                        <p class="text-sm text-green-400 flex items-center gap-2">
+                            <i class="fas fa-check-circle"></i>
+                            Alteração Aprovada
+                        </p>
+                        <p class="text-xs text-green-300/70 mt-2">Enviada em: <span id="approvalSentDate" class="font-bold"></span></p>
+                        <p class="text-xs text-green-300/70 mt-1">Aprovada em: <span id="approvalDate" class="font-bold"></span></p>
+                    </div>
+                </div>
                 
                 <!-- Ações de Topo do Modal -->
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-white/10 pb-4 gap-3">
@@ -483,19 +491,7 @@
                     
                     <!-- Lista de Itens para Edição (O JS injetará os itens aqui) -->
                     <div id="clientModalItemsList" class="space-y-3">
-                        <!-- Exemplo de estrutura gerada via JS:
-                        <div class="flex flex-col sm:flex-row justify-between sm:items-center bg-white/5 p-4 rounded-xl border border-white/10 gap-3">
-                            <div>
-                                <p class="font-medium text-white text-sm">Caixa de Pizza (Modelo Tradicional)</p>
-                                <p class="text-xs text-white/50 mt-1">35cm</p>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <label class="text-xs text-white/50">Qtd:</label>
-                                <input type="number" value="500" class="w-24 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-400">
-                                <button type="button" class="text-red-400 hover:text-red-300 bg-red-400/10 p-2 rounded-lg transition"><i class="fas fa-trash"></i></button>
-                            </div>
-                        </div>
-                        -->
+                        <!-- Exemplo de estrutura gerada via JS -->
                     </div>
                     
                     <!-- Botão Adicionar Mais Itens na Edição -->
