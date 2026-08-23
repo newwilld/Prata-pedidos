@@ -1037,32 +1037,45 @@ select:invalid {
 .kanban-column::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.5);
 }
-/* Ajuste específico para o bloco Finalizados */
-#kanban-finalizado {
-    min-height: auto !important;
-    height: auto !important;
-    max-height: 600px !important; /* Altura máxima do bloco Finalizados */
-    overflow-y: auto !important; /* Scroll interno com barra de rolagem */
-    -webkit-overflow-scrolling: touch; /* Scroll suave no mobile */
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+/* Correção DEFINITIVA para Finalizados - Prioridade máxima */
+#adminPedidosView > div:last-child {
+    min-height: 400px !important;
+    height: 400px !important;
+    max-height: 400px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
 }
 
-/* Barra de rolagem personalizada para Finalizados */
+#kanban-finalizado {
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    flex: 1 !important;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(255, 255, 255, 0.5) transparent !important;
+    display: block !important;
+}
+
+/* Barra de rolagem SEMPRE visível */
 #kanban-finalizado::-webkit-scrollbar {
-    width: 8px;
+    width: 10px !important;
+    display: block !important;
 }
 
 #kanban-finalizado::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 10px !important;
 }
 
 #kanban-finalizado::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.5) !important;
+    border-radius: 10px !important;
 }
 
 #kanban-finalizado::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.7) !important;
 }
