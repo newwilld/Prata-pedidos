@@ -458,7 +458,23 @@ function setupUIForUser() {
         
         applyItemsFilter();
     }
-};
+}
+
+        badge.innerText = 'Cliente';
+        badge.className = 'text-xs px-3 py-1 rounded-full font-medium bg-white/20 text-white';
+        document.getElementById('clientScreen').classList.remove('hidden');
+        document.getElementById('clientScreen').classList.add('flex');
+        document.getElementById('adminScreen').classList.add('hidden');
+        document.getElementById('adminScreen').classList.remove('flex');
+        
+        if (!listenersInitialized) {
+            initClientListeners();
+            listenersInitialized = true;
+        }
+        
+        applyItemsFilter();
+    }
+}
 
         badge.innerText = 'Cliente';
         badge.className = 'text-xs px-3 py-1 rounded-full font-medium bg-white/20 text-white';
