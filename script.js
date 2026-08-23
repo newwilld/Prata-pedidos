@@ -436,12 +436,12 @@ function setupUIForUser() {
         }
     } else {
         // Se for cliente, mostra @Empresa e @Nome
-        if (headerTitulo) {
+               if (headerTitulo) {
             const empresaNome = currentUserData.company ? currentUserData.company : 'Área do Cliente';
-            headerTitulo.innerText = `@${empresaNome}`;
+            headerTitulo.innerText = empresaNome;
         }
         if (headerSubtitulo) {
-            headerSubtitulo.innerText = `@${currentUserData.name}`;
+            headerSubtitulo.innerText = `Bem-vindo, ${currentUserData.name}`;
         }
         
         badge.innerText = 'Cliente';
