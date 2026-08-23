@@ -1337,16 +1337,14 @@ window.saveClientEdit = async function() {
             clientPhone: newClientPhone,
             clientEmail: newClientEmail,
             clientCompany: newClientCompany,
-            generalObs: newObs, // Atualiza observação geral
-            obs: newObs         // Para retrocompatibilidade
+            generalObs: newObs,
+            obs: newObs
         };
         
-        // Só atualiza os campos de produto se não for um pedido múltiplo travado (readOnly)
         if (!document.getElementById('editProduct').readOnly) {
             updates.product = newProduct;
             updates.quantity = newQuantity;
             
-            // Se for array de 1 item, atualiza dentro também
             if (originalOrder && originalOrder.items && originalOrder.items.length === 1) {
                 updates.items = [...originalOrder.items];
                 updates.items[0].product = newProduct;
@@ -1367,17 +1365,67 @@ window.saveClientEdit = async function() {
             });
         }
         
-        const adminName = currentUserData.name;
+        // NOTIFICAÇÕES DE EDIÇÕES
+        const adminName = currentUserData.name || 'AdminMaster';
+        const targetClientName = newClientName || 'Cliente';
+        const notifications = [];
         
-        if (originalOrder) {
-            if (originalOrder.status !== newStatus) {
-                const statusText = { 'novo': 'Pendente', 'producao': 'Em Produção', 'finalizado': 'Finalizado' };
-                await createNotification(`Status do pedido alterado por @${adminName}: ${statusText[originalOrder.status]} → ${statusText[newStatus]}`);
-            }
+        // Notificação de mudança de status
+        if (originalOrder && originalOrder.status !== newStatus) {
+            const statusText = { 'novo': 'Pendente', 'producao': 'Em Produção', 'finalizado': 'Finalizado' };
+            notifications.push(`@${adminName} editou o status de @${targetClientName}: ${statusText[originalOrder.status]} → ${statusText[newStatus]}`);
         }
         
+        // Notificação de mudança de nome
+        if (originalOrder && originalOrder.clientName !== newClientName) {
+            notifications.push(`@${adminName} editou o nome de @${originalOrder.clientName}: ${originalOrder.clientName} → ${newClientName}`);
+        }
+        
+        // Notificação de mudança de telefone
+        if (originalOrder && originalOrder.clientPhone !== newClientPhone) {
+            const oldPhone = originalOrder.clientPhone || 'N/A';
+            const newPhone = newClientPhone || 'N/A';
+            notifications.push(`@${adminName} editou o telefone de @${targetClientName}: ${oldPhone} → ${newPhone}`);
+        }
+        
+        // Notificação de mudança de email
         if (originalOrder && originalOrder.clientEmail !== newClientEmail) {
-            await createNotification(`E-mail do cliente ${newClientName} foi alterado por @${adminName}: ${originalOrder.clientEmail} → ${newClientEmail}`);
+            notifications.push(`@${adminName} editou o email de @${targetClientName}: ${originalOrder.clientEmail} → ${newClientEmail}`);
+        }
+        
+        // Notificação de mudança de empresa
+        if (originalOrder && originalOrder.clientCompany !== newClientCompany) {
+            const oldCompany = originalOrder.clientCompany || 'N/A';
+            const newCompany = newClientCompany || 'N/A';
+            notifications.push(`@${adminName} editou a empresa de @${targetClientName}: ${oldCompany} → ${newCompany}`);
+        }
+        
+        // Notificação de mudança de produto
+        if (originalOrder && !document.getElementById('editProduct').readOnly && originalOrder.product !== newProduct) {
+            notifications.push(`@${adminName} editou o produto de @${targetClientName}: ${originalOrder.product} → ${newProduct}`);
+        }
+        
+        // Notificação de mudança de quantidade
+        if (originalOrder && !document.getElementById('editQuantity').readOnly && originalOrder.quantity !== newQuantity) {
+            notifications.push(`@${adminName} editou a quantidade de @${targetClientName}: ${originalOrder.quantity} → ${newQuantity}`);
+        }
+        
+        // Notificação de mudança de prioridade
+        if (originalOrder && originalOrder.priority !== newPriority) {
+            const oldPriority = originalOrder.priority || 'Média';
+            notifications.push(`@${adminName} editou a prioridade de @${targetClientName}: ${oldPriority} → ${newPriority}`);
+        }
+        
+        // Notificação de mudança de observações
+        if (originalOrder && (originalOrder.generalObs || originalOrder.obs) !== newObs) {
+            const oldObs = originalOrder.generalObs || originalOrder.obs || 'N/A';
+            const newObsDisplay = newObs || 'N/A';
+            notifications.push(`@${adminName} editou as observações de @${targetClientName}: ${oldObs} → ${newObsDisplay}`);
+        }
+        
+        // Cria todas as notificações
+        for (const notificationMessage of notifications) {
+            await createNotification(notificationMessage);
         }
         
         showToast('Pedido e dados do cliente atualizados!', 'success');
