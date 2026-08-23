@@ -885,8 +885,8 @@ window.excluirPedidoCliente = async function() {
     
     try {
         // Captura informações antes de excluir
-        const clientName = currentUserData.name || 'Cliente';
-        const clientEmail = currentUserData.email || 'N/A';
+        const clientName = currentUserData.name || order.clientName || 'Cliente sem nome';
+        const clientEmail = currentUserData.email || order.clientEmail || 'N/A';
         
         // Prepara informações dos itens
         let itemsInfo = '';
@@ -905,8 +905,7 @@ window.excluirPedidoCliente = async function() {
         
         // Cria notificação detalhada de exclusão
         await createNotification(
-            `🗑️ PEDIDO EXCLUÍDO POR CLIENTE\n` +
-            `👤 Cliente: ${clientName} (${clientEmail})\n` +
+            `Pedido do cliente ${clientName} foi excluído por @${clientName} (${clientEmail})\n` +
             `📦 Pedido: ${itemsInfo}\n` +
             `💰 Valor Total: ${totalValue}\n` +
             `📅 Data: ${window.formatDateTime(Date.now())}`
@@ -1668,7 +1667,18 @@ window.deleteClient = async function() {
     const clientName = document.getElementById('editClientName').value;
     const currentOrderId = document.getElementById('editOrderId').value;
     
-    const displayNome = (clientName && clientName !== 'undefined') ? clientName : 'Sem Nome / Undefined';
+    // Captura o nome real do cliente - tenta primeiro do campo de edição, depois do pedido, depois do usuário
+    let displayNome = (clientName && clientName !== 'undefined') ? clientName : 'Sem Nome';
+    
+    // Se ainda não tem nome, tenta buscar do pedido atual
+    if ((!displayNome || displayNome === 'Sem Nome') && currentOrderId && globalOrders[currentOrderId]) {
+        displayNome = globalOrders[currentOrderId].clientName || displayNome;
+    }
+    
+    // Se ainda não tem nome, tenta buscar do usuário
+    if ((!displayNome || displayNome === 'Sem Nome') && clientUid && globalUsers[clientUid]) {
+        displayNome = globalUsers[clientUid].name || displayNome;
+    }
 
     if (!confirm(`Tem certeza que deseja excluir o pedido do cliente ${displayNome}? Esta ação não pode ser desfeita.`)) {
         return;
@@ -1685,12 +1695,24 @@ window.deleteClient = async function() {
             return false;
         });
         
-        // Captura informações dos pedidos antes de excluir
-        const adminName = currentUserData.name || 'AdminMaster';
+        // Captura informações do admin
+        const adminName = currentUserData.name || 'Administrador';
         const adminEmail = currentUserData.email || 'N/A';
         
         for (const orderId of ordersToDelete) {
             const order = globalOrders[orderId];
+            
+            // Captura o nome real do cliente do pedido
+            let orderClientName = order.clientName;
+            if (!orderClientName || orderClientName === 'undefined') {
+                // Tenta buscar do usuário
+                if (order.userId && globalUsers[order.userId]) {
+                    orderClientName = globalUsers[order.userId].name;
+                }
+                if (!orderClientName || orderClientName === 'undefined') {
+                    orderClientName = 'Cliente sem nome';
+                }
+            }
             
             // Prepara informações dos itens
             let itemsInfo = '';
@@ -1707,11 +1729,9 @@ window.deleteClient = async function() {
             // Remove o pedido
             await remove(ref(db, `orders/${orderId}`));
             
-            // Cria notificação detalhada de exclusão para cada pedido
+            // Cria notificação detalhada de exclusão
             await createNotification(
-                `🗑️ PEDIDO EXCLUÍDO POR ADMIN\n` +
-                `👤 Admin: ${adminName} (${adminEmail})\n` +
-                `👥 Cliente: ${displayNome}\n` +
+                `Pedido do cliente ${orderClientName} foi excluído por @${adminName} (${adminEmail})\n` +
                 `📦 Pedido: ${itemsInfo}\n` +
                 `💰 Valor Total: ${totalValue}\n` +
                 `📅 Data: ${window.formatDateTime(Date.now())}`
