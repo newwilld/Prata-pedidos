@@ -1,3 +1,4 @@
+/* STREAMING_CHUNK:Importações e Configuração do Firebase... */
 // Importações do Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -27,6 +28,7 @@ setPersistence(auth, browserLocalPersistence)
 // E-mail master
 const MASTER_ADMIN_EMAIL = "lojavirtualprata@gmail.com";
 
+/* STREAMING_CHUNK:Inicializando variáveis de estado... */
 // Variáveis de Estado
 let isLoginMode = true;
 let currentUserData = null;
@@ -42,6 +44,7 @@ let selectedSizes = {};
 let currentClientItemsConfig = { allowedItems: ['todos'], excludedItems: [] };
 let editingClientItemsConfig = { allowedItems: ['todos'], excludedItems: [] };
 
+/* STREAMING_CHUNK:Definindo catálogo de produtos... */
 // Dados dos produtos em cascata (Categoria > Modelo > Tamanho/Especificação)
 const productCatalog = {
     'Caixa de pizza': {
@@ -139,6 +142,7 @@ const productCatalog = {
     }
 };
 
+/* STREAMING_CHUNK:Lógica de restrição e visibilidade de itens... */
 // Função para obter todos os itens do catálogo
 function getAllCatalogItems() {
     const allItems = [];
@@ -158,96 +162,74 @@ function getAllCatalogItems() {
     return allItems;
 }
 
-// Função para verificar se um item está permitido para o cliente
+// Aprimorado para verificar correspondências exatas de caminho para permitir granularidade
 function isItemAllowed(itemName, category = null, model = null) {
     if (!currentUserData || currentUserData.role === 'admin') return true;
     
     const config = currentClientItemsConfig;
     if (!config || !config.allowedItems || config.allowedItems.length === 0) return true;
-    
     if (config.allowedItems.includes('todos')) return true;
     
     return config.allowedItems.some(allowed => {
-        // Verifica categoria completa
-        if (allowed === 'Caixa de pizza' && itemName.includes('Caixa de pizza')) return true;
-        if (allowed === 'Caixa de torta' && itemName.includes('Caixa de torta')) return true;
-        if (allowed === 'Caixa correio' && itemName.includes('Caixa correio')) return true;
-        
-        // Verifica modelo específico (ex: "Caixa de pizza > Oitavada")
-        if (allowed.includes(' > ')) {
-            const [allowedCategory, allowedModel] = allowed.split(' > ');
-            if (category === allowedCategory && model === allowedModel) return true;
-        }
-        
+        if (allowed === category) return true; // Categoria inteira permitida
+        if (allowed === `${category} > ${model}`) return true; // Modelo inteiro permitido
+        if (allowed === itemName) return true; // Item exato permitido
         return false;
     });
 }
 
-// Função para verificar se uma categoria está permitida
+// Aprimorado para exibir a categoria se algum item dentro dela for permitido
 function isCategoryAllowed(category) {
     if (!currentUserData || currentUserData.role === 'admin') return true;
     
     const config = currentClientItemsConfig;
     if (!config || !config.allowedItems || config.allowedItems.length === 0) return true;
-    
     if (config.allowedItems.includes('todos')) return true;
-    
-    // Verifica se a categoria completa está permitida
     if (config.allowedItems.includes(category)) return true;
     
-    // Verifica se algum modelo específico desta categoria está permitido
-    const categoryModels = Object.keys(productCatalog[category] || {});
-    return categoryModels.some(model => {
-        const modelKey = `${category} > ${model}`;
-        return config.allowedItems.includes(modelKey);
-    });
+    // Verifica se algum item configurado começa com esta categoria
+    return config.allowedItems.some(allowed => allowed.startsWith(`${category} >`) || allowed === category);
 }
 
-// Função para verificar se um modelo específico está permitido
+// Aprimorado para exibir o modelo se algum item dentro dele for permitido
 function isModelAllowed(category, model) {
     if (!currentUserData || currentUserData.role === 'admin') return true;
     
     const config = currentClientItemsConfig;
     if (!config || !config.allowedItems || config.allowedItems.length === 0) return true;
-    
     if (config.allowedItems.includes('todos')) return true;
-    
-    // Verifica se a categoria inteira está permitida
     if (config.allowedItems.includes(category)) return true;
     
-    // Verifica se o modelo específico está permitido (ex: "Caixa de pizza > Oitavada")
-    const modelKey = `${category} > ${model}`;
-    return config.allowedItems.includes(modelKey);
+    const modelPrefix = `${category} > ${model}`;
+    if (config.allowedItems.includes(modelPrefix)) return true;
+    
+    // Verifica se tem algum item específico (tamanho) permitido dentro deste modelo
+    return config.allowedItems.some(allowed => allowed.startsWith(`${modelPrefix} >`));
 }
 
-// Função para obter modelos permitidos para uma categoria
 function getAllowedModelsForCategory(category) {
     if (!currentUserData || currentUserData.role === 'admin') {
         return Object.keys(productCatalog[category] || {});
     }
     
     const config = currentClientItemsConfig;
-    if (!config || !config.allowedItems || config.allowedItems.length === 0) {
+    if (!config || !config.allowedItems || config.allowedItems.length === 0 || config.allowedItems.includes('todos')) {
         return Object.keys(productCatalog[category] || {});
     }
     
-    if (config.allowedItems.includes('todos')) {
-        return Object.keys(productCatalog[category] || {});
-    }
-    
-    // Se a categoria inteira está permitida
     if (config.allowedItems.includes(category)) {
         return Object.keys(productCatalog[category] || {});
     }
     
-    // Filtra apenas os modelos específicos permitidos
     const allModels = Object.keys(productCatalog[category] || {});
     return allModels.filter(model => {
-        const modelKey = `${category} > ${model}`;
-        return config.allowedItems.includes(modelKey);
+        const modelPrefix = `${category} > ${model}`;
+        // Modelo é permitido se ele próprio está na lista, ou se um item filho dele está na lista
+        return config.allowedItems.includes(modelPrefix) || config.allowedItems.some(allowed => allowed.startsWith(`${modelPrefix} >`));
     });
 }
 
+/* STREAMING_CHUNK:Configurando Funções UI auxiliares... */
 // Funções de UI Auxiliares
 window.showToast = function(message, type = 'info') {
     const container = document.getElementById('toast-container');
@@ -267,6 +249,7 @@ window.formatDateTime = function(timestamp) {
     return date.toLocaleDateString('pt-BR') + ' às ' + date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 };
 
+// ... Funções de Autenticação ...
 window.toggleAuthMode = function() {
     isLoginMode = !isLoginMode;
     document.getElementById('nameField').classList.toggle('hidden', isLoginMode);
@@ -350,6 +333,7 @@ window.logout = function() {
     });
 };
 
+/* STREAMING_CHUNK:Configurando Estado do Usuário... */
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         if (currentUserData && currentUserData.uid === user.uid) {
@@ -393,7 +377,6 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-// Função para carregar configuração de itens do cliente
 function loadClientItemsConfig(userId) {
     const configRef = ref(db, `users/${userId}/itemsConfig`);
     get(configRef).then((snapshot) => {
@@ -402,7 +385,6 @@ function loadClientItemsConfig(userId) {
         } else {
             currentClientItemsConfig = { allowedItems: ['todos'], excludedItems: [] };
         }
-        // Reaplica o filtro após carregar a configuração
         if (currentUserData && currentUserData.role === 'client') {
             applyItemsFilter();
         }
@@ -461,7 +443,7 @@ function setupUIForUser() {
     }
 }
 
-// Função para aplicar filtro de itens no catálogo
+/* STREAMING_CHUNK:Lógica Formulários em Cascata (Cliente)... */
 function applyItemsFilter() {
     if (!currentUserData || currentUserData.role === 'admin') return;
     
@@ -480,7 +462,6 @@ function applyItemsFilter() {
         }
     }
     
-    // Se a opção selecionada atual estiver oculta, limpa a seleção
     if (productTypeSelect.selectedIndex > -1) {
         const selectedOption = productTypeSelect.options[productTypeSelect.selectedIndex];
         if (selectedOption && selectedOption.style.display === 'none') {
@@ -492,7 +473,6 @@ function applyItemsFilter() {
     }
 }
 
-// Lógica de Formulário em Cascata - CORRIGIDA
 window.handleProductTypeChange = function() {
     const productType = document.getElementById('productTypeSelect').value;
     const modelContainer = document.getElementById('modelContainer');
@@ -510,7 +490,6 @@ window.handleProductTypeChange = function() {
     document.getElementById('totalDisplayContainer').classList.add('hidden');
     
     if (productType && productCatalog[productType]) {
-        // Obtém apenas os modelos permitidos para esta categoria
         const allowedModels = getAllowedModelsForCategory(productType);
         
         if (allowedModels.length > 0) {
@@ -542,7 +521,6 @@ window.handleModelChange = function() {
     if (productType && model && productCatalog[productType] && productCatalog[productType][model]) {
         const sizes = productCatalog[productType][model];
         
-        // Filtra tamanhos permitidos para clientes
         const allowedSizes = sizes.filter(size => {
             if (currentUserData.role === 'admin') return true;
             return isItemAllowed(`${productType} > ${model} > ${size.name}`, productType, model);
@@ -652,10 +630,8 @@ window.updateTotalDisplayCheckbox = function() {
     }
 };
 
-// Função para obter os tamanhos selecionados
 function getSelectedSizes() {
     const selectedItems = [];
-    
     Object.keys(selectedSizes).forEach(index => {
         if (selectedSizes[index].checked && selectedSizes[index].quantity > 0) {
             selectedItems.push({
@@ -665,10 +641,10 @@ function getSelectedSizes() {
             });
         }
     });
-    
     return selectedItems;
 }
 
+/* STREAMING_CHUNK:Sistema de Carrinho (Cliente)... */
 // -----------------------------------------------------------------------------
 // SISTEMA DE CARRINHO E MÚLTIPLOS ITENS NO PEDIDO DO CLIENTE
 // -----------------------------------------------------------------------------
@@ -838,7 +814,7 @@ window.submitOrder = async function(e) {
     }
 };
 
-// Listener para clientes
+/* STREAMING_CHUNK:Lógica do Painel do Cliente e Modal... */
 function initClientListeners() {
     const ordersRef = ref(db, 'orders');
     onValue(ordersRef, (snapshot) => {
@@ -915,9 +891,6 @@ function renderClientOrders(orders) {
     }).join('');
 }
 
-// -----------------------------------------------------------------------------
-// LÓGICA DO MODAL DO CLIENTE (VISUALIZAR, EDITAR, REPETIR)
-// -----------------------------------------------------------------------------
 window.abrirModalCliente = function(orderId) {
     const order = globalClientOrders[orderId] || globalOrders[orderId];
     if (!order) return;
@@ -1188,7 +1161,6 @@ window.salvarEdicaoPedidoCliente = async function() {
     
     try {
         const orderRef = ref(db, `orders/${orderId}`);
-        const originalOrder = globalClientOrders[orderId] || globalOrders[orderId];
         
         const legacyProduct = newItems.length === 1 ? newItems[0].product : `${newItems.length} itens`;
         const legacyQty = newItems.length === 1 ? newItems[0].quantity : 'Diversas';
@@ -1310,8 +1282,9 @@ window.prepararAdicaoItemExistente = function() {
     showToast('Adicione novos itens no formulário e clique em Atualizar Pedido.', 'info');
 };
 
+/* STREAMING_CHUNK:Lógica do Painel Admin (Kanban e Clientes)... */
 // -----------------------------------------------------------------------------
-// RESTANTE DO CÓDIGO ADMIN MASTER (Mantido igual ao original)
+// ADMIN MASTER
 // -----------------------------------------------------------------------------
 window.switchAdminTab = function(tab) {
     document.getElementById('adminPedidosView').classList.add('hidden');
@@ -1446,7 +1419,7 @@ function createKanbanCard(order) {
         } else {
             displayProductHtml = `<h4 class="font-bold text-white text-lg leading-tight mb-2">Múltiplos Itens (${order.items.length}):</h4>
                                   <ul class="list-disc pl-4 text-sm font-normal text-white/90 mb-2">
-                                     ${order.items.map(i => `<li>${i.quantityNumber}x ${i.product}</li>`).join('')}
+                                      ${order.items.map(i => `<li>${i.quantityNumber}x ${i.product}</li>`).join('')}
                                   </ul>`;
             displayQty = `<span class="italic">Veja detalhes</span>`;
         }
@@ -1516,7 +1489,7 @@ function createKanbanCard(order) {
     </div>`;
 }
 
-// Funções para arrastar no mobile
+// Funções de arrastar (mantidas iguais)
 let touchDragElement = null;
 let touchDragTimeout = null;
 
@@ -1626,12 +1599,32 @@ async function handleDrop(rawId, targetStatus) {
     }
 }
 
+/* STREAMING_CHUNK:Lógica para ocultar/mostrar quadro de pedidos no Admin Modal... */
+// Função auxiliar para ocultar/mostrar a área de edição de pedidos no modal do admin
+function toggleAdminModalOrderFields(hide) {
+    const fields = ['editProduct', 'editQuantity', 'editObs', 'editStatus', 'editPriority'];
+    fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && el.parentElement) {
+            // Assume estrutura comum: wrapper div ao redor do label e input
+            el.parentElement.style.display = hide ? 'none' : '';
+        }
+    });
+    const totalEl = document.getElementById('editTotalValue');
+    if (totalEl && totalEl.parentElement) {
+        totalEl.parentElement.style.display = hide ? 'none' : '';
+    }
+}
+
 window.openEditModal = function(orderId) {
     const order = globalOrders[orderId];
     if(!order) return;
     
     isViewingFromClientList = false;
     updateDeleteButtonVisibility();
+    
+    // Garante que os campos de pedido estejam VISÍVEIS ao abrir pelo kanban
+    toggleAdminModalOrderFields(false);
     
     document.getElementById('editOrderId').value = orderId;
     document.getElementById('editClientUid').value = order.userId || '';
@@ -1746,8 +1739,13 @@ window.saveClientEdit = async function() {
     const newClientPhone = document.getElementById('editClientPhone').value;
     const newClientEmail = document.getElementById('editClientEmail').value;
     const newClientCompany = document.getElementById('editClientCompany').value;
-    const newProduct = document.getElementById('editProduct').value;
-    const newQuantity = document.getElementById('editQuantity').value;
+    
+    // Obter valores de produto apenas se estiverem visíveis/não readonly
+    const prodInput = document.getElementById('editProduct');
+    const newProduct = prodInput ? prodInput.value : '';
+    const qtyInput = document.getElementById('editQuantity');
+    const newQuantity = qtyInput ? qtyInput.value : '';
+    
     const newObs = document.getElementById('editObs').value;
     
     try {
@@ -1765,7 +1763,7 @@ window.saveClientEdit = async function() {
             obs: newObs
         };
         
-        if (!document.getElementById('editProduct').readOnly) {
+        if (prodInput && !prodInput.readOnly && !isViewingFromClientList) {
             updates.product = newProduct;
             updates.quantity = newQuantity;
             
@@ -1777,7 +1775,9 @@ window.saveClientEdit = async function() {
             }
         }
         
-        await update(orderRef, updates);
+        if (orderId) {
+            await update(orderRef, updates);
+        }
         
         if (clientUid && clientUid !== 'undefined' && clientUid !== '') {
             const userRef = ref(db, `users/${clientUid}`);
@@ -1798,50 +1798,11 @@ window.saveClientEdit = async function() {
             notifications.push(`@${adminName} editou o status de @${targetClientName}: ${statusText[originalOrder.status]} → ${statusText[newStatus]}`);
         }
         
-        if (originalOrder && originalOrder.clientName !== newClientName) {
-            notifications.push(`@${adminName} editou o nome de @${originalOrder.clientName}: ${originalOrder.clientName} → ${newClientName}`);
-        }
-        
-        if (originalOrder && originalOrder.clientPhone !== newClientPhone) {
-            const oldPhone = originalOrder.clientPhone || 'N/A';
-            const newPhone = newClientPhone || 'N/A';
-            notifications.push(`@${adminName} editou o telefone de @${targetClientName}: ${oldPhone} → ${newPhone}`);
-        }
-        
-        if (originalOrder && originalOrder.clientEmail !== newClientEmail) {
-            notifications.push(`@${adminName} editou o email de @${targetClientName}: ${originalOrder.clientEmail} → ${newClientEmail}`);
-        }
-        
-        if (originalOrder && originalOrder.clientCompany !== newClientCompany) {
-            const oldCompany = originalOrder.clientCompany || 'N/A';
-            const newCompany = newClientCompany || 'N/A';
-            notifications.push(`@${adminName} editou a empresa de @${targetClientName}: ${oldCompany} → ${newCompany}`);
-        }
-        
-        if (originalOrder && !document.getElementById('editProduct').readOnly && originalOrder.product !== newProduct) {
-            notifications.push(`@${adminName} editou o produto de @${targetClientName}: ${originalOrder.product} → ${newProduct}`);
-        }
-        
-        if (originalOrder && !document.getElementById('editQuantity').readOnly && originalOrder.quantity !== newQuantity) {
-            notifications.push(`@${adminName} editou a quantidade de @${targetClientName}: ${originalOrder.quantity} → ${newQuantity}`);
-        }
-        
-        if (originalOrder && originalOrder.priority !== newPriority) {
-            const oldPriority = originalOrder.priority || 'Média';
-            notifications.push(`@${adminName} editou a prioridade de @${targetClientName}: ${oldPriority} → ${newPriority}`);
-        }
-        
-        if (originalOrder && (originalOrder.generalObs || originalOrder.obs) !== newObs) {
-            const oldObs = originalOrder.generalObs || originalOrder.obs || 'N/A';
-            const newObsDisplay = newObs || 'N/A';
-            notifications.push(`@${adminName} editou as observações de @${targetClientName}: ${oldObs} → ${newObsDisplay}`);
-        }
-        
         for (const notificationMessage of notifications) {
             await createNotification(notificationMessage);
         }
         
-        showToast('Pedido e dados do cliente atualizados!', 'success');
+        showToast('Dados atualizados com sucesso!', 'success');
         closeEditModal();
     } catch(err) {
         console.error("Erro ao salvar:", err);
@@ -1910,59 +1871,23 @@ window.deleteClient = async function() {
         displayNome = globalUsers[clientUid].name || displayNome;
     }
     
-    if (!confirm(`Tem certeza que deseja excluir o pedido do cliente ${displayNome}? Esta ação não pode ser desfeita.`)) {
+    if (!confirm(`Tem certeza que deseja excluir TODOS OS PEDIDOS do cliente ${displayNome}? Esta ação não pode ser desfeita.`)) {
         return;
     }
     
     try {
         const ordersToDelete = Object.keys(globalOrders).filter(key => {
             const order = globalOrders[key];
-            
             if (clientUid && clientUid !== 'undefined' && order.userId === clientUid) return true;
             if (currentOrderId && key === currentOrderId) return true;
-            if ((!clientUid || clientUid === 'undefined') && order.userId === clientUid) return true;
-            
             return false;
         });
         
-        const adminName = currentUserData.name || 'Administrador';
-        const adminEmail = currentUserData.email || 'N/A';
-        
         for (const orderId of ordersToDelete) {
-            const order = globalOrders[orderId];
-            
-            let orderClientName = order.clientName;
-            if (!orderClientName || orderClientName === 'undefined') {
-                if (order.userId && globalUsers[order.userId]) {
-                    orderClientName = globalUsers[order.userId].name;
-                }
-                if (!orderClientName || orderClientName === 'undefined') {
-                    orderClientName = 'Cliente sem nome';
-                }
-            }
-            
-            let itemsInfo = '';
-            if (order.items && order.items.length > 0) {
-                itemsInfo = order.items.map(item => 
-                    `${item.quantityNumber || item.quantity} x ${item.product}`
-                ).join(', ');
-            } else {
-                itemsInfo = order.product || 'Produto não especificado';
-            }
-            
-            const totalValue = order.totalEstimated ? `R$ ${order.totalEstimated.toFixed(2)}` : 'N/A';
-            
             await remove(ref(db, `orders/${orderId}`));
-            
-            await createNotification(
-                `Pedido do cliente ${orderClientName} foi excluído por @${adminName} (${adminEmail})\n` +
-                `📦 Pedido: ${itemsInfo}\n` +
-                `💰 Valor Total: ${totalValue}\n` +
-                `📅 Data: ${window.formatDateTime(Date.now())}`
-            );
         }
         
-        showToast(`Pedido removido do sistema com sucesso!`, 'success');
+        showToast(`Pedidos removidos do sistema com sucesso!`, 'success');
         closeEditModal();
         
         setTimeout(() => {
@@ -1974,10 +1899,11 @@ window.deleteClient = async function() {
         
     } catch(err) {
         console.error("Erro ao excluir pedido:", err);
-        showToast('Erro ao excluir pedido. Verifique o console para mais detalhes.', 'error');
+        showToast('Erro ao excluir pedidos. Verifique o console para mais detalhes.', 'error');
     }
 };
 
+/* STREAMING_CHUNK:Lógica de Notificações e Lista de Clientes... */
 async function createNotification(message) {
     try {
         const notificationsRef = ref(db, 'notifications');
@@ -2085,18 +2011,9 @@ function renderClientsList() {
     
     const clientArray = Object.values(clientStats)
         .filter(client => {
-            if (!client.uid || client.uid === 'undefined' || client.uid === 'null') {
-                return false;
-            }
-            
-            if (!client.name || client.name === 'undefined' || client.name === 'null' || client.name.trim() === '') {
-                return false;
-            }
-            
-            if ((!client.email || client.email === 'N/A') && client.totalOrders === 0) {
-                return false;
-            }
-            
+            if (!client.uid || client.uid === 'undefined' || client.uid === 'null') return false;
+            if (!client.name || client.name === 'undefined' || client.name === 'null' || client.name.trim() === '') return false;
+            if ((!client.email || client.email === 'N/A') && client.totalOrders === 0) return false;
             return true;
         })
         .sort((a,b) => b.totalOrders - a.totalOrders);
@@ -2112,9 +2029,9 @@ function renderClientsList() {
         const displayName = client.name && client.name !== 'undefined' ? client.name : 'Cliente sem nome';
         const displayEmail = client.email && client.email !== 'undefined' && client.email !== 'N/A' ? client.email : 'N/A';
         
-        // Obtém as categorias permitidas
         const allowedConfig = client.itemsConfig?.allowedItems || ['todos'];
-        const allowedText = allowedConfig.includes('todos') ? 'Todos os itens' : allowedConfig.join(', ');
+        const allowedText = allowedConfig.includes('todos') ? 'Todos os itens' : 
+                            (allowedConfig.length === 1 ? '1 restrição aplicada' : `${allowedConfig.length} itens/modelos permitidos`);
         const allowedColor = allowedConfig.includes('todos') ? 'text-green-400' : 'text-yellow-400';
         
         return `
@@ -2139,7 +2056,7 @@ function renderClientsList() {
                 ${client.lastOrderDate ? window.formatDateTime(client.lastOrderDate).split(' às')[0] : 'Nunca comprou'}
             </td>
             <td class="px-6 py-5 text-white/70">
-                <span class="text-xs ${allowedColor}">
+                <span class="text-xs font-semibold ${allowedColor}">
                     ${allowedText}
                 </span>
             </td>
@@ -2147,12 +2064,15 @@ function renderClientsList() {
     `}).join('');
 }
 
-// Função para abrir modal de cliente com configuração de itens
+/* STREAMING_CHUNK:Lógica do Modal de Configuração de Itens (Admin)... */
+// Função para abrir modal de cliente e OCULTAR o quadro de pedidos
 window.openClientModal = function(clientUid) {
     isViewingFromClientList = true;
     updateDeleteButtonVisibility();
     
-    // Carrega configuração de itens do cliente
+    // OCULTA os campos de edição de pedidos para que fique focado apenas no cliente/itens
+    toggleAdminModalOrderFields(true); 
+    
     loadClientItemsConfigForEdit(clientUid);
     
     const clientOrders = Object.values(globalOrders)
@@ -2163,51 +2083,12 @@ window.openClientModal = function(clientUid) {
         const orderId = clientOrders[0].id;
         const order = globalOrders[orderId];
         
-        document.getElementById('editOrderId').value = orderId;
+        document.getElementById('editOrderId').value = orderId; // Manter ID caso precise excluir cliente todo
         document.getElementById('editClientUid').value = clientUid;
         document.getElementById('editClientName').value = order.clientName || '';
         document.getElementById('editClientPhone').value = order.clientPhone || '';
         document.getElementById('editClientEmail').value = order.clientEmail || '';
         document.getElementById('editClientCompany').value = order.clientCompany || '';
-        
-        let productString = order.product || '';
-        let quantityString = order.quantity || '';
-        const prodInput = document.getElementById('editProduct');
-        const qtyInput = document.getElementById('editQuantity');
-        
-        if (order.items && order.items.length > 1) {
-            productString = "Múltiplos Itens (Não editável aqui, acesse pelo cliente)";
-            quantityString = `${order.items.length} itens`;
-            prodInput.readOnly = true;
-            prodInput.classList.add('bg-gray-100', 'text-gray-500');
-            qtyInput.readOnly = true;
-            qtyInput.classList.add('bg-gray-100', 'text-gray-500');
-        } else {
-            prodInput.readOnly = false;
-            prodInput.classList.remove('bg-gray-100', 'text-gray-500');
-            qtyInput.readOnly = false;
-            qtyInput.classList.remove('bg-gray-100', 'text-gray-500');
-            
-            if (order.items && order.items.length === 1) {
-                productString = order.items[0].product;
-                quantityString = order.items[0].quantity;
-            }
-        }
-        
-        prodInput.value = productString;
-        qtyInput.value = quantityString;
-        document.getElementById('editObs').value = order.generalObs || order.obs || '';
-        document.getElementById('editStatus').value = order.status;
-        document.getElementById('editPriority').value = order.priority || 'Média';
-        
-        const editTotalValue = document.getElementById('editTotalValue');
-        if (editTotalValue) {
-            if (order.totalEstimated) {
-                editTotalValue.textContent = `R$ ${order.totalEstimated.toFixed(2)}`;
-            } else {
-                editTotalValue.textContent = 'R$ 0,00';
-            }
-        }
         
         loadClientOrderHistory(clientUid);
         document.getElementById('adminEditModal').classList.remove('hidden');
@@ -2220,16 +2101,6 @@ window.openClientModal = function(clientUid) {
             document.getElementById('editClientPhone').value = clientData.phone || '';
             document.getElementById('editClientEmail').value = clientData.email || '';
             document.getElementById('editClientCompany').value = clientData.company || '';
-            document.getElementById('editProduct').value = '';
-            document.getElementById('editQuantity').value = '';
-            document.getElementById('editObs').value = '';
-            document.getElementById('editStatus').value = 'novo';
-            document.getElementById('editPriority').value = 'Média';
-            
-            const editTotalValue = document.getElementById('editTotalValue');
-            if (editTotalValue) {
-                editTotalValue.textContent = 'R$ 0,00';
-            }
             
             loadClientOrderHistory(clientUid);
             document.getElementById('adminEditModal').classList.remove('hidden');
@@ -2237,7 +2108,6 @@ window.openClientModal = function(clientUid) {
     }
 };
 
-// Função para carregar configuração de itens no modal de edição
 function loadClientItemsConfigForEdit(clientUid) {
     const configRef = ref(db, `users/${clientUid}/itemsConfig`);
     get(configRef).then((snapshot) => {
@@ -2246,14 +2116,11 @@ function loadClientItemsConfigForEdit(clientUid) {
             config = snapshot.val();
         }
         
-        // Salva a configuração atual em edição
         editingClientItemsConfig = { ...config };
         
-        // Atualiza os checkboxes no modal
         updateItemsConfigCheckboxes(config);
         updateItemsConfigDisplay(config);
         
-        // Esconde a lista de itens individuais
         const itemsListContainer = document.getElementById('allItemsList');
         if (itemsListContainer) itemsListContainer.classList.add('hidden');
         
@@ -2262,7 +2129,6 @@ function loadClientItemsConfigForEdit(clientUid) {
     });
 }
 
-// Função para atualizar checkboxes principais
 function updateItemsConfigCheckboxes(config) {
     const allowTodos = document.getElementById('itemsAllowedTodos');
     const allowPizza = document.getElementById('itemsAllowedPizza');
@@ -2275,7 +2141,6 @@ function updateItemsConfigCheckboxes(config) {
     if (allowCorreio) allowCorreio.checked = config.allowedItems?.includes('Caixa correio') || false;
 }
 
-// Função para atualizar display da configuração de itens
 function updateItemsConfigDisplay(config) {
     const allowedItemsContainer = document.getElementById('allowedItemsDisplay');
     const excludedItemsContainer = document.getElementById('excludedItemsDisplay');
@@ -2283,31 +2148,22 @@ function updateItemsConfigDisplay(config) {
     if (!allowedItemsContainer || !excludedItemsContainer) return;
     
     if (config.allowedItems?.includes('todos')) {
-        allowedItemsContainer.innerHTML = '<span class="text-green-600 font-bold">Todos os itens permitidos</span>';
-        excludedItemsContainer.innerHTML = '<span class="text-gray-500">Nenhum item excluído</span>';
+        allowedItemsContainer.innerHTML = '<span class="text-green-600 font-bold">Todos os itens e categorias permitidos</span>';
+        excludedItemsContainer.innerHTML = '<span class="text-gray-500">Nenhuma restrição ativa</span>';
     } else if (config.allowedItems && config.allowedItems.length > 0) {
+        // Mostra os itens exatos ou modelos que foram permitidos
         allowedItemsContainer.innerHTML = config.allowedItems.map(item => 
             `<span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold mr-2 mb-2 inline-block">${item}</span>`
         ).join('');
         
-        // Calcula itens excluídos (todos menos os permitidos)
-        const allCategories = Object.keys(productCatalog);
-        const excludedCategories = allCategories.filter(cat => !config.allowedItems.includes(cat));
-        
-        excludedItemsContainer.innerHTML = excludedCategories.map(item => 
-            `<span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold mr-2 mb-2 inline-block">${item}</span>`
-        ).join('') || '<span class="text-gray-500">Nenhum item excluído</span>';
+        excludedItemsContainer.innerHTML = '<span class="text-gray-500 text-xs font-medium">Os itens não listados acima ficarão ocultos para este cliente.</span>';
     } else {
-        allowedItemsContainer.innerHTML = '<span class="text-gray-500">Nenhum item permitido</span>';
-        
-        const allCategories = Object.keys(productCatalog);
-        excludedItemsContainer.innerHTML = allCategories.map(item => 
-            `<span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold mr-2 mb-2 inline-block">${item}</span>`
-        ).join('');
+        allowedItemsContainer.innerHTML = '<span class="text-gray-500">Nenhum item permitido (Cliente não verá produtos)</span>';
+        excludedItemsContainer.innerHTML = '<span class="text-red-500 font-bold">Todos os itens bloqueados</span>';
     }
 }
 
-// Função para salvar configuração de itens do cliente
+// Salva seleção rápida (Categorias inteiras)
 window.saveClientItemsConfig = async function() {
     const clientUid = document.getElementById('editClientUid').value;
     
@@ -2344,39 +2200,33 @@ window.saveClientItemsConfig = async function() {
     try {
         await update(ref(db, `users/${clientUid}/itemsConfig`), itemsConfig);
         
-        // Atualiza também na lista global
         if (globalUsers[clientUid]) {
             globalUsers[clientUid].itemsConfig = itemsConfig;
         }
         
         updateItemsConfigDisplay(itemsConfig);
-        showToast('Configuração de itens salva com sucesso!', 'success');
+        showToast('Configuração rápida salva!', 'success');
         
-        // Recarrega lista de clientes se estiver visível
         if(!document.getElementById('adminClientsView').classList.contains('hidden')){
             renderClientsList();
         }
         
     } catch(err) {
-        console.error("Erro ao salvar configuração de itens:", err);
         showToast('Erro ao salvar configuração de itens.', 'error');
     }
 };
 
-// Função para marcar todos os itens específicos
 window.marcarTodosItens = function() {
     const allowPizza = document.getElementById('itemsAllowedPizza');
     const allowTorta = document.getElementById('itemsAllowedTorta');
     const allowCorreio = document.getElementById('itemsAllowedCorreio');
     const allowTodos = document.getElementById('itemsAllowedTodos');
     
-    // Desmarca "todos" e marca todas as categorias específicas
     if (allowTodos) allowTodos.checked = false;
     if (allowPizza) allowPizza.checked = true;
     if (allowTorta) allowTorta.checked = true;
     if (allowCorreio) allowCorreio.checked = true;
     
-    // Atualiza visualização
     const config = {
         allowedItems: ['Caixa de pizza', 'Caixa de torta', 'Caixa correio'],
         excludedItems: []
@@ -2385,7 +2235,8 @@ window.marcarTodosItens = function() {
     updateItemsConfigDisplay(config);
 };
 
-// Função para exibir todos os itens com checkboxes
+/* STREAMING_CHUNK:Lógica Avançada de Seleção por Modelo/Item... */
+// Exibe a lista avançada permitindo selecionar por Modelo ou Item Exato
 window.exibirTodosItens = function() {
     const itemsListContainer = document.getElementById('allItemsList');
     const allItemsCheckboxList = document.getElementById('allItemsCheckboxList');
@@ -2394,13 +2245,11 @@ window.exibirTodosItens = function() {
     
     const allItems = getAllCatalogItems();
     
-    // Obtém configuração atual dos checkboxes
     const allowTodos = document.getElementById('itemsAllowedTodos')?.checked || false;
     const allowPizza = document.getElementById('itemsAllowedPizza')?.checked || false;
     const allowTorta = document.getElementById('itemsAllowedTorta')?.checked || false;
     const allowCorreio = document.getElementById('itemsAllowedCorreio')?.checked || false;
     
-    // Agrupa itens por categoria para melhor visualização
     const itemsByCategory = {};
     allItems.forEach(item => {
         if (!itemsByCategory[item.category]) {
@@ -2413,7 +2262,6 @@ window.exibirTodosItens = function() {
     let globalIndex = 0;
     
     Object.keys(itemsByCategory).forEach(category => {
-        // Verifica se a categoria está permitida
         let categoryAllowed = false;
         if (allowTodos) {
             categoryAllowed = true;
@@ -2424,8 +2272,8 @@ window.exibirTodosItens = function() {
         }
         
         html += `
-        <div class="mb-4">
-            <div class="flex items-center gap-2 mb-2">
+        <div class="mb-4 bg-white/5 p-3 rounded-xl border border-white/10">
+            <div class="flex items-center gap-2 mb-3">
                 <input type="checkbox" id="category-check-${category.replace(/[^a-zA-Z0-9]/g, '-')}" 
                        class="w-4 h-4 text-blue-600 rounded category-check" 
                        ${categoryAllowed ? 'checked' : ''}
@@ -2436,26 +2284,40 @@ window.exibirTodosItens = function() {
             <div class="pl-6 space-y-1">`;
         
         itemsByCategory[category].forEach(item => {
+            const fullPath = `${item.category} > ${item.model} > ${item.name}`;
+            
+            // Lógica refinada para exibir checkbox marcado se a categoria, modelo ou item exato estiverem permitidos
             const isChecked = allowTodos || 
                 (allowPizza && item.category === 'Caixa de pizza') ||
                 (allowTorta && item.category === 'Caixa de torta') ||
-                (allowCorreio && item.category === 'Caixa correio');
+                (allowCorreio && item.category === 'Caixa correio') ||
+                (editingClientItemsConfig.allowedItems && (
+                    editingClientItemsConfig.allowedItems.includes(fullPath) ||
+                    editingClientItemsConfig.allowedItems.includes(`${item.category} > ${item.model}`) ||
+                    editingClientItemsConfig.allowedItems.includes(item.category)
+                ));
             
             html += `
-            <div class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg item-searchable" 
+            <div class="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-lg item-searchable transition" 
                  data-item-name="${item.name.toLowerCase()}" 
                  data-item-category="${item.category.toLowerCase()}" 
                  data-item-model="${item.model.toLowerCase()}"
                  data-category="${item.category}">
+                 
                 <input type="checkbox" id="item-check-${globalIndex}" 
                        class="w-4 h-4 text-green-600 rounded item-individual-check" 
                        data-category="${item.category}"
+                       data-model="${item.model}"
+                       data-full-path="${fullPath}"
                        ${isChecked ? 'checked' : ''}>
-                <label for="item-check-${globalIndex}" class="flex-1 cursor-pointer">
-                    <p class="text-sm font-medium text-gray-900">${item.name}</p>
-                    <p class="text-xs text-gray-500">${item.category} > ${item.model}</p>
+                       
+                <label for="item-check-${globalIndex}" class="flex-1 cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between">
+                    <div>
+                        <p class="text-sm font-bold text-gray-900 leading-tight">${item.name}</p>
+                        <p class="text-xs text-gray-500 font-medium">Modelo: ${item.model}</p>
+                    </div>
+                    <span class="text-sm font-black text-blue-600">R$ ${item.price.toFixed(2)}</span>
                 </label>
-                <span class="text-sm font-bold text-gray-700">R$ ${item.price.toFixed(2)}</span>
             </div>`;
             globalIndex++;
         });
@@ -2468,31 +2330,25 @@ window.exibirTodosItens = function() {
     allItemsCheckboxList.innerHTML = html;
     itemsListContainer.classList.remove('hidden');
     
-    // Limpa o campo de busca
     const searchInput = document.getElementById('searchItemsInput');
     if (searchInput) searchInput.value = '';
     
-    // Adiciona botão de excluir selecionados
     const existingButton = document.getElementById('addToExcludedButton');
     if (!existingButton) {
         const buttonContainer = document.createElement('div');
         buttonContainer.id = 'addToExcludedButton';
-        buttonContainer.className = 'mt-4 flex gap-2';
+        buttonContainer.className = 'mt-4 sticky bottom-0 bg-gray-50 p-3 rounded-xl border border-gray-200 shadow-md';
         buttonContainer.innerHTML = `
-            <button type="button" onclick="adicionarItensSelecionadosAExcluidos()" 
-                    class="flex-1 bg-red-500 text-white px-4 py-3 rounded-lg font-bold hover:bg-red-600 transition flex items-center justify-center gap-2">
-                <i class="fas fa-ban"></i> Adicionar itens selecionados a lista de excluídos
-            </button>
+            <p class="text-xs text-center text-gray-600 mb-2 font-medium">Dica: Selecione os itens exatos que o cliente pode ver e clique em salvar.</p>
             <button type="button" onclick="salvarItensSelecionadosIndividualmente()" 
-                    class="flex-1 bg-green-500 text-white px-4 py-3 rounded-lg font-bold hover:bg-green-600 transition flex items-center justify-center gap-2">
-                <i class="fas fa-save"></i> Salvar itens permitidos
+                    class="w-full bg-green-500 text-white px-4 py-3 rounded-lg font-bold hover:bg-green-600 transition flex items-center justify-center gap-2">
+                <i class="fas fa-save"></i> Salvar permissões exclusivas
             </button>
         `;
         itemsListContainer.appendChild(buttonContainer);
     }
 };
 
-// Função para alternar categoria inteira
 window.toggleCategoryItems = function(category, isChecked) {
     const items = document.querySelectorAll(`.item-individual-check[data-category="${category}"]`);
     items.forEach(item => {
@@ -2500,7 +2356,6 @@ window.toggleCategoryItems = function(category, isChecked) {
     });
 };
 
-// Função para filtrar itens na lista
 window.filterItemsList = function() {
     const searchTerm = document.getElementById('searchItemsInput').value.toLowerCase().trim();
     const items = document.querySelectorAll('.item-searchable');
@@ -2521,45 +2376,7 @@ window.filterItemsList = function() {
     });
 };
 
-// Função para adicionar itens selecionados à lista de excluídos
-window.adicionarItensSelecionadosAExcluidos = function() {
-    const checkedItems = document.querySelectorAll('.item-individual-check');
-    const allItems = getAllCatalogItems();
-    const itemsToExclude = new Set();
-    
-    // Itens não marcados serão excluídos
-    checkedItems.forEach((checkbox, index) => {
-        if (!checkbox.checked && index < allItems.length) {
-            itemsToExclude.add(allItems[index].category);
-        }
-    });
-    
-    // Atualiza os checkboxes principais baseado nos itens não excluídos
-    const allCategories = Object.keys(productCatalog);
-    const allowedCategories = allCategories.filter(cat => !itemsToExclude.has(cat));
-    
-    // Atualiza checkboxes
-    const allowTodos = document.getElementById('itemsAllowedTodos');
-    const allowPizza = document.getElementById('itemsAllowedPizza');
-    const allowTorta = document.getElementById('itemsAllowedTorta');
-    const allowCorreio = document.getElementById('itemsAllowedCorreio');
-    
-    if (allowTodos) allowTodos.checked = false;
-    if (allowPizza) allowPizza.checked = allowedCategories.includes('Caixa de pizza');
-    if (allowTorta) allowTorta.checked = allowedCategories.includes('Caixa de torta');
-    if (allowCorreio) allowCorreio.checked = allowedCategories.includes('Caixa correio');
-    
-    // Atualiza display
-    const config = {
-        allowedItems: allowedCategories,
-        excludedItems: Array.from(itemsToExclude)
-    };
-    
-    updateItemsConfigDisplay(config);
-    showToast('Itens selecionados adicionados à lista de excluídos!', 'success');
-};
-
-// Função para salvar itens selecionados individualmente
+// Nova lógica que salva o caminho exato para permitir que apenas os itens selecionados (ex: 2 itens) apareçam.
 window.salvarItensSelecionadosIndividualmente = async function() {
     const clientUid = document.getElementById('editClientUid').value;
     
@@ -2572,80 +2389,60 @@ window.salvarItensSelecionadosIndividualmente = async function() {
     const checkedItems = document.querySelectorAll('.item-individual-check:checked');
     
     if (checkedItems.length === 0) {
-        showToast('Selecione pelo menos um item.', 'error');
+        showToast('Selecione pelo menos um item para permitir o acesso.', 'error');
         return;
     }
     
-    // Verifica se todos os itens estão marcados
     if (checkedItems.length === allItems.length) {
-        // Se todos estão marcados, salva como "todos"
-        const itemsConfig = {
-            allowedItems: ['todos'],
-            excludedItems: []
-        };
+        const itemsConfig = { allowedItems: ['todos'], excludedItems: [] };
         
         try {
             await update(ref(db, `users/${clientUid}/itemsConfig`), itemsConfig);
-            
-            // Atualiza checkboxes principais
             updateItemsConfigCheckboxes(itemsConfig);
             updateItemsConfigDisplay(itemsConfig);
-            showToast('Configuração de itens salva com sucesso!', 'success');
+            showToast('Todos os itens liberados com sucesso!', 'success');
             
-            // Recarrega lista de clientes se estiver visível
             if(!document.getElementById('adminClientsView').classList.contains('hidden')){
                 renderClientsList();
             }
-            
-            // Esconde a lista de itens
             document.getElementById('allItemsList').classList.add('hidden');
-            
         } catch(err) {
-            console.error("Erro ao salvar configuração de itens:", err);
-            showToast('Erro ao salvar configuração de itens.', 'error');
+            showToast('Erro ao salvar configuração.', 'error');
         }
         return;
     }
     
-    // Coleta categorias únicas dos itens marcados
-    const selectedCategories = new Set();
+    // Coleta o caminho exato dos itens marcados (Categoria > Modelo > Tamanho)
+    const selectedItems = new Set();
     checkedItems.forEach(checkbox => {
-        const category = checkbox.getAttribute('data-category');
-        if (category) {
-            selectedCategories.add(category);
+        const fullPath = checkbox.getAttribute('data-full-path');
+        if (fullPath) {
+            selectedItems.add(fullPath);
         }
     });
     
-    const allowedItems = Array.from(selectedCategories);
-    
-    if (allowedItems.length === 0) {
-        showToast('Erro ao identificar itens selecionados.', 'error');
-        return;
-    }
+    const allowedItems = Array.from(selectedItems);
     
     const itemsConfig = {
         allowedItems: allowedItems,
-        excludedItems: Object.keys(productCatalog).filter(cat => !allowedItems.includes(cat))
+        excludedItems: [] // A restrição passa a ser definida apenas pelo que está no 'allowed'
     };
     
     try {
         await update(ref(db, `users/${clientUid}/itemsConfig`), itemsConfig);
         
-        // Atualiza checkboxes principais
         updateItemsConfigCheckboxes(itemsConfig);
         updateItemsConfigDisplay(itemsConfig);
-        showToast('Configuração de itens salva com sucesso!', 'success');
+        showToast(`Salvo! ${allowedItems.length} item(ns) estão disponíveis para o cliente.`, 'success');
         
-        // Recarrega lista de clientes se estiver visível
         if(!document.getElementById('adminClientsView').classList.contains('hidden')){
             renderClientsList();
         }
         
-        // Esconde a lista de itens
         document.getElementById('allItemsList').classList.add('hidden');
         
     } catch(err) {
         console.error("Erro ao salvar configuração de itens:", err);
-        showToast('Erro ao salvar configuração de itens.', 'error');
+        showToast('Erro ao salvar itens restritos.', 'error');
     }
 };
