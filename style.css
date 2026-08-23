@@ -1,3 +1,980 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+:root {
+    --primary: #1e293b;
+    --primary-light: #334155;
+    --accent: #3b82f6;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --info: #8b5cf6;
+    --bg-main: #f8fafc;
+    --bg-card: #ffffff;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body { 
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+/* Animações */
+.fade-in { 
+    animation: fadeIn 0.5s ease-in-out; 
+}
+
+@keyframes fadeIn { 
+    from { opacity: 0; transform: translateY(20px); } 
+    to { opacity: 1; transform: translateY(0); } 
+}
+
+.slide-in-right {
+    animation: slideInRight 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes slideInRight { 
+    from { transform: translateX(100%); opacity: 0; } 
+    to { transform: translateX(0); opacity: 1; } 
+}
+
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Drag and Drop styles */
+.kanban-column { 
+    min-height: 300px;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 1.5rem;
+}
+
+.draggable-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: grab;
+    position: relative;
+    overflow: hidden;
+}
+
+.draggable-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+}
+
+.draggable-card.dragging { 
+    opacity: 0.5; 
+    transform: scale(0.98) rotate(2deg);
+}
+
+.kanban-column.drag-over { 
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px dashed rgba(255, 255, 255, 0.5);
+    transform: scale(1.02);
+}
+
+/* Mobile touch support */
+.draggable-card { 
+    touch-action: none; 
+    -webkit-user-select: none; 
+    user-select: none; 
+}
+
+/* Toast Notification */
+#toast-container { 
+    position: fixed; 
+    top: 20px; 
+    right: 20px; 
+    z-index: 9999; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px;
+}
+
+.toast { 
+    padding: 16px 24px; 
+    border-radius: 16px; 
+    color: white; 
+    font-weight: 600; 
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+    animation: slideInRight 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.toast.success { 
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.toast.error { 
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.toast.info { 
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.toast-fade-out { 
+    animation: fadeOut 0.5s ease-in forwards;
+}
+
+@keyframes fadeOut { 
+    from { opacity: 1; } 
+    to { opacity: 0; transform: translateX(100%); } 
+}
+
+/* Glassmorphism */
+.glass-effect {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 1.5rem;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar { 
+    width: 8px; 
+    height: 8px; 
+}
+
+::-webkit-scrollbar-track { 
+    background: transparent; 
+}
+
+::-webkit-scrollbar-thumb { 
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px; 
+}
+
+::-webkit-scrollbar-thumb:hover { 
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* Scrollbar do novo Modal e Itens Internos */
+.modal-cart-item input[type=number]::-webkit-inner-spin-button, 
+.modal-cart-item input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+}
+.modal-cart-item input[type=number] {
+    -moz-appearance: textfield;
+}
+
+/* NOVO: Estilos para o Carrinho de Itens */
+#cartContainer {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 1.5rem;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#cartContainer:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.35);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+}
+
+#cartItemsList {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+#cartItemsList::-webkit-scrollbar {
+    width: 6px;
+}
+
+#cartItemsList::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#cartItemsList::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
+
+#cartSubtotal {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    letter-spacing: -0.5px;
+}
+
+/* NOVO: Estilos para o Modal do Cliente */
+#clientOrderModal {
+    backdrop-filter: blur(5px);
+}
+
+#clientOrderModal .modal-cart-item {
+    transition: all 0.3s ease;
+}
+
+#clientOrderModal .modal-cart-item:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    transform: translateX(4px);
+}
+
+#clientOrderModal .item-qty-input {
+    transition: all 0.3s ease;
+}
+
+#clientOrderModal .item-qty-input:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    border-color: #3b82f6 !important;
+    background: rgba(255, 255, 255, 0.15) !important;
+}
+
+#clientOrderModal .item-qty-input:hover {
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+}
+
+#clientModalTotalValue {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    letter-spacing: -0.5px;
+    transition: all 0.3s ease;
+}
+
+/* Botão de Repetir Pedido */
+button[onclick="repetirPedidoCliente()"] {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+button[onclick="repetirPedidoCliente()"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.3);
+}
+
+button[onclick="repetirPedidoCliente()"]:active {
+    transform: translateY(0);
+}
+
+/* Botão Adicionar Mais Itens no Modal */
+#clientOrderModal button .fa-plus-circle {
+    transition: transform 0.3s ease;
+}
+
+#clientOrderModal button:hover .fa-plus-circle {
+    transform: rotate(90deg);
+}
+
+/* Cards com gradientes */
+.card-gradient-novo {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.card-gradient-producao {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+}
+
+.card-gradient-finalizado {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+}
+
+/* Estilos para os Selects de Produtos (Tipo, Modelo, Tamanho) */
+#productTypeSelect,
+#modelSelect,
+#sizeSelect,
+#productSelect {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+#productTypeSelect optgroup,
+#modelSelect optgroup,
+#sizeSelect optgroup,
+#productSelect optgroup {
+    font-weight: 700;
+    color: #1e293b;
+    background-color: #f1f5f9;
+    padding: 8px 0;
+    font-size: 0.9em;
+    letter-spacing: 0.5px;
+}
+
+#productTypeSelect optgroup::before,
+#modelSelect optgroup::before,
+#sizeSelect optgroup::before,
+#productSelect optgroup::before {
+    content: '📦 ';
+    font-size: 1.1em;
+}
+
+#productTypeSelect option,
+#modelSelect option,
+#sizeSelect option,
+#productSelect option {
+    padding: 10px 12px;
+    font-weight: 400;
+    color: #334155;
+    background-color: #ffffff;
+    transition: all 0.2s ease;
+}
+
+#productTypeSelect option:hover,
+#modelSelect option:hover,
+#sizeSelect option:hover,
+#productSelect option:hover {
+    background-color: #e0e7ff;
+    color: #1e40af;
+}
+
+#productTypeSelect option:checked,
+#modelSelect option:checked,
+#sizeSelect option:checked,
+#productSelect option:checked {
+    background-color: #3b82f6;
+    color: white;
+}
+
+/* Melhorar a aparência do dropdown */
+select {
+    scrollbar-width: thin;
+    scrollbar-color: #94a3b8 #e2e8f0;
+}
+
+select::-webkit-scrollbar {
+    width: 8px;
+}
+
+select::-webkit-scrollbar-track {
+    background: #e2e8f0;
+    border-radius: 4px;
+}
+
+select::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+    border-radius: 4px;
+}
+
+select::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+/* Estilos para o Display do Valor Total */
+#totalDisplayContainer {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 1.5rem;
+    padding: 1.25rem;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+#totalDisplayContainer:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.2);
+}
+
+#totalDisplayValue {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #ffffff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    letter-spacing: -0.5px;
+    animation: pulse 2s infinite;
+}
+
+#unitPriceDisplay {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.875rem;
+    display: block;
+    margin-top: 0.5rem;
+    font-weight: 500;
+}
+
+/* Estilo para o valor total no modal de edição */
+#editTotalValue {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #2563eb;
+    letter-spacing: -0.5px;
+}
+
+/* Estilos para os containers de cascata */
+#modelContainer,
+#sizeContainer {
+    transition: all 0.3s ease;
+}
+
+#modelContainer.hidden,
+#sizeContainer.hidden {
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+}
+
+/* Estilo para o campo de observação */
+#orderObs {
+    resize: none;
+    min-height: 80px;
+    transition: all 0.3s ease;
+}
+
+#orderObs:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+#orderObs::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Estilo para o campo de observação no modal de edição */
+#editObs {
+    resize: none;
+    min-height: 60px;
+}
+
+#editObs:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: #3b82f6;
+}
+
+/* NOVO: Estilos para o campo de observação no modal do cliente */
+#clientModalObs {
+    resize: none;
+    min-height: 60px;
+    transition: all 0.3s ease;
+}
+
+#clientModalObs:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+#clientModalObs::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+/* TV Mode */
+@media (min-width: 1920px) {
+    body {
+        font-size: 18px;
+    }
+    
+    .draggable-card {
+        padding: 24px !important;
+        border-radius: 20px !important;
+    }
+    
+    .kanban-column {
+        min-height: 500px;
+    }
+    
+    #productTypeSelect,
+    #modelSelect,
+    #sizeSelect,
+    #productSelect {
+        max-height: 500px;
+        font-size: 1.1em;
+    }
+    
+    #productTypeSelect option,
+    #modelSelect option,
+    #sizeSelect option,
+    #productSelect option {
+        padding: 12px 14px;
+    }
+    
+    #totalDisplayValue {
+        font-size: 2.5rem;
+    }
+    
+    #totalDisplayContainer {
+        padding: 1.5rem;
+    }
+    
+    #orderObs {
+        min-height: 100px;
+    }
+    
+    #cartContainer {
+        padding: 1.5rem !important;
+    }
+    
+    #clientOrderModal .modal-cart-item {
+        padding: 1.25rem !important;
+    }
+}
+
+/* Mobile otimizado */
+@media (max-width: 768px) {
+    .draggable-card.dragging-touch { 
+        opacity: 0.7; 
+        transform: scale(0.95); 
+    }
+    
+    .kanban-column {
+        min-height: 200px;
+    }
+    
+    #productTypeSelect,
+    #modelSelect,
+    #sizeSelect,
+    #productSelect {
+        max-height: 300px;
+        font-size: 0.9em;
+    }
+    
+    #productTypeSelect option,
+    #modelSelect option,
+    #sizeSelect option,
+    #productSelect option {
+        padding: 8px 10px;
+    }
+    
+    #productTypeSelect optgroup,
+    #modelSelect optgroup,
+    #sizeSelect optgroup,
+    #productSelect optgroup {
+        font-size: 0.85em;
+        padding: 6px 0;
+    }
+    
+    #totalDisplayValue {
+        font-size: 1.5rem;
+    }
+    
+    #totalDisplayContainer {
+        padding: 1rem;
+    }
+    
+    #orderObs {
+        min-height: 60px;
+        font-size: 0.9em;
+    }
+    
+    #cartContainer {
+        padding: 0.75rem !important;
+    }
+    
+    #cartItemsList {
+        max-height: 120px !important;
+    }
+    
+    #clientOrderModal .modal-cart-item {
+        padding: 0.75rem !important;
+    }
+    
+    #clientOrderModal .item-qty-input {
+        width: 70px !important;
+    }
+    
+    #clientModalTotalValue {
+        font-size: 1.25rem !important;
+    }
+    
+    button[onclick="repetirPedidoCliente()"] {
+        font-size: 0.8rem !important;
+        padding: 0.5rem 0.75rem !important;
+    }
+}
+
+/* Efeitos de brilho */
+.glow-effect {
+    position: relative;
+}
+
+.glow-effect::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: glow 3s infinite;
+}
+
+@keyframes glow {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(10%, 10%); }
+}
+
+/* Ajustes para o select em telas maiores */
+@media (min-width: 1024px) {
+    #productTypeSelect,
+    #modelSelect,
+    #sizeSelect,
+    #productSelect {
+        font-size: 0.95em;
+    }
+    
+    #productTypeSelect optgroup,
+    #modelSelect optgroup,
+    #sizeSelect optgroup,
+    #productSelect optgroup {
+        font-size: 0.88em;
+    }
+    
+    #totalDisplayValue {
+        font-size: 2.25rem;
+    }
+}
+
+/* Hover states para os grupos */
+#productTypeSelect optgroup:hover,
+#modelSelect optgroup:hover,
+#sizeSelect optgroup:hover,
+#productSelect optgroup:hover {
+    background-color: #e2e8f0;
+    cursor: pointer;
+}
+
+/* Estilo para quando os selects estão focados */
+#productTypeSelect:focus,
+#modelSelect:focus,
+#sizeSelect:focus,
+#productSelect:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+/* Ajuste para o dropdown quando aberto */
+#productTypeSelect:focus-visible,
+#modelSelect:focus-visible,
+#sizeSelect:focus-visible,
+#productSelect:focus-visible {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+/* Animação especial para o valor total quando atualizado */
+@keyframes valueUpdate {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+#totalDisplayValue.value-updated {
+    animation: valueUpdate 0.3s ease;
+}
+
+/* Estilo para o container do valor total no formulário */
+#orderForm #totalDisplayContainer {
+    margin-top: 0.5rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#orderForm #totalDisplayContainer.hidden {
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+}
+
+/* Estilos adicionais para os novos campos de cascata */
+#productTypeSelect,
+#modelSelect,
+#sizeSelect {
+    width: 100%;
+    appearance: none;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 1rem;
+    color: white;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+#productTypeSelect:hover,
+#modelSelect:hover,
+#sizeSelect:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+#productTypeSelect:focus,
+#modelSelect:focus,
+#sizeSelect:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* Estilo para as opções dentro dos selects */
+#productTypeSelect option,
+#modelSelect option,
+#sizeSelect option {
+    background-color: #ffffff;
+    color: #1e293b;
+    padding: 10px;
+    font-weight: 500;
+}
+
+#productTypeSelect option:hover,
+#modelSelect option:hover,
+#sizeSelect option:hover {
+    background-color: #e0e7ff;
+}
+
+/* Estilos específicos para o select de produto (categoria principal) */
+#productTypeSelect {
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+#productTypeSelect option {
+    font-weight: 500;
+    padding: 12px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+#productTypeSelect option:last-child {
+    border-bottom: none;
+}
+
+/* Estilos para o select de modelo */
+#modelSelect {
+    font-weight: 500;
+}
+
+#modelSelect option {
+    padding: 10px 12px;
+    font-size: 0.95em;
+}
+
+/* Estilos para o select de tamanho */
+#sizeSelect {
+    font-weight: 500;
+}
+
+#sizeSelect option {
+    padding: 10px 12px;
+    font-size: 0.9em;
+    color: #475569;
+}
+
+#sizeSelect option:hover {
+    background-color: #f0f9ff;
+    color: #0369a1;
+}
+
+/* Melhorias de acessibilidade */
+#productTypeSelect:focus-visible,
+#modelSelect:focus-visible,
+#sizeSelect:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* Estilo para o container do formulário */
+#orderForm {
+    position: relative;
+}
+
+#orderForm > div {
+    position: relative;
+    z-index: 1;
+}
+
+/* Ajuste para o ícone de chevron nos selects */
+#productTypeSelect + i,
+#modelSelect + i,
+#sizeSelect + i {
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* Melhorias de performance */
+.draggable-card,
+.kanban-column,
+#totalDisplayContainer,
+#modelContainer,
+#sizeContainer,
+#cartContainer,
+.modal-cart-item {
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+}
+
+/* Suporte para modo escuro do sistema */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-main: #0f172a;
+        --bg-card: #1e293b;
+        --text-primary: #f8fafc;
+        --text-secondary: #cbd5e1;
+        --text-muted: #64748b;
+        --border-color: #334155;
+    }
+}
+
+/* Ajustes finais para melhor visualização */
+#productTypeSelect option:disabled,
+#modelSelect option:disabled,
+#sizeSelect option:disabled {
+    color: #94a3b8;
+    font-style: italic;
+}
+
+/* Estilo para quando não há opções disponíveis */
+#modelSelect option:only-child,
+#sizeSelect option:only-child {
+    color: #94a3b8;
+    font-style: italic;
+}
+
+/* Melhorar contraste e legibilidade */
+#productTypeSelect option,
+#modelSelect option,
+#sizeSelect option {
+    text-shadow: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Animações suaves para mostrar/esconder elementos */
+.hidden {
+    display: none !important;
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Melhorar a aparência do select quando aberto */
+select:focus option:checked {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+}
+
+/* Estilo para o texto do placeholder nos selects */
+select:invalid {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Ajustes para o modo TV */
+@media (min-width: 1920px) and (max-width: 2560px) {
+    #productTypeSelect,
+    #modelSelect,
+    #sizeSelect {
+        font-size: 1.2em;
+    }
+    
+    #productTypeSelect option,
+    #modelSelect option,
+    #sizeSelect option {
+        padding: 15px 18px;
+    }
+    
+    #totalDisplayValue {
+        font-size: 3rem;
+    }
+    
+    #unitPriceDisplay {
+        font-size: 1.1rem;
+    }
+}
+
+/* NOVO: Animações para o carrinho */
+#cartContainer.fade-in {
+    animation: cartSlideIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes cartSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* NOVO: Estilo para itens do carrinho */
+#cartItemsList li {
+    animation: itemSlideIn 0.3s ease;
+}
+
+@keyframes itemSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* NOVO: Botão de remover item do carrinho */
+#cartItemsList button {
+    transition: all 0.2s ease;
+}
+
+#cartItemsList button:hover {
+    transform: scale(1.2);
+    background: rgba(239, 68, 68, 0.2);
+    border-radius: 0.5rem;
+}
+
+/* NOVO: Estilos para o botão de remover item no modal */
+#clientModalItemsList button[onclick="removerItemModalCliente(this)"] {
+    transition: all 0.2s ease;
+}
+
+#clientModalItemsList button[onclick="removerItemModalCliente(this)"]:hover {
+    transform: scale(1.1);
+    background: rgba(239, 68, 68, 0.2);
+}
+
+/* NOVO: Responsividade para o modal do cliente */
+@media (max-width: 640px) {
+    #clientOrderModal .modal-cart-item {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+    }
+    
+    #clientOrderModal .modal-cart-item > div:last-child {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    #clientModalObs {
+        font-size: 0.9rem !important;
+    }
+}
 /* ============ OTIMIZAÇÕES MOBILE - HISTÓRICO E ROLAGEM ============ */
 
 @media (max-width: 768px) {
