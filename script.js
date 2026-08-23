@@ -37,6 +37,7 @@ let globalClientOrders = {}; // Cache dos pedidos do cliente logado
 let currentCart = []; // Carrinho de compras atual
 let editingOrderId = null; // ID de um pedido existente sendo editado no form principal
 let listenersInitialized = false;
+let isViewingFromClientList = false; // Flag para identificar origem do modal admin
 
 // Dados dos produtos em cascata (Categoria > Modelo > Tamanho/Especificação)
 const productCatalog = {
@@ -1369,6 +1370,10 @@ window.openEditModal = function(orderId) {
     const order = globalOrders[orderId];
     if(!order) return;
 
+    // Define flag: veio do quadro de pedidos
+    isViewingFromClientList = false;
+    updateDeleteButtonVisibility();
+
     document.getElementById('editOrderId').value = orderId;
     document.getElementById('editClientUid').value = order.userId || '';
     document.getElementById('editClientName').value = order.clientName || '';
@@ -1591,35 +1596,95 @@ window.saveClientEdit = async function() {
     }
 };
 
-window.deleteClient = async function() {
-    const clientUid = document.getElementById('editClientUid').value;
-    const clientName = document.getElementById('editClientName').value;
-    const currentOrderId = document.getElementById('editOrderId').value;
-    
-    const displayNome = (clientName && clientName !== 'undefined') ? clientName : 'Sem Nome / Undefined';
+// Função para atualizar visibilidade do botão de exclusão
+function updateDeleteButtonVisibility() {
+    const deleteBtn = document.getElementById('deleteButton');
+    if (deleteBtn) {
+        if (isViewingFromClientList) {
+            deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Excluir Cliente';
+            deleteBtn.setAttribute('onclick', 'deleteClient()');
+        } else {
+            deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Excluir Pedido';
+            deleteBtn.setAttribute('onclick', 'deleteOrder()');
+        }
+    }
+}
 
-    if (!confirm(`Tem certeza que deseja excluir o pedido do cliente ${displayNome}? Esta ação não pode ser desfeita.`)) {
+// Função para excluir apenas o pedido individual (quadro de pedidos)
+window.deleteOrder = async function() {
+    const orderId = document.getElementById('editOrderId').value;
+    
+    if (!orderId) {
+        showToast('Nenhum pedido selecionado.', 'error');
+        return;
+    }
+    
+    if (!confirm('Tem certeza que deseja excluir este pedido? Esta ação não pode ser desfeita.')) {
         return;
     }
     
     try {
+        await remove(ref(db, `orders/${orderId}`));
+        
+        const order = globalOrders[orderId];
+        const clientName = order ? order.clientName : 'Cliente';
+        
+        await createNotification(`Pedido de ${clientName} foi excluído por @${currentUserData.name}`);
+        
+        showToast('Pedido excluído com sucesso!', 'success');
+        closeEditModal();
+        
+        setTimeout(() => {
+            renderKanban();
+        }, 500);
+        
+    } catch(err) {
+        console.error("Erro ao excluir pedido:", err);
+        showToast('Erro ao excluir pedido.', 'error');
+    }
+};
+
+// Função para excluir cliente e todos seus pedidos (lista de clientes)
+window.deleteClient = async function() {
+    const clientUid = document.getElementById('editClientUid').value;
+    const clientName = document.getElementById('editClientName').value;
+    
+    const displayNome = (clientName && clientName !== 'undefined') ? clientName : 'Sem Nome / Undefined';
+
+    if (!confirm(`Tem certeza que deseja excluir o cliente ${displayNome}? Todos os pedidos deste cliente também serão excluídos. Esta ação não pode ser desfeita.`)) {
+        return;
+    }
+    
+    try {
+        // Exclui todos os pedidos do cliente
         const ordersToDelete = Object.keys(globalOrders).filter(key => {
             const order = globalOrders[key];
-            
-            if (clientUid && clientUid !== 'undefined' && order.userId === clientUid) return true;
-            if (currentOrderId && key === currentOrderId) return true;
-            if ((!clientUid || clientUid === 'undefined') && order.userId === clientUid) return true;
-            
-            return false;
+            return clientUid && clientUid !== 'undefined' && order.userId === clientUid;
         });
         
         for (const orderId of ordersToDelete) {
             await remove(ref(db, `orders/${orderId}`));
         }
         
-        await createNotification(`Pedido do cliente ${displayNome} foi excluído por @${currentUserData.name}`);
+        // Exclui o usuário/cliente
+        if (clientUid && clientUid !== 'undefined') {
+            await remove(ref(db, `users/${clientUid}`));
+        }
         
-        showToast(`Pedido removido do sistema com sucesso!`, 'success');
+        // Remove notificações relacionadas ao cliente
+        if (clientName && clientName !== 'undefined') {
+            const notificationKeys = Object.keys(globalNotifications);
+            for (const notifKey of notificationKeys) {
+                const notif = globalNotifications[notifKey];
+                if (notif.message && notif.message.includes(clientName)) {
+                    await remove(ref(db, `notifications/${notifKey}`));
+                }
+            }
+        }
+        
+        await createNotification(`Cliente ${displayNome} foi excluído por @${currentUserData.name}`);
+        
+        showToast(`Cliente e todos os pedidos foram removidos com sucesso!`, 'success');
         closeEditModal();
         
         setTimeout(() => {
@@ -1630,8 +1695,8 @@ window.deleteClient = async function() {
         }, 500);
         
     } catch(err) {
-        console.error("Erro ao excluir pedido:", err);
-        showToast('Erro ao excluir pedido. Verifique o console para mais detalhes.', 'error');
+        console.error("Erro ao excluir cliente:", err);
+        showToast('Erro ao excluir cliente. Verifique o console para mais detalhes.', 'error');
     }
 };
 
@@ -1803,12 +1868,67 @@ function renderClientsList() {
 }
 
 window.openClientModal = function(clientUid) {
+    // Define flag: veio da lista de clientes
+    isViewingFromClientList = true;
+    updateDeleteButtonVisibility();
+    
     const clientOrders = Object.values(globalOrders)
         .filter(order => order.userId === clientUid)
         .sort((a, b) => b.createdAt - a.createdAt);
     
     if (clientOrders.length > 0) {
-        openEditModal(clientOrders[0].id);
+        // Abre o modal com o pedido mais recente, mas mantém flag de cliente
+        const orderId = clientOrders[0].id;
+        const order = globalOrders[orderId];
+        
+        document.getElementById('editOrderId').value = orderId;
+        document.getElementById('editClientUid').value = clientUid;
+        document.getElementById('editClientName').value = order.clientName || '';
+        document.getElementById('editClientPhone').value = order.clientPhone || '';
+        document.getElementById('editClientEmail').value = order.clientEmail || '';
+        document.getElementById('editClientCompany').value = order.clientCompany || '';
+        
+        let productString = order.product || '';
+        let quantityString = order.quantity || '';
+        const prodInput = document.getElementById('editProduct');
+        const qtyInput = document.getElementById('editQuantity');
+        
+        if (order.items && order.items.length > 1) {
+            productString = "Múltiplos Itens (Não editável aqui, acesse pelo cliente)";
+            quantityString = `${order.items.length} itens`;
+            prodInput.readOnly = true;
+            prodInput.classList.add('bg-gray-100', 'text-gray-500');
+            qtyInput.readOnly = true;
+            qtyInput.classList.add('bg-gray-100', 'text-gray-500');
+        } else {
+            prodInput.readOnly = false;
+            prodInput.classList.remove('bg-gray-100', 'text-gray-500');
+            qtyInput.readOnly = false;
+            qtyInput.classList.remove('bg-gray-100', 'text-gray-500');
+            
+            if (order.items && order.items.length === 1) {
+                productString = order.items[0].product;
+                quantityString = order.items[0].quantity;
+            }
+        }
+        
+        prodInput.value = productString;
+        qtyInput.value = quantityString;
+        document.getElementById('editObs').value = order.generalObs || order.obs || '';
+        document.getElementById('editStatus').value = order.status;
+        document.getElementById('editPriority').value = order.priority || 'Média';
+        
+        const editTotalValue = document.getElementById('editTotalValue');
+        if (editTotalValue) {
+            if (order.totalEstimated) {
+                editTotalValue.textContent = `R$ ${order.totalEstimated.toFixed(2)}`;
+            } else {
+                editTotalValue.textContent = 'R$ 0,00';
+            }
+        }
+        
+        loadClientOrderHistory(clientUid);
+        document.getElementById('adminEditModal').classList.remove('hidden');
     } else {
         const clientData = globalUsers[clientUid];
         if (clientData) {
@@ -1824,7 +1944,6 @@ window.openClientModal = function(clientUid) {
             document.getElementById('editStatus').value = 'novo';
             document.getElementById('editPriority').value = 'Média';
             
-            // Limpa o valor total para cliente sem pedidos
             const editTotalValue = document.getElementById('editTotalValue');
             if (editTotalValue) {
                 editTotalValue.textContent = 'R$ 0,00';
