@@ -44,18 +44,18 @@ let selectedSizes = {}; // Para armazenar os tamanhos selecionados com checkboxe
 const productCatalog = {
     'Caixa de pizza': {
         'Oitavada': [
-            { name: '20cm brotinho', price: 1.70 },
-            { name: '25cm pequena', price: 2.10 },
-            { name: '30cm média', price: 2.40 },
-            { name: '35cm grande', price: 2.85 },
-            { name: '40cm família', price: 3.30 },
-            { name: '45cm gigante', price: 4.60 },
-            { name: '20cm brotinho', price: 1.60 },
-            { name: '25cm pequena', price: 2.00 },
-            { name: '30cm média', price: 2.30 },
-            { name: '35cm grande', price: 2.65 },
-            { name: '40cm família', price: 3.10 },
-            { name: '45cm gigante', price: 4.40 },
+            { name: '20cm brotinho (parda)', price: 1.60 },
+            { name: '20cm brotinho (branca)', price: 1.70 },
+            { name: '25cm pequena (parda)', price: 2.00 },
+            { name: '25cm pequena (branca)', price: 2.10 },
+            { name: '30cm média (parda)', price: 2.30 },
+            { name: '30cm média (branca)', price: 2.40 },
+            { name: '35cm grande (parda)', price: 2.65 },
+            { name: '35cm grande (branca)', price: 2.85 },
+            { name: '40cm família (parda)', price: 3.10 },
+            { name: '40cm família (branca)', price: 3.30 },
+            { name: '45cm gigante (parda)', price: 4.40 },
+            { name: '45cm gigante (branca)', price: 4.60 },
             { name: '25cm pequena', price: 2.80 },
             { name: '30cm média', price: 3.00 },
             { name: '35cm grande', price: 3.35 },
@@ -75,16 +75,16 @@ const productCatalog = {
             { name: '45x45x5cm (Gigante)', price: 5.25 }
         ],
         'Sextavada/Americana': [
-            { name: '20cm brotinho', price: 1.98 },
-            { name: '25cm pequena', price: 2.10 },
-            { name: '30cm média', price: 2.40 },
-            { name: '35cm grande', price: 2.85 },
-            { name: '40cm família', price: 3.30 },
-            { name: '20cm brotinho', price: 1.88 },
-            { name: '25cm pequena', price: 2.00 },
-            { name: '30cm média', price: 2.20 },
-            { name: '35cm grande', price: 2.65 },
-            { name: '40cm família', price: 3.10 }
+            { name: '20cm brotinho (parda)', price: 1.88 },
+            { name: '20cm brotinho (branca)', price: 1.98 },
+            { name: '25cm pequena (parda)', price: 2.00 },
+            { name: '25cm pequena (branca)', price: 2.10 },
+            { name: '30cm média (parda)', price: 2.20 },
+            { name: '30cm média (branca)', price: 2.40 },
+            { name: '35cm grande (parda)', price: 2.65 },
+            { name: '35cm grande (branca)', price: 2.85 },
+            { name: '40cm família (parda)', price: 3.10 },
+            { name: '40cm família (branca)', price: 3.30 }
         ]
     },
     'Caixa de torta': {
