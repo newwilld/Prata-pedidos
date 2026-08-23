@@ -38,59 +38,59 @@ let currentCart = []; // Carrinho de compras atual
 let editingOrderId = null; // ID de um pedido existente sendo editado no form principal
 let listenersInitialized = false;
 let isViewingFromClientList = false; // Flag para identificar origem do modal admin
-let selectedSizes = {}; // NOVO: Para armazenar os tamanhos selecionados com checkboxes
+let selectedSizes = {}; // Para armazenar os tamanhos selecionados com checkboxes
 
 // Dados dos produtos em cascata (Categoria > Modelo > Tamanho/Especificação)
 const productCatalog = {
     'Caixa de pizza': {
         'Oitavada - Flexográficas - Branca': [
-            { name: 'Caixa de pizza oitavada 20cm (brotinho)', price: 1.70 },
-            { name: 'Caixa de pizza oitavada 25cm (pequena)', price: 2.10 },
-            { name: 'Caixa de pizza oitavada 30cm (média)', price: 2.40 },
-            { name: 'Caixa de pizza oitavada 35cm (grande)', price: 2.85 },
-            { name: 'Caixa de pizza oitavada 40cm (família)', price: 3.30 },
-            { name: 'Caixa de pizza oitavada 45cm (gigante)', price: 4.60 }
+            { name: '20cm brotinho', price: 1.70 },
+            { name: '25cm pequena', price: 2.10 },
+            { name: '30cm média', price: 2.40 },
+            { name: '35cm grande', price: 2.85 },
+            { name: '40cm família', price: 3.30 },
+            { name: '45cm gigante', price: 4.60 }
         ],
         'Oitavada - Flexográficas - Parda': [
-            { name: 'Caixa de pizza oitavada 20cm (brotinho)', price: 1.60 },
-            { name: 'Caixa de pizza oitavada 25cm (pequena)', price: 2.00 },
-            { name: 'Caixa de pizza oitavada 30cm (média)', price: 2.30 },
-            { name: 'Caixa de pizza oitavada 35cm (grande)', price: 2.65 },
-            { name: 'Caixa de pizza oitavada 40cm (família)', price: 3.10 },
-            { name: 'Caixa de pizza oitavada 45cm (gigante)', price: 4.40 }
+            { name: '20cm brotinho', price: 1.60 },
+            { name: '25cm pequena', price: 2.00 },
+            { name: '30cm média', price: 2.30 },
+            { name: '35cm grande', price: 2.65 },
+            { name: '40cm família', price: 3.10 },
+            { name: '45cm gigante', price: 4.40 }
         ],
         'Oitavada - Fotográficas': [
-            { name: 'Caixa de pizza oitavada 25cm (pequena)', price: 2.80 },
-            { name: 'Caixa de pizza oitavada 30cm (média)', price: 3.00 },
-            { name: 'Caixa de pizza oitavada 35cm (grande)', price: 3.35 },
-            { name: 'Caixa de pizza oitavada 40cm (família)', price: 3.70 }
+            { name: '25cm pequena', price: 2.80 },
+            { name: '30cm média', price: 3.00 },
+            { name: '35cm grande', price: 3.35 },
+            { name: '40cm família', price: 3.70 }
         ],
         'Americana - Branca': [
-            { name: 'Caixa Americana tam. 20cm (brotinho)', price: 1.98 },
-            { name: 'Caixa Americana tam. 25cm (pequena)', price: 2.10 },
-            { name: 'Caixa Americana tam. 30cm (média)', price: 2.40 },
-            { name: 'Caixa Americana tam. 35cm (grande)', price: 2.85 },
-            { name: 'Caixa Americana tam. 40cm (família)', price: 3.30 }
+            { name: '20cm brotinho', price: 1.98 },
+            { name: '25cm pequena', price: 2.10 },
+            { name: '30cm média', price: 2.40 },
+            { name: '35cm grande', price: 2.85 },
+            { name: '40cm família', price: 3.30 }
         ],
         'Americana - Parda': [
-            { name: 'Caixa Americana tam. 20cm (brotinho)', price: 1.88 },
-            { name: 'Caixa Americana tam. 25cm (pequena)', price: 2.00 },
-            { name: 'Caixa Americana tam. 30cm (média)', price: 2.20 },
-            { name: 'Caixa Americana tam. 35cm (grande)', price: 2.65 },
-            { name: 'Caixa Americana tam. 40cm (família)', price: 3.10 }
+            { name: '20cm brotinho', price: 1.88 },
+            { name: '25cm pequena', price: 2.00 },
+            { name: '30cm média', price: 2.20 },
+            { name: '35cm grande', price: 2.65 },
+            { name: '40cm família', price: 3.10 }
         ],
         'Quadrada Branca': [
-            { name: 'Caixa quadrada tam. 20x20x5cm (Broto)', price: 2.10 },
-            { name: 'Caixa quadrada tam. 25x25x5,5cm (Pequena)', price: 2.40 },
-            { name: 'Caixa quadrada tam. 30x30x4,0cm (média)', price: 2.50 },
-            { name: 'Caixa quadrada tam. 30x30x5,5cm (média)', price: 2.85 },
-            { name: 'Caixa quadrada tam. 35x35x4,0cm (grande)', price: 2.85 },
-            { name: 'Caixa quadrada tam. 35x35x5,5cm (grande)', price: 3.18 },
-            { name: 'Caixa quadrada tam. 40x40x4,0cm (família)', price: 3.32 },
-            { name: 'Caixa quadrada tam. 40x40x4,5cm (família)', price: 3.52 },
-            { name: 'Caixa quadrada tam. 40x40x5,5cm (família)', price: 4.38 },
-            { name: 'Caixa quadrada tam. 40x40x7cm (família)', price: 4.70 },
-            { name: 'Caixa quadrada tam. 45x45x5cm (Gigante)', price: 5.25 }
+            { name: '20x20x5cm (Broto)', price: 2.10 },
+            { name: '25x25x5,5cm (Pequena)', price: 2.40 },
+            { name: '30x30x4,0cm (média)', price: 2.50 },
+            { name: '30x30x5,5cm (média)', price: 2.85 },
+            { name: '35x35x4,0cm (grande)', price: 2.85 },
+            { name: '35x35x5,5cm (grande)', price: 3.18 },
+            { name: '40x40x4,0cm (família)', price: 3.32 },
+            { name: '40x40x4,5cm (família)', price: 3.52 },
+            { name: '40x40x5,5cm (família)', price: 4.38 },
+            { name: '40x40x7cm (família)', price: 4.70 },
+            { name: '45x45x5cm (Gigante)', price: 5.25 }
         ]
     },
     'Caixa de torta': {
@@ -433,10 +433,6 @@ window.handleSizeCheckboxChange = function(index) {
     updateTotalDisplayCheckbox();
 };
 
-window.handleQuantityChange = function() {
-    // Função mantida para compatibilidade, mas não é mais usada diretamente
-};
-
 window.updateTotalDisplayCheckbox = function() {
     const sizeCheckboxContainer = document.getElementById('sizeCheckboxContainer');
     const checkboxes = sizeCheckboxContainer.querySelectorAll('.size-checkbox');
@@ -479,7 +475,7 @@ window.updateTotalDisplayCheckbox = function() {
     }
 };
 
-// NOVO: Função para obter os tamanhos selecionados
+// Função para obter os tamanhos selecionados
 function getSelectedSizes() {
     const selectedItems = [];
     
@@ -758,7 +754,7 @@ window.abrirModalCliente = function(orderId) {
     document.getElementById('clientModalOrderId').value = order.id;
     document.getElementById('clientModalStatus').textContent = (order.status === 'novo' ? 'Pendente' : order.status === 'producao' ? 'Em Produção' : order.status === 'finalizado' ? 'Finalizado' : 'Entregue');
     
-    // NOVO: Exibir mensagens de status de alteração
+    // Exibir mensagens de status de alteração
     const alterationPendingMessage = document.getElementById('alterationPendingMessage');
     const alterationApprovedMessage = document.getElementById('alterationApprovedMessage');
     const alterationSentDate = document.getElementById('alterationSentDate');
@@ -1034,7 +1030,7 @@ window.salvarEdicaoPedidoCliente = async function() {
         const legacyQty = newItems.length === 1 ? newItems[0].quantity : 'Diversas';
         const legacyObs = newItems.length === 1 ? newItems[0].obs : '';
         
-        // NOVO: Marca o pedido como "alteração pendente de aprovação"
+        // Marca o pedido como "alteração pendente de aprovação"
         await update(orderRef, {
             items: newItems,
             totalEstimated: newTotal,
@@ -1068,7 +1064,7 @@ window.salvarEdicaoPedidoCliente = async function() {
     }
 };
 
-// NOVO: Função para aprovar alteração (chamada pelo admin)
+// Função para aprovar alteração (chamada pelo admin)
 window.aprovarAlteracaoPedido = async function(orderId) {
     try {
         const orderRef = ref(db, `orders/${orderId}`);
@@ -1154,7 +1150,7 @@ window.prepararAdicaoItemExistente = function() {
 };
 
 // -----------------------------------------------------------------------------
-// RESTANTE DO CÓDIGO ADMIN MASTER
+// RESTANTE DO CÓDIGO ADMIN MASTER (Mantido igual ao original)
 // -----------------------------------------------------------------------------
 window.switchAdminTab = function(tab) {
     document.getElementById('adminPedidosView').classList.add('hidden');
@@ -1305,7 +1301,6 @@ function createKanbanCard(order) {
     const obsDisplay = finalObs ? 
         `<div class="text-xs text-white/80 mb-2 flex items-start gap-1"><i class="fas fa-comment-dots text-white/60 mt-0.5"></i> ${finalObs}</div>` : '';
     
-    // NOVO: Indicador de alteração pendente
     const alterationPending = order.alterationStatus === 'pending' ? 
         `<div class="bg-yellow-500/20 text-yellow-200 text-xs px-3 py-2 rounded-lg mb-2 flex items-center gap-2">
             <i class="fas fa-clock"></i> Alteração pendente de aprovação
