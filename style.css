@@ -976,3 +976,22 @@ select:invalid {
         font-size: 0.9rem !important;
     }
 }
+/* Ajustes para a tela do Admin */
+#adminScreen {
+    height: 100vh;
+    overflow: hidden;
+}
+
+#adminScreen .flex-1 {
+    min-height: 0;
+}
+
+#adminPedidosView {
+    min-height: 0;
+}
+
+/* Garantir que as colunas do kanban tenham altura correta */
+.kanban-column {
+    min-height: 0;
+    height: 100%;
+}
