@@ -448,7 +448,7 @@ window.handleQuantityChange = function() {
 };
 
 // -----------------------------------------------------------------------------
-// NOVO: SISTEMA DE CARRINHO E MÚLTIPLOS ITENS NO PEDIDO DO CLIENTE
+// SISTEMA DE CARRINHO E MÚLTIPLOS ITENS NO PEDIDO DO CLIENTE
 // -----------------------------------------------------------------------------
 window.adicionarAoCarrinho = function() {
     const sizeSelect = document.getElementById('sizeSelect');
@@ -705,7 +705,7 @@ function renderClientOrders(orders) {
 }
 
 // -----------------------------------------------------------------------------
-// NOVO: LÓGICA DO MODAL DO CLIENTE (VISUALIZAR, EDITAR, REPETIR)
+// LÓGICA DO MODAL DO CLIENTE (VISUALIZAR, EDITAR, REPETIR)
 // -----------------------------------------------------------------------------
 window.abrirModalCliente = function(orderId) {
     const order = globalClientOrders[orderId] || globalOrders[orderId];
@@ -902,7 +902,7 @@ window.prepararAdicaoItemExistente = function() {
     showToast('Adicione novos itens no formulário e clique em Atualizar Pedido.', 'info');
 };
 
-// Vincula dinamicamente a função ao botão do modal (para não precisar mudar o HTML estritamente)
+// Vincula dinamicamente a função ao botão do modal
 document.addEventListener('DOMContentLoaded', () => {
     const modalClient = document.getElementById('clientOrderModal');
     if (modalClient) {
@@ -915,7 +915,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
-
 
 // -----------------------------------------------------------------------------
 // RESTANTE DO CÓDIGO ADMIN MASTER
