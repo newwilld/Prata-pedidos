@@ -177,18 +177,18 @@
 
                         <!-- Campo de Observação -->
                         <div class="fade-in">
-                            <label class="block text-sm font-medium text-white mb-2">Observação</label>
+                            <label class="block text-sm font-medium text-white mb-2">Observação (Para o item)</label>
                             <div class="relative">
                                 <i class="fas fa-comment-dots absolute left-4 top-4 text-white/50"></i>
-                                <textarea id="orderObs" rows="3" class="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50 resize-none" placeholder="Alguma observação? Ex: cor específica, tipo de material, etc."></textarea>
+                                <textarea id="orderObs" rows="3" class="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50 resize-none" placeholder="Alguma observação específica deste item? Ex: cor, tipo de material, etc."></textarea>
                             </div>
                         </div>
 
-                        <!-- Display do Valor Total -->
+                        <!-- Display do Valor Total do Item Atual -->
                         <div id="totalDisplayContainer" class="hidden fade-in">
                             <div class="bg-white/10 border border-white/20 rounded-2xl p-5">
                                 <div class="flex justify-between items-center">
-                                    <span class="text-sm font-medium text-white/70">Valor Total Estimado:</span>
+                                    <span class="text-sm font-medium text-white/70">Valor Deste Item:</span>
                                     <span id="totalDisplayValue" class="text-2xl font-bold text-white">R$ 0,00</span>
                                 </div>
                                 <div class="text-xs text-white/50 mt-2">
@@ -197,10 +197,30 @@
                             </div>
                         </div>
 
-                        <!-- Botão Enviar -->
-                        <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-4 rounded-2xl hover:from-blue-600 hover:to-purple-700 transition shadow-2xl transform hover:scale-105 flex items-center justify-center gap-2">
-                            <i class="fas fa-paper-plane"></i> Enviar Pedido
-                        </button>
+                        <!-- NOVO: Container do Carrinho (Exibe itens já adicionados) -->
+                        <div id="cartContainer" class="hidden fade-in bg-white/5 border border-white/20 rounded-2xl p-4">
+                            <h3 class="text-sm font-medium text-white mb-3 flex items-center gap-2">
+                                <i class="fas fa-shopping-basket text-blue-400"></i> Itens no Pedido Atual
+                            </h3>
+                            <ul id="cartItemsList" class="space-y-2 mb-3 max-h-40 overflow-y-auto text-sm text-white/80">
+                                <!-- Os itens adicionados aparecerão aqui via JS -->
+                            </ul>
+                            <div class="pt-3 border-t border-white/20 flex justify-between items-center">
+                                <span class="font-medium text-white text-sm">Total Geral Estimado:</span>
+                                <span id="cartSubtotal" class="font-bold text-green-400 text-lg">R$ 0,00</span>
+                            </div>
+                        </div>
+
+                        <!-- Botões Modificados para Carrinho e Envio Único -->
+                        <div class="flex flex-col gap-3">
+                            <button type="button" onclick="adicionarAoCarrinho()" class="w-full bg-white/10 text-white font-bold py-4 rounded-2xl hover:bg-white/20 border border-white/30 transition shadow-lg flex items-center justify-center gap-2">
+                                <i class="fas fa-cart-plus"></i> Adicionar Mais Itens
+                            </button>
+                            
+                            <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-4 rounded-2xl hover:from-blue-600 hover:to-purple-700 transition shadow-2xl transform hover:scale-105 flex items-center justify-center gap-2">
+                                <i class="fas fa-paper-plane"></i> Finalizar Pedido Completo
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -215,6 +235,7 @@
                 </div>
                 
                 <div class="p-6 flex-1 overflow-y-auto">
+                    <!-- O JS deve adicionar 'onclick="abrirModalCliente(pedidoId)"' nos cards gerados aqui -->
                     <div id="clientOrdersList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <!-- Pedidos do cliente aparecerão aqui -->
                         <div class="col-span-full text-center text-white/50 py-10">Carregando pedidos...</div>
@@ -430,6 +451,73 @@
             <div class="p-6 border-t border-gray-200 bg-gray-50 flex justify-end gap-3">
                 <button onclick="closeEditModal()" class="px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 transition">Cancelar</button>
                 <button onclick="saveClientEdit()" class="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-bold rounded-2xl hover:from-blue-700 hover:to-purple-700 transition shadow-lg">Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOVO: Modal do Cliente (Visualizar e Editar Pedido) -->
+    <div id="clientOrderModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div class="bg-gray-900/95 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
+                <h3 class="font-bold text-white text-xl">Detalhes do Meu Pedido</h3>
+                <button type="button" onclick="closeClientOrderModal()" class="text-white/50 hover:text-white transition">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 space-y-5 overflow-y-auto flex-1">
+                <input type="hidden" id="clientModalOrderId">
+                
+                <!-- Ações de Topo do Modal -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-white/10 pb-4 gap-3">
+                    <span class="text-white/70 text-sm">Status: <span id="clientModalStatus" class="font-bold text-blue-400">Pendente</span></span>
+                    
+                    <!-- Botão Repetir Pedido (1 clique) -->
+                    <button type="button" onclick="repetirPedidoCliente()" class="bg-green-500/20 text-green-400 hover:bg-green-500/30 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition border border-green-500/30 w-full sm:w-auto justify-center">
+                        <i class="fas fa-copy"></i> Repetir Pedido no Sistema
+                    </button>
+                </div>
+
+                <div class="space-y-4">
+                    <h4 class="font-semibold text-white/90 text-sm uppercase tracking-wider">Itens do Pedido</h4>
+                    
+                    <!-- Lista de Itens para Edição (O JS injetará os itens aqui) -->
+                    <div id="clientModalItemsList" class="space-y-3">
+                        <!-- Exemplo de estrutura gerada via JS:
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center bg-white/5 p-4 rounded-xl border border-white/10 gap-3">
+                            <div>
+                                <p class="font-medium text-white text-sm">Caixa de Pizza (Modelo Tradicional)</p>
+                                <p class="text-xs text-white/50 mt-1">35cm</p>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <label class="text-xs text-white/50">Qtd:</label>
+                                <input type="number" value="500" class="w-24 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-400">
+                                <button type="button" class="text-red-400 hover:text-red-300 bg-red-400/10 p-2 rounded-lg transition"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                        -->
+                    </div>
+                    
+                    <!-- Botão Adicionar Mais Itens na Edição -->
+                    <button type="button" onclick="closeClientOrderModal(); document.getElementById('productTypeSelect').focus();" class="w-full border border-dashed border-white/20 text-white/70 hover:text-white hover:border-white/50 hover:bg-white/5 py-4 rounded-xl transition flex items-center justify-center gap-2 text-sm font-medium">
+                        <i class="fas fa-plus-circle"></i> Adicionar Mais Itens a Este Pedido
+                    </button>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-white/70 mb-2">Observações Gerais do Pedido</label>
+                    <textarea id="clientModalObs" rows="3" class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm text-white resize-none" placeholder="Atualize suas observações aqui..."></textarea>
+                </div>
+            </div>
+            
+            <div class="p-6 border-t border-white/10 bg-white/5 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="text-lg font-bold text-white w-full sm:w-auto text-center sm:text-left">
+                    Total: <span id="clientModalTotalValue" class="text-green-400">R$ 0,00</span>
+                </div>
+                <div class="flex w-full sm:w-auto gap-3">
+                    <button type="button" onclick="closeClientOrderModal()" class="flex-1 sm:flex-none px-6 py-3 text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition">Cancelar</button>
+                    <button type="button" onclick="salvarEdicaoPedidoCliente()" class="flex-1 sm:flex-none px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm font-bold rounded-xl hover:from-blue-600 hover:to-purple-700 transition shadow-lg">Salvar Modificações</button>
+                </div>
             </div>
         </div>
     </div>

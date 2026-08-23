@@ -33,6 +33,9 @@ let currentUserData = null;
 let globalOrders = {}; 
 let globalUsers = {};
 let globalNotifications = {};
+let globalClientOrders = {}; // Cache dos pedidos do cliente logado
+let currentCart = []; // Carrinho de compras atual
+let editingOrderId = null; // ID de um pedido existente sendo editado no form principal
 let listenersInitialized = false;
 
 // Dados dos produtos em cascata (Categoria > Modelo > Tamanho/Especificação)
@@ -322,14 +325,13 @@ function setupUIForUser() {
     }
 }
 
-// Função para lidar com a mudança no tipo de produto
+// Lógica de Formulário em Cascata
 window.handleProductTypeChange = function() {
     const productType = document.getElementById('productTypeSelect').value;
     const modelContainer = document.getElementById('modelContainer');
     const sizeContainer = document.getElementById('sizeContainer');
     const quantityContainer = document.getElementById('quantityContainer');
     
-    // Resetar seleções
     const modelSelect = document.getElementById('modelSelect');
     const sizeSelect = document.getElementById('sizeSelect');
     const quantitySelect = document.getElementById('quantitySelect');
@@ -338,7 +340,6 @@ window.handleProductTypeChange = function() {
     sizeSelect.innerHTML = '<option value="" disabled selected class="text-gray-900">Selecione o tamanho...</option>';
     quantitySelect.value = "";
     
-    // Resetar containers
     modelContainer.classList.add('hidden');
     sizeContainer.classList.add('hidden');
     quantityContainer.classList.add('hidden');
@@ -347,7 +348,6 @@ window.handleProductTypeChange = function() {
     
     if (productType && productCatalog[productType]) {
         const models = Object.keys(productCatalog[productType]);
-        
         models.forEach(model => {
             const option = document.createElement('option');
             option.value = model;
@@ -355,12 +355,10 @@ window.handleProductTypeChange = function() {
             option.className = 'text-gray-900';
             modelSelect.appendChild(option);
         });
-        
         modelContainer.classList.remove('hidden');
     }
 };
 
-// Função para lidar com a mudança no modelo
 window.handleModelChange = function() {
     const productType = document.getElementById('productTypeSelect').value;
     const model = document.getElementById('modelSelect').value;
@@ -375,7 +373,6 @@ window.handleModelChange = function() {
     
     if (productType && model && productCatalog[productType][model]) {
         const sizes = productCatalog[productType][model];
-        
         sizes.forEach(size => {
             const option = document.createElement('option');
             option.value = size.name;
@@ -384,12 +381,10 @@ window.handleModelChange = function() {
             option.className = 'text-gray-900';
             sizeSelect.appendChild(option);
         });
-        
         sizeContainer.classList.remove('hidden');
     }
 };
 
-// Função para lidar com a mudança no tamanho
 window.handleSizeChange = function() {
     const sizeSelect = document.getElementById('sizeSelect');
     const quantityContainer = document.getElementById('quantityContainer');
@@ -403,18 +398,14 @@ window.handleSizeChange = function() {
     }
 };
 
-// Função para atualizar o display do valor total
 window.updateTotalDisplay = function() {
     const sizeSelect = document.getElementById('sizeSelect');
     const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
     
-    if (!selectedOption || !selectedOption.dataset.price) {
-        return;
-    }
+    if (!selectedOption || !selectedOption.dataset.price) return;
     
     const unitPrice = parseFloat(selectedOption.dataset.price);
     
-    // Pega a quantidade selecionada
     let quantity = 0;
     const quantitySelect = document.getElementById('quantitySelect');
     const qValue = quantitySelect.value;
@@ -426,10 +417,7 @@ window.updateTotalDisplay = function() {
         quantity = parseInt(qValue) || 0;
     }
     
-    // Calcula o valor total
     const totalValue = unitPrice * quantity;
-    
-    // Atualiza o display
     const totalDisplayContainer = document.getElementById('totalDisplayContainer');
     const totalDisplayValue = document.getElementById('totalDisplayValue');
     const unitPriceDisplay = document.getElementById('unitPriceDisplay');
@@ -447,6 +435,7 @@ window.handleQuantityChange = function() {
     const q = document.getElementById('quantitySelect').value;
     const cContainer = document.getElementById('customQuantityContainer');
     const cInput = document.getElementById('customQuantityInput');
+    
     if (q === 'Outra') {
         cContainer.classList.remove('hidden');
         cInput.setAttribute('required', 'true');
@@ -455,107 +444,215 @@ window.handleQuantityChange = function() {
         cContainer.classList.add('hidden');
         cInput.removeAttribute('required');
     }
-    
-    // Atualiza o display do valor total
     updateTotalDisplay();
+};
+
+// -----------------------------------------------------------------------------
+// NOVO: SISTEMA DE CARRINHO E MÚLTIPLOS ITENS NO PEDIDO DO CLIENTE
+// -----------------------------------------------------------------------------
+window.adicionarAoCarrinho = function() {
+    const sizeSelect = document.getElementById('sizeSelect');
+    if (!sizeSelect || !sizeSelect.value) {
+        showToast('Selecione um produto e tamanho antes de adicionar.', 'error');
+        return;
+    }
+
+    const productType = document.getElementById('productTypeSelect').value;
+    const model = document.getElementById('modelSelect').value;
+    const sizeOption = sizeSelect.options[sizeSelect.selectedIndex];
+    const productValue = sizeSelect.value;
+    const productText = sizeOption.textContent;
+    const unitPrice = parseFloat(sizeOption.dataset.price);
+
+    let quantitySelect = document.getElementById('quantitySelect').value;
+    let quantityNumber = 0;
+
+    if(quantitySelect === 'Outra') {
+        quantityNumber = parseInt(document.getElementById('customQuantityInput').value) || 0;
+    } else {
+        quantityNumber = parseInt(quantitySelect) || 0;
+    }
+
+    if (quantityNumber <= 0) {
+        showToast('Informe uma quantidade válida.', 'error');
+        return;
+    }
+
+    const totalEstimated = unitPrice * quantityNumber;
+    const obs = document.getElementById('orderObs').value.trim();
+
+    // Adiciona ao carrinho em memória
+    currentCart.push({
+        productType,
+        model,
+        product: productValue,
+        productFullDescription: productText,
+        quantity: quantityNumber + ' unidades',
+        quantityNumber: quantityNumber,
+        unitPrice: unitPrice,
+        totalEstimated: totalEstimated,
+        obs: obs
+    });
+
+    renderCart();
+
+    // Resetar campos para permitir adição de novos itens
+    document.getElementById('sizeSelect').selectedIndex = 0;
+    document.getElementById('quantitySelect').value = "";
+    document.getElementById('customQuantityInput').value = "";
+    document.getElementById('orderObs').value = "";
+    document.getElementById('quantityContainer').classList.add('hidden');
+    document.getElementById('customQuantityContainer').classList.add('hidden');
+    document.getElementById('totalDisplayContainer').classList.add('hidden');
+
+    showToast('Item adicionado ao pedido.', 'success');
+};
+
+function renderCart() {
+    const container = document.getElementById('cartContainer');
+    const list = document.getElementById('cartItemsList');
+    const subtotalEl = document.getElementById('cartSubtotal');
+
+    if (currentCart.length === 0) {
+        container.classList.add('hidden');
+        return;
+    }
+
+    container.classList.remove('hidden');
+    let subtotal = 0;
+
+    list.innerHTML = currentCart.map((item, index) => {
+        subtotal += item.totalEstimated;
+        return `
+            <li class="flex justify-between items-center border-b border-white/10 pb-2 mb-2 last:border-0 last:pb-0 last:mb-0">
+                <div>
+                    <p class="font-medium text-white">${item.product}</p>
+                    <p class="text-xs text-white/60">${item.quantity} | R$ ${item.totalEstimated.toFixed(2)}</p>
+                </div>
+                <button type="button" onclick="removerDoCarrinho(${index})" class="text-red-400 hover:text-red-300 p-2">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </li>
+        `;
+    }).join('');
+
+    subtotalEl.textContent = `R$ ${subtotal.toFixed(2)}`;
+}
+
+window.removerDoCarrinho = function(index) {
+    currentCart.splice(index, 1);
+    renderCart();
 };
 
 window.submitOrder = async function(e) {
     e.preventDefault();
     if (!currentUserData) return;
 
-    const productType = document.getElementById('productTypeSelect').value;
-    const model = document.getElementById('modelSelect').value;
+    // Se o cliente preencheu algo e clicou em Enviar direto, captura o item para o carrinho antes.
     const sizeSelect = document.getElementById('sizeSelect');
-    const sizeOption = sizeSelect.options[sizeSelect.selectedIndex];
-    const productValue = sizeSelect.value;
-    const productText = sizeOption.textContent;
-    const unitPrice = parseFloat(sizeOption.dataset.price);
-    
-    let quantity = document.getElementById('quantitySelect').value;
-    let quantityNumber = 0;
-    
-    if(quantity === 'Outra') {
-        quantityNumber = parseInt(document.getElementById('customQuantityInput').value) || 0;
-        quantity = quantityNumber + ' unidades';
-    } else {
-        quantityNumber = parseInt(quantity) || 0;
-        quantity = quantity + ' unidades';
+    if (sizeSelect && sizeSelect.value) {
+        window.adicionarAoCarrinho();
     }
 
-    // Calcula o valor total estimado
-    let totalEstimated = null;
-    if (unitPrice && quantityNumber > 0) {
-        totalEstimated = unitPrice * quantityNumber;
+    if (currentCart.length === 0) {
+        showToast('Adicione pelo menos um item ao pedido.', 'error');
+        return;
     }
-
-    const obs = document.getElementById('orderObs').value.trim();
 
     const btn = e.target.querySelector('button[type="submit"]');
     const originalText = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
     btn.disabled = true;
 
-    const newOrder = {
-        userId: currentUserData.uid,
-        clientName: currentUserData.name,
-        clientEmail: currentUserData.email,
-        clientPhone: currentUserData.phone || '',
-        clientCompany: currentUserData.company || '',
-        productType: productType,
-        model: model,
-        product: productValue,
-        productFullDescription: productText,
-        quantity: quantity,
-        unitPrice: unitPrice,
-        totalEstimated: totalEstimated,
-        obs: obs,
-        priority: "Média",
-        status: "novo",
-        createdAt: Date.now()
-    };
+    const totalOrderValue = currentCart.reduce((acc, item) => acc + item.totalEstimated, 0);
 
     try {
-        const ordersListRef = ref(db, 'orders');
-        const newOrderRef = push(ordersListRef);
-        await set(newOrderRef, newOrder);
-        
-        showToast('Pedido enviado com sucesso!', 'success');
-        if (totalEstimated) {
-            showToast(`Valor total: R$ ${totalEstimated.toFixed(2)}`, 'success');
+        if (editingOrderId) {
+            // Editando um pedido existente a partir da home
+            const orderRef = ref(db, `orders/${editingOrderId}`);
+            await update(orderRef, {
+                items: currentCart,
+                totalEstimated: totalOrderValue,
+                // Fallbacks
+                product: currentCart.length === 1 ? currentCart[0].product : `${currentCart.length} itens`,
+                quantity: currentCart.length === 1 ? currentCart[0].quantity : `Diversas`,
+                obs: currentCart.length === 1 ? currentCart[0].obs : ''
+            });
+            showToast('Pedido atualizado com os novos itens!', 'success');
+            
+            // Restaura o botão original
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Finalizar Pedido Completo';
+            editingOrderId = null;
+        } else {
+            // Criando pedido novo
+            const newOrder = {
+                userId: currentUserData.uid,
+                clientName: currentUserData.name,
+                clientEmail: currentUserData.email,
+                clientPhone: currentUserData.phone || '',
+                clientCompany: currentUserData.company || '',
+                items: currentCart, 
+                totalEstimated: totalOrderValue,
+                priority: "Média",
+                status: "novo",
+                createdAt: Date.now(),
+                // Propriedades antigas de fallback
+                product: currentCart.length === 1 ? currentCart[0].product : `${currentCart.length} itens`,
+                quantity: currentCart.length === 1 ? currentCart[0].quantity : `Diversas`,
+                obs: currentCart.length === 1 ? currentCart[0].obs : ''
+            };
+
+            const ordersListRef = ref(db, 'orders');
+            await push(ordersListRef, newOrder);
+            
+            showToast('Pedido completo enviado com sucesso!', 'success');
+            if (totalOrderValue) {
+                showToast(`Valor total: R$ ${totalOrderValue.toFixed(2)}`, 'success');
+            }
         }
         
+        // Limpar tudo
         document.getElementById('orderForm').reset();
         document.getElementById('modelContainer').classList.add('hidden');
         document.getElementById('sizeContainer').classList.add('hidden');
         document.getElementById('quantityContainer').classList.add('hidden');
         document.getElementById('customQuantityContainer').classList.add('hidden');
         document.getElementById('totalDisplayContainer').classList.add('hidden');
+        
+        currentCart = [];
+        renderCart();
+
     } catch (error) {
         console.error(error);
-        showToast('Erro ao enviar pedido.', 'error');
+        showToast('Erro ao processar pedido.', 'error');
     } finally {
-        btn.innerHTML = originalText;
+        if (!editingOrderId) {
+            btn.innerHTML = originalText;
+        }
         btn.disabled = false;
     }
 };
 
+// Listener para clientes
 function initClientListeners() {
     const ordersRef = ref(db, 'orders');
     onValue(ordersRef, (snapshot) => {
+        globalClientOrders = {}; // Limpa cache
         const data = snapshot.val();
         const myOrders = [];
         if (data) {
             Object.keys(data).forEach(key => {
                 if (data[key].userId === currentUserData.uid) {
-                    myOrders.push({ id: key, ...data[key] });
+                    const orderObj = { id: key, ...data[key] };
+                    myOrders.push(orderObj);
+                    globalClientOrders[key] = orderObj; // Alimentando cache local
                 }
             });
         }
         renderClientOrders(myOrders.sort((a,b) => b.createdAt - a.createdAt));
     }, (error) => {
         console.error("Erro ao carregar pedidos:", error);
-        document.getElementById('clientOrdersList').innerHTML = '<div class="col-span-full text-center py-10 text-red-500">Erro ao carregar pedidos. Verifique as regras do banco de dados.</div>';
+        document.getElementById('clientOrdersList').innerHTML = '<div class="col-span-full text-center py-10 text-red-500">Erro ao carregar pedidos.</div>';
     });
 }
 
@@ -577,29 +674,252 @@ function renderClientOrders(orders) {
         const estimatedValue = order.totalEstimated ? 
             `<div class="text-sm font-bold text-white mt-2">Valor Total: R$ ${order.totalEstimated.toFixed(2)}</div>` : '';
         
-        const obsDisplay = order.obs ? 
-            `<div class="text-sm text-white/90 mt-2 flex items-start gap-2"><i class="fas fa-comment-dots text-white/60 mt-1"></i> ${order.obs}</div>` : '';
+        let displayProduct = '';
+        let displayQty = '';
+        
+        if (order.items && order.items.length > 0) {
+            displayProduct = order.items.length === 1 ? order.items[0].product : `${order.items.length} itens (Clique p/ ver)`;
+            displayQty = order.items.length === 1 ? order.items[0].quantity : `Diversas`;
+        } else {
+            displayProduct = order.product || 'Produto não especificado';
+            displayQty = order.quantity || '';
+        }
         
         return `
-        <div class="bg-gradient-to-br ${statusColors[order.status]} p-6 rounded-3xl shadow-xl flex flex-col gap-4 relative overflow-hidden">
+        <div class="bg-gradient-to-br ${statusColors[order.status]} p-6 rounded-3xl shadow-xl flex flex-col gap-4 relative overflow-hidden cursor-pointer hover:scale-[1.02] transition-transform" onclick="abrirModalCliente('${order.id}')">
             <div class="flex justify-between items-start">
                 <div>
                     <span class="text-xs font-semibold text-white/70 uppercase tracking-wider">${window.formatDateTime(order.createdAt).split(' às')[0]}</span>
-                    <h4 class="font-bold text-white text-lg leading-tight mt-1">${order.product}</h4>
+                    <h4 class="font-bold text-white text-lg leading-tight mt-1">${displayProduct}</h4>
                     ${estimatedValue}
                 </div>
-                <span class="text-xs px-3 py-1.5 rounded-full font-bold bg-white/20 text-white">
+                <span class="text-xs px-3 py-1.5 rounded-full font-bold bg-white/20 text-white text-center">
                     ${statusText[order.status]}
                 </span>
             </div>
             <div class="text-sm text-white/90 flex items-center gap-2">
-                <i class="fas fa-cubes text-white/60"></i> ${order.quantity}
+                <i class="fas fa-cubes text-white/60"></i> ${displayQty}
             </div>
-            ${obsDisplay}
         </div>`;
     }).join('');
 }
 
+// -----------------------------------------------------------------------------
+// NOVO: LÓGICA DO MODAL DO CLIENTE (VISUALIZAR, EDITAR, REPETIR)
+// -----------------------------------------------------------------------------
+window.abrirModalCliente = function(orderId) {
+    const order = globalClientOrders[orderId] || globalOrders[orderId];
+    if (!order) return;
+
+    document.getElementById('clientModalOrderId').value = order.id;
+    document.getElementById('clientModalStatus').textContent = (order.status === 'novo' ? 'Pendente' : order.status === 'producao' ? 'Em Produção' : 'Finalizado');
+
+    const itemsList = document.getElementById('clientModalItemsList');
+    
+    // Tratativa para pedido antigo vs pedido novo (com array)
+    let items = [];
+    if (order.items && Array.isArray(order.items)) {
+        items = [...order.items];
+    } else {
+        items = [{
+            product: order.product,
+            productFullDescription: order.productFullDescription,
+            quantity: order.quantity,
+            quantityNumber: parseInt(order.quantity) || 0,
+            unitPrice: order.unitPrice || 0,
+            totalEstimated: order.totalEstimated || 0,
+            obs: order.obs || ''
+        }];
+    }
+
+    itemsList.innerHTML = items.map((item, index) => {
+        const qtyNum = item.quantityNumber || parseInt(item.quantity) || 0;
+        return `
+        <div class="modal-cart-item flex flex-col sm:flex-row justify-between sm:items-center bg-white/5 p-4 rounded-xl border border-white/10 gap-3" data-unit-price="${item.unitPrice || 0}">
+            <div class="flex-1">
+                <p class="font-medium text-white text-sm item-product-name">${item.product}</p>
+                <p class="text-xs text-white/50 mt-1 item-product-desc hidden">${item.productFullDescription || item.product}</p>
+                <input type="hidden" class="item-product-type" value="${item.productType || ''}">
+                <input type="hidden" class="item-model" value="${item.model || ''}">
+                <input type="hidden" class="item-obs" value="${item.obs || ''}">
+            </div>
+            <div class="flex items-center gap-3">
+                <label class="text-xs text-white/50">Qtd:</label>
+                <input type="number" min="1" value="${qtyNum}" oninput="recalcularTotalModalCliente()" class="item-qty-input w-24 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-400">
+                <button type="button" onclick="removerItemModalCliente(this)" class="text-red-400 hover:text-red-300 bg-red-400/10 p-2 rounded-lg transition"><i class="fas fa-trash"></i></button>
+            </div>
+        </div>`;
+    }).join('');
+
+    document.getElementById('clientModalObs').value = order.generalObs || (order.items ? '' : order.obs) || '';
+    
+    recalcularTotalModalCliente();
+    document.getElementById('clientOrderModal').classList.remove('hidden');
+};
+
+window.closeClientOrderModal = function() {
+    document.getElementById('clientOrderModal').classList.add('hidden');
+};
+
+window.removerItemModalCliente = function(btn) {
+    btn.closest('.modal-cart-item').remove();
+    recalcularTotalModalCliente();
+};
+
+window.recalcularTotalModalCliente = function() {
+    const items = document.querySelectorAll('#clientModalItemsList .modal-cart-item');
+    let total = 0;
+    items.forEach(el => {
+        const unitPrice = parseFloat(el.getAttribute('data-unit-price')) || 0;
+        const qty = parseInt(el.querySelector('.item-qty-input').value) || 0;
+        total += (unitPrice * qty);
+    });
+    document.getElementById('clientModalTotalValue').textContent = `R$ ${total.toFixed(2)}`;
+};
+
+window.salvarEdicaoPedidoCliente = async function() {
+    const orderId = document.getElementById('clientModalOrderId').value;
+    const itemsEls = document.querySelectorAll('#clientModalItemsList .modal-cart-item');
+    
+    if (itemsEls.length === 0) {
+        showToast('O pedido não pode ficar vazio. Adicione itens ou exclua se não quiser mais.', 'error');
+        return;
+    }
+
+    let newItems = [];
+    let newTotal = 0;
+
+    itemsEls.forEach(el => {
+        const qtyNumber = parseInt(el.querySelector('.item-qty-input').value) || 0;
+        const unitPrice = parseFloat(el.getAttribute('data-unit-price')) || 0;
+        const product = el.querySelector('.item-product-name').textContent;
+        const productFullDesc = el.querySelector('.item-product-desc').textContent;
+        const productType = el.querySelector('.item-product-type').value;
+        const model = el.querySelector('.item-model').value;
+        const obs = el.querySelector('.item-obs').value;
+        
+        const totalEst = qtyNumber * unitPrice;
+        newTotal += totalEst;
+
+        newItems.push({
+            productType: productType,
+            model: model,
+            product: product,
+            productFullDescription: productFullDesc,
+            quantity: qtyNumber + ' unidades',
+            quantityNumber: qtyNumber,
+            unitPrice: unitPrice,
+            totalEstimated: totalEst,
+            obs: obs
+        });
+    });
+
+    const generalObs = document.getElementById('clientModalObs').value;
+
+    try {
+        const orderRef = ref(db, `orders/${orderId}`);
+        const legacyProduct = newItems.length === 1 ? newItems[0].product : `${newItems.length} itens`;
+        const legacyQty = newItems.length === 1 ? newItems[0].quantity : 'Diversas';
+        const legacyObs = newItems.length === 1 ? newItems[0].obs : '';
+
+        await update(orderRef, {
+            items: newItems,
+            totalEstimated: newTotal,
+            generalObs: generalObs,
+            product: legacyProduct,
+            quantity: legacyQty,
+            obs: generalObs || legacyObs
+        });
+
+        showToast('Modificações do pedido salvas!', 'success');
+        closeClientOrderModal();
+    } catch (error) {
+        console.error(error);
+        showToast('Erro ao atualizar pedido.', 'error');
+    }
+};
+
+window.repetirPedidoCliente = async function() {
+    const orderId = document.getElementById('clientModalOrderId').value;
+    const originalOrder = globalClientOrders[orderId] || globalOrders[orderId];
+    if (!originalOrder) return;
+    
+    const btn = document.querySelector('button[onclick="repetirPedidoCliente()"]');
+    const origBtnHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Copiando...';
+    btn.disabled = true;
+
+    // Clona e reseta status
+    const clonedOrder = { ...originalOrder };
+    delete clonedOrder.id; 
+    clonedOrder.status = 'novo';
+    clonedOrder.createdAt = Date.now();
+
+    try {
+        const ordersListRef = ref(db, 'orders');
+        await push(ordersListRef, clonedOrder);
+        showToast('Pedido repetido e enviado com sucesso!', 'success');
+        closeClientOrderModal();
+    } catch (error) {
+        console.error(error);
+        showToast('Erro ao repetir pedido.', 'error');
+    } finally {
+        btn.innerHTML = origBtnHtml;
+        btn.disabled = false;
+    }
+};
+
+window.prepararAdicaoItemExistente = function() {
+    const orderId = document.getElementById('clientModalOrderId').value;
+    editingOrderId = orderId;
+    const order = globalClientOrders[orderId];
+    
+    // Passa os itens do pedido para o carrinho principal
+    if (order.items) {
+        currentCart = [...order.items];
+    } else {
+        currentCart = [{
+            productType: order.productType,
+            model: order.model,
+            product: order.product,
+            productFullDescription: order.productFullDescription,
+            quantity: order.quantity,
+            quantityNumber: parseInt(order.quantity) || 0,
+            unitPrice: order.unitPrice,
+            totalEstimated: order.totalEstimated,
+            obs: order.obs
+        }];
+    }
+    
+    closeClientOrderModal();
+    renderCart();
+    
+    document.getElementById('productTypeSelect').focus();
+    
+    // Altera o botão de submissão
+    const submitBtn = document.querySelector('button[type="submit"]');
+    submitBtn.innerHTML = '<i class="fas fa-save"></i> Atualizar Pedido Existente';
+    showToast('Adicione novos itens no formulário e clique em Atualizar Pedido.', 'info');
+};
+
+// Vincula dinamicamente a função ao botão do modal (para não precisar mudar o HTML estritamente)
+document.addEventListener('DOMContentLoaded', () => {
+    const modalClient = document.getElementById('clientOrderModal');
+    if (modalClient) {
+        const addMoreBtn = modalClient.querySelector('button .fa-plus-circle');
+        if (addMoreBtn && addMoreBtn.parentElement) {
+            addMoreBtn.parentElement.onclick = function(e) {
+                e.preventDefault();
+                prepararAdicaoItemExistente();
+            };
+        }
+    }
+});
+
+
+// -----------------------------------------------------------------------------
+// RESTANTE DO CÓDIGO ADMIN MASTER
+// -----------------------------------------------------------------------------
 window.switchAdminTab = function(tab) {
     document.getElementById('adminPedidosView').classList.add('hidden');
     document.getElementById('adminClientsView').classList.add('hidden');
@@ -720,11 +1040,32 @@ function createKanbanCard(order) {
         'Alta': 'bg-red-500/20 text-red-200'
     };
     
+    // Ajuste de visualização para lidar com múltiplos itens (carrinho)
+    let displayProductHtml = '';
+    let displayQty = '';
+    
+    if (order.items && order.items.length > 0) {
+        if (order.items.length === 1) {
+            displayProductHtml = `<h4 class="font-bold text-white text-lg leading-tight mb-2">${order.items[0].product}</h4>`;
+            displayQty = order.items[0].quantity;
+        } else {
+            displayProductHtml = `<h4 class="font-bold text-white text-lg leading-tight mb-2">Múltiplos Itens (${order.items.length}):</h4>
+                                  <ul class="list-disc pl-4 text-sm font-normal text-white/90 mb-2">
+                                     ${order.items.map(i => `<li>${i.quantityNumber}x ${i.product}</li>`).join('')}
+                                  </ul>`;
+            displayQty = `<span class="italic">Veja detalhes</span>`;
+        }
+    } else {
+        displayProductHtml = `<h4 class="font-bold text-white text-lg leading-tight mb-2">${order.product}</h4>`;
+        displayQty = order.quantity;
+    }
+    
     const estimatedValue = order.totalEstimated ? 
         `<div class="text-sm font-bold text-white mb-2">Valor Total: R$ ${order.totalEstimated.toFixed(2)}</div>` : '';
     
-    const obsDisplay = order.obs ? 
-        `<div class="text-xs text-white/80 mb-2 flex items-start gap-1"><i class="fas fa-comment-dots text-white/60 mt-0.5"></i> ${order.obs}</div>` : '';
+    const finalObs = order.generalObs || order.obs;
+    const obsDisplay = finalObs ? 
+        `<div class="text-xs text-white/80 mb-2 flex items-start gap-1"><i class="fas fa-comment-dots text-white/60 mt-0.5"></i> ${finalObs}</div>` : '';
     
     return `
     <div id="order-${order.id}" class="draggable-card bg-gradient-to-br ${statusGradients[order.status]} p-5 rounded-2xl border border-white/20 shadow-xl hover:shadow-2xl transition-all relative overflow-hidden group" 
@@ -742,9 +1083,10 @@ function createKanbanCard(order) {
             <span class="text-[10px] text-white/70 font-medium uppercase tracking-wider">${window.formatDateTime(order.createdAt).split(' às')[0]}</span>
         </div>
         
-        <h4 class="font-bold text-white text-lg leading-tight mb-2">${order.product}</h4>
+        ${displayProductHtml}
+        
         <div class="text-sm text-white/80 mb-2 flex items-center gap-2">
-            <i class="fas fa-cubes text-white/60"></i> ${order.quantity}
+            <i class="fas fa-cubes text-white/60"></i> ${displayQty}
         </div>
         ${estimatedValue}
         ${obsDisplay}
@@ -879,13 +1221,39 @@ window.openEditModal = function(orderId) {
     document.getElementById('editClientPhone').value = order.clientPhone || '';
     document.getElementById('editClientEmail').value = order.clientEmail || '';
     document.getElementById('editClientCompany').value = order.clientCompany || '';
-    document.getElementById('editProduct').value = order.product;
-    document.getElementById('editQuantity').value = order.quantity;
-    document.getElementById('editObs').value = order.obs || '';
+    
+    // Tratando campos para o caso de ter múltiplos itens
+    let productString = order.product || '';
+    let quantityString = order.quantity || '';
+    const prodInput = document.getElementById('editProduct');
+    const qtyInput = document.getElementById('editQuantity');
+    
+    if (order.items && order.items.length > 1) {
+        productString = "Múltiplos Itens (Não editável aqui, acesse pelo cliente)";
+        quantityString = `${order.items.length} itens`;
+        prodInput.readOnly = true;
+        prodInput.classList.add('bg-gray-100', 'text-gray-500');
+        qtyInput.readOnly = true;
+        qtyInput.classList.add('bg-gray-100', 'text-gray-500');
+    } else {
+        prodInput.readOnly = false;
+        prodInput.classList.remove('bg-gray-100', 'text-gray-500');
+        qtyInput.readOnly = false;
+        qtyInput.classList.remove('bg-gray-100', 'text-gray-500');
+        
+        if (order.items && order.items.length === 1) {
+            productString = order.items[0].product;
+            quantityString = order.items[0].quantity;
+        }
+    }
+
+    prodInput.value = productString;
+    qtyInput.value = quantityString;
+    
+    document.getElementById('editObs').value = order.generalObs || order.obs || '';
     document.getElementById('editStatus').value = order.status;
     document.getElementById('editPriority').value = order.priority || 'Média';
     
-    // Atualiza o valor total no modal
     const editTotalValue = document.getElementById('editTotalValue');
     if (editTotalValue) {
         if (order.totalEstimated) {
@@ -896,7 +1264,6 @@ window.openEditModal = function(orderId) {
     }
     
     loadClientOrderHistory(order.userId);
-    
     document.getElementById('adminEditModal').classList.remove('hidden');
 };
 
@@ -923,12 +1290,15 @@ function loadClientOrderHistory(userId) {
         const estimatedValue = order.totalEstimated ? 
             `<p class="text-sm font-bold text-gray-700 mt-1">Valor Total: R$ ${order.totalEstimated.toFixed(2)}</p>` : '';
         
+        const prodName = (order.items && order.items.length > 1) ? `${order.items.length} Itens Vários` : (order.product || 'N/A');
+        const finalObs = order.generalObs || order.obs;
+        
         return `
         <div class="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
             <div class="flex-1">
-                <p class="text-sm font-semibold text-gray-900">${order.product} - ${order.quantity}</p>
+                <p class="text-sm font-semibold text-gray-900">${prodName}</p>
                 ${estimatedValue}
-                ${order.obs ? `<p class="text-xs text-gray-500 mt-1"><i class="fas fa-comment-dots mr-1"></i>${order.obs}</p>` : ''}
+                ${finalObs ? `<p class="text-xs text-gray-500 mt-1"><i class="fas fa-comment-dots mr-1"></i>${finalObs}</p>` : ''}
                 <p class="text-xs text-gray-500 mt-1">
                     <i class="fas fa-calendar-alt mr-1"></i>${window.formatDateTime(order.createdAt)}
                 </p>
@@ -961,17 +1331,32 @@ window.saveClientEdit = async function() {
         const orderRef = ref(db, `orders/${orderId}`);
         const originalOrder = globalOrders[orderId];
         
-        await update(orderRef, {
+        const updates = {
             status: newStatus,
             priority: newPriority,
             clientName: newClientName,
             clientPhone: newClientPhone,
             clientEmail: newClientEmail,
             clientCompany: newClientCompany,
-            product: newProduct,
-            quantity: newQuantity,
-            obs: newObs
-        });
+            generalObs: newObs, // Atualiza observação geral
+            obs: newObs         // Para retrocompatibilidade
+        };
+        
+        // Só atualiza os campos de produto se não for um pedido múltiplo travado (readOnly)
+        if (!document.getElementById('editProduct').readOnly) {
+            updates.product = newProduct;
+            updates.quantity = newQuantity;
+            
+            // Se for array de 1 item, atualiza dentro também
+            if (originalOrder && originalOrder.items && originalOrder.items.length === 1) {
+                updates.items = [...originalOrder.items];
+                updates.items[0].product = newProduct;
+                updates.items[0].quantity = newQuantity;
+                updates.items[0].obs = newObs;
+            }
+        }
+        
+        await update(orderRef, updates);
         
         if (clientUid) {
             const userRef = ref(db, `users/${clientUid}`);
@@ -986,12 +1371,6 @@ window.saveClientEdit = async function() {
         const adminName = currentUserData.name;
         
         if (originalOrder) {
-            if (originalOrder.quantity !== newQuantity) {
-                await createNotification(`Pedido editado por @${adminName}: Quantidade alterada de ${originalOrder.quantity} para ${newQuantity}`);
-            }
-            if (originalOrder.product !== newProduct) {
-                await createNotification(`Pedido editado por @${adminName}: Produto alterado de ${originalOrder.product} para ${newProduct}`);
-            }
             if (originalOrder.status !== newStatus) {
                 const statusText = { 'novo': 'Pendente', 'producao': 'Em Produção', 'finalizado': 'Finalizado' };
                 await createNotification(`Status do pedido alterado por @${adminName}: ${statusText[originalOrder.status]} → ${statusText[newStatus]}`);

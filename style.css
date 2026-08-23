@@ -169,6 +169,16 @@ body {
     background: rgba(255, 255, 255, 0.5);
 }
 
+/* Scrollbar do novo Modal e Itens Internos */
+.modal-cart-item input[type=number]::-webkit-inner-spin-button, 
+.modal-cart-item input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+}
+.modal-cart-item input[type=number] {
+    -moz-appearance: textfield;
+}
+
 /* Cards com gradientes */
 .card-gradient-novo {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
