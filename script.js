@@ -158,17 +158,7 @@ function getAllCatalogItems() {
     return allItems;
 }
 
-// Função para verificar se um item está permitido para o cliente
-function isItemAllowed(itemName, category = null, model = null) {
-    if (!currentUserData || currentUserData.role === 'admin') return true;
-    
-    const config = currentClientItemsConfig;
-    if (!config || !config.allowedItems || config.allowedItems.length === 0) return true;
-    
-    if (config.allowedItems.includes('todos')) return true;
-    
-    return config.allowedItems.some(allowed => {
-        // Verifica categoria completa
+
         if (allowed === 'Caixa de pizza' && itemName.includes('Caixa de pizza')) return true;
         if (allowed === 'Caixa de torta' && itemName.includes('Caixa de torta')) return true;
         if (allowed === 'Caixa correio' && itemName.includes('Caixa correio')) return true;
@@ -177,14 +167,9 @@ function isItemAllowed(itemName, category = null, model = null) {
         if (allowed.includes(' > ')) {
             const [allowedCategory, allowedModel] = allowed.split(' > ');
             if (category === allowedCategory && model === allowedModel) return true;
-            if (itemName.includes(allowedModel)) return true;
         }
         
-        // Verifica apenas o nome do modelo
-        if (model && allowed.toLowerCase() === model.toLowerCase()) return true;
-        if (category && allowed.toLowerCase() === category.toLowerCase()) return true;
-        
-        return itemName.includes(allowed);
+        return false;
     });
 }
 
@@ -203,7 +188,8 @@ function isCategoryAllowed(category) {
     // Verifica se algum modelo específico desta categoria está permitido
     const categoryModels = Object.keys(productCatalog[category] || {});
     return categoryModels.some(model => {
-        return isModelAllowed(category, model);
+        const modelKey = `${category} > ${model}`;
+        return config.allowedItems.includes(modelKey);
     });
 }
 
@@ -219,21 +205,12 @@ function isModelAllowed(category, model) {
     // Verifica se a categoria inteira está permitida
     if (config.allowedItems.includes(category)) return true;
     
-    // Verifica se o modelo específico está permitido (ex: "Caixa de pizza > Oitavada")
+    // Verifica se o modelo específico está permitido
+    // EX: "Caixa de pizza > Oitavada"
     const modelKey = `${category} > ${model}`;
     
-    return config.allowedItems.some(allowed => {
-        // Verifica se é exatamente "Categoria > Modelo"
-        if (allowed === modelKey) return true;
-        
-        // Verifica se é apenas o nome do modelo
-        if (allowed === model) return true;
-        
-        // Verifica comparação case-insensitive
-        if (allowed.toLowerCase() === model.toLowerCase()) return true;
-        
-        return false;
-    });
+    // Verificação EXATA - sem case-insensitive para evitar falsos positivos
+    return config.allowedItems.includes(modelKey);
 }
 
 // Função para obter modelos permitidos para uma categoria
@@ -259,7 +236,8 @@ function getAllowedModelsForCategory(category) {
     // Filtra apenas os modelos específicos permitidos
     const allModels = Object.keys(productCatalog[category] || {});
     const allowedModels = allModels.filter(model => {
-        return isModelAllowed(category, model);
+        const modelKey = `${category} > ${model}`;
+        return config.allowedItems.includes(modelKey);
     });
     
     return allowedModels;
