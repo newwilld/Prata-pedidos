@@ -188,6 +188,13 @@ function isItemAllowed(itemName, category = null, model = null) {
     });
 }
 
+isCategoryAllowed() que está retornando true quando encontra qualquer modelo permitido na categoria, fazendo com que a categoria "Caixa de pizza" apareça no seletor. Mas ao selecionar a categoria, todos os modelos aparecem.
+
+Preciso ajustar a função applyItemsFilter() e handleProductTypeChange() para que, quando apenas um modelo específico for permitido (ex: "Oitavada"), apenas esse modelo apareça no seletor de modelos.
+
+Aqui está a correção necessária:
+
+javascript
 // Função para verificar se uma categoria está permitida
 function isCategoryAllowed(category) {
     if (!currentUserData || currentUserData.role === 'admin') return true;
@@ -197,10 +204,10 @@ function isCategoryAllowed(category) {
     
     if (config.allowedItems.includes('todos')) return true;
     
-    // Verifica se a categoria completa está permitida
+    // Verifica se a categoria completa está permitida (ex: "Caixa de pizza")
     if (config.allowedItems.includes(category)) return true;
     
-    // Verifica se algum modelo desta categoria está permitido
+    // Verifica se algum modelo desta categoria está permitido (ex: "Caixa de pizza > Oitavada")
     const categoryModels = Object.keys(productCatalog[category] || {});
     return categoryModels.some(model => {
         const modelKey = `${category} > ${model}`;
@@ -221,10 +228,10 @@ function isModelAllowed(category, model) {
     
     if (config.allowedItems.includes('todos')) return true;
     
-    // Verifica se a categoria inteira está permitida
+    // Verifica se a categoria inteira está permitida (ex: "Caixa de pizza")
     if (config.allowedItems.includes(category)) return true;
     
-    // Verifica se o modelo específico está permitido
+    // Verifica se o modelo específico está permitido (ex: "Caixa de pizza > Oitavada" ou "Oitavada")
     const modelKey = `${category} > ${model}`;
     return config.allowedItems.some(allowed => 
         allowed === modelKey || 
@@ -232,6 +239,77 @@ function isModelAllowed(category, model) {
         allowed.toLowerCase() === model.toLowerCase()
     );
 }
+
+// Função para obter os modelos permitidos de uma categoria
+function getAllowedModelsForCategory(category) {
+    if (!currentUserData || currentUserData.role === 'admin') {
+        return Object.keys(productCatalog[category] || {});
+    }
+    
+    const config = currentClientItemsConfig;
+    if (!config || !config.allowedItems || config.allowedItems.length === 0) {
+        return Object.keys(productCatalog[category] || {});
+    }
+    
+    if (config.allowedItems.includes('todos')) {
+        return Object.keys(productCatalog[category] || {});
+    }
+    
+    // Se a categoria inteira está permitida
+    if (config.allowedItems.includes(category)) {
+        return Object.keys(productCatalog[category] || {});
+    }
+    
+    // Filtra apenas os modelos específicos permitidos
+    const allModels = Object.keys(productCatalog[category] || {});
+    return allModels.filter(model => {
+        const modelKey = `${category} > ${model}`;
+        return config.allowedItems.some(allowed => 
+            allowed === modelKey || 
+            allowed === model ||
+            allowed.toLowerCase() === model.toLowerCase()
+        );
+    });
+}
+
+// Lógica de Formulário em Cascata - CORRIGIDA
+window.handleProductTypeChange = function() {
+    const productType = document.getElementById('productTypeSelect').value;
+    const modelContainer = document.getElementById('modelContainer');
+    const sizeContainer = document.getElementById('sizeContainer');
+    const sizeCheckboxContainer = document.getElementById('sizeCheckboxContainer');
+    
+    const modelSelect = document.getElementById('modelSelect');
+    
+    modelSelect.innerHTML = '<option value="" disabled selected class="text-gray-900">Selecione o modelo...</option>';
+    sizeCheckboxContainer.innerHTML = '';
+    selectedSizes = {};
+    
+    modelContainer.classList.add('hidden');
+    sizeContainer.classList.add('hidden');
+    document.getElementById('totalDisplayContainer').classList.add('hidden');
+    
+    if (productType && productCatalog[productType]) {
+        // Obtém apenas os modelos permitidos para esta categoria
+        const allowedModels = getAllowedModelsForCategory(productType);
+        
+        if (allowedModels.length > 0) {
+            allowedModels.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model;
+                option.textContent = model;
+                option.className = 'text-gray-900';
+                modelSelect.appendChild(option);
+            });
+            modelContainer.classList.remove('hidden');
+        } else {
+            // Se nenhum modelo estiver disponível, esconde o container
+            modelSelect.innerHTML = '<option value="" disabled selected class="text-gray-900">Nenhum modelo disponível</option>';
+            modelContainer.classList.add('hidden');
+        }
+    }
+};
+
 
 // Funções de UI Auxiliares
 window.showToast = function(message, type = 'info') {
@@ -477,48 +555,6 @@ function applyItemsFilter() {
         }
     }
 }
-
-// Lógica de Formulário em Cascata
-window.handleProductTypeChange = function() {
-    const productType = document.getElementById('productTypeSelect').value;
-    const modelContainer = document.getElementById('modelContainer');
-    const sizeContainer = document.getElementById('sizeContainer');
-    const sizeCheckboxContainer = document.getElementById('sizeCheckboxContainer');
-    
-    const modelSelect = document.getElementById('modelSelect');
-    
-    modelSelect.innerHTML = '<option value="" disabled selected class="text-gray-900">Selecione o modelo...</option>';
-    sizeCheckboxContainer.innerHTML = '';
-    selectedSizes = {};
-    
-    modelContainer.classList.add('hidden');
-    sizeContainer.classList.add('hidden');
-    document.getElementById('totalDisplayContainer').classList.add('hidden');
-    
-    if (productType && productCatalog[productType]) {
-        const models = Object.keys(productCatalog[productType]);
-        let hasVisibleModel = false;
-        
-        models.forEach(model => {
-            // Verifica se o modelo está permitido para o cliente
-            if (currentUserData.role === 'admin' || isModelAllowed(productType, model)) {
-                const option = document.createElement('option');
-                option.value = model;
-                option.textContent = model;
-                option.className = 'text-gray-900';
-                modelSelect.appendChild(option);
-                hasVisibleModel = true;
-            }
-        });
-        
-        if (hasVisibleModel) {
-            modelContainer.classList.remove('hidden');
-        } else {
-            modelSelect.innerHTML = '<option value="" disabled selected class="text-gray-900">Nenhum modelo disponível</option>';
-            modelContainer.classList.remove('hidden');
-        }
-    }
-};
 
 window.handleModelChange = function() {
     const productType = document.getElementById('productTypeSelect').value;
