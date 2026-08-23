@@ -454,10 +454,16 @@
         <!-- Itens carregados dinamicamente com checkboxes -->
     </div>
     
-    <!-- Botão para Salvar Itens Selecionados Individualmente -->
+   <!-- Botões para Salvar Itens Selecionados -->
+<div class="space-y-2">
     <button onclick="salvarItensSelecionadosIndividualmente()" 
             class="w-full bg-green-600 text-white text-sm font-bold px-4 py-2 rounded-lg hover:bg-green-700 transition">
         <i class="fas fa-check"></i> Salvar Itens Selecionados
+    </button>
+    
+    <button onclick="adicionarItensSelecionadosExcluidos()" 
+            class="w-full bg-red-600 text-white text-sm font-bold px-4 py-2 rounded-lg hover:bg-red-700 transition">
+        <i class="fas fa-ban"></i> Adicionar Itens Selecionados a Lista de Excluídos
     </button>
 </div>
                 
