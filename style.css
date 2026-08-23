@@ -1037,3 +1037,32 @@ select:invalid {
 .kanban-column::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.5);
 }
+/* Ajuste específico para o bloco Finalizados */
+#kanban-finalizado {
+    min-height: auto !important;
+    height: auto !important;
+    max-height: 600px !important; /* Altura máxima do bloco Finalizados */
+    overflow-y: auto !important; /* Scroll interno com barra de rolagem */
+    -webkit-overflow-scrolling: touch; /* Scroll suave no mobile */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+/* Barra de rolagem personalizada para Finalizados */
+#kanban-finalizado::-webkit-scrollbar {
+    width: 8px;
+}
+
+#kanban-finalizado::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
+#kanban-finalizado::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+}
+
+#kanban-finalizado::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
