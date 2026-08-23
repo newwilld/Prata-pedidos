@@ -33,14 +33,14 @@ let currentUserData = null;
 let globalOrders = {}; 
 let globalUsers = {};
 let globalNotifications = {};
-let globalClientOrders = {}; // Cache dos pedidos do cliente logado
-let currentCart = []; // Carrinho de compras atual
-let editingOrderId = null; // ID de um pedido existente sendo editado no form principal
+let globalClientOrders = {};
+let currentCart = [];
+let editingOrderId = null;
 let listenersInitialized = false;
-let isViewingFromClientList = false; // Flag para identificar origem do modal admin
-let selectedSizes = {}; // Para armazenar os tamanhos selecionados com checkboxes
-let currentClientItemsConfig = { allowedItems: ['todos'], excludedItems: [] }; // Configuração de itens do cliente atual
-let editingClientItemsConfig = { allowedItems: ['todos'], excludedItems: [] }; // Configuração em edição no modal
+let isViewingFromClientList = false;
+let selectedSizes = {};
+let currentClientItemsConfig = { allowedItems: ['todos'], excludedItems: [] };
+let editingClientItemsConfig = { allowedItems: ['todos'], excludedItems: [] };
 
 // Dados dos produtos em cascata (Categoria > Modelo > Tamanho/Especificação)
 const productCatalog = {
@@ -159,7 +159,7 @@ function getAllCatalogItems() {
 }
 
 // Função para verificar se um item está permitido para o cliente
-function isItemAllowed(itemName) {
+function isItemAllowed(itemName, category = null, model = null) {
     if (!currentUserData || currentUserData.role === 'admin') return true;
     
     const config = currentClientItemsConfig;
@@ -167,11 +167,23 @@ function isItemAllowed(itemName) {
     
     if (config.allowedItems.includes('todos')) return true;
     
-    // Verifica se o item está na lista de permitidos
     return config.allowedItems.some(allowed => {
+        // Verifica categoria completa
         if (allowed === 'Caixa de pizza' && itemName.includes('Caixa de pizza')) return true;
         if (allowed === 'Caixa de torta' && itemName.includes('Caixa de torta')) return true;
         if (allowed === 'Caixa correio' && itemName.includes('Caixa correio')) return true;
+        
+        // Verifica modelo específico (ex: "Caixa de pizza > Oitavada")
+        if (allowed.includes(' > ')) {
+            const [allowedCategory, allowedModel] = allowed.split(' > ');
+            if (category === allowedCategory && model === allowedModel) return true;
+            if (itemName.includes(allowedModel)) return true;
+        }
+        
+        // Verifica apenas o nome do modelo
+        if (model && allowed.toLowerCase() === model.toLowerCase()) return true;
+        if (category && allowed.toLowerCase() === category.toLowerCase()) return true;
+        
         return itemName.includes(allowed);
     });
 }
@@ -185,7 +197,40 @@ function isCategoryAllowed(category) {
     
     if (config.allowedItems.includes('todos')) return true;
     
-    return config.allowedItems.includes(category);
+    // Verifica se a categoria completa está permitida
+    if (config.allowedItems.includes(category)) return true;
+    
+    // Verifica se algum modelo desta categoria está permitido
+    const categoryModels = Object.keys(productCatalog[category] || {});
+    return categoryModels.some(model => {
+        const modelKey = `${category} > ${model}`;
+        return config.allowedItems.some(allowed => 
+            allowed === modelKey || 
+            allowed === model ||
+            allowed.toLowerCase() === model.toLowerCase()
+        );
+    });
+}
+
+// Função para verificar se um modelo específico está permitido
+function isModelAllowed(category, model) {
+    if (!currentUserData || currentUserData.role === 'admin') return true;
+    
+    const config = currentClientItemsConfig;
+    if (!config || !config.allowedItems || config.allowedItems.length === 0) return true;
+    
+    if (config.allowedItems.includes('todos')) return true;
+    
+    // Verifica se a categoria inteira está permitida
+    if (config.allowedItems.includes(category)) return true;
+    
+    // Verifica se o modelo específico está permitido
+    const modelKey = `${category} > ${model}`;
+    return config.allowedItems.some(allowed => 
+        allowed === modelKey || 
+        allowed === model ||
+        allowed.toLowerCase() === model.toLowerCase()
+    );
 }
 
 // Funções de UI Auxiliares
@@ -307,7 +352,6 @@ onAuthStateChanged(auth, async (user) => {
                     currentUserData.role = 'admin';
                 }
                 
-                // Carrega configuração de itens do cliente
                 if (currentUserData.role === 'client') {
                     loadClientItemsConfig(user.uid);
                 }
@@ -342,6 +386,10 @@ function loadClientItemsConfig(userId) {
             currentClientItemsConfig = snapshot.val();
         } else {
             currentClientItemsConfig = { allowedItems: ['todos'], excludedItems: [] };
+        }
+        // Reaplica o filtro após carregar a configuração
+        if (currentUserData && currentUserData.role === 'client') {
+            applyItemsFilter();
         }
     }).catch(err => {
         console.error("Erro ao carregar configuração de itens:", err);
@@ -394,7 +442,6 @@ function setupUIForUser() {
             listenersInitialized = true;
         }
         
-        // Aplica filtro de itens no catálogo
         applyItemsFilter();
     }
 }
@@ -415,6 +462,18 @@ function applyItemsFilter() {
         } else {
             option.disabled = false;
             option.style.display = '';
+        }
+    }
+    
+    // Se a opção selecionada atual estiver oculta, limpa a seleção
+    if (productTypeSelect.selectedIndex > -1) {
+        const selectedOption = productTypeSelect.options[productTypeSelect.selectedIndex];
+        if (selectedOption && selectedOption.style.display === 'none') {
+            productTypeSelect.selectedIndex = 0;
+            // Limpa os containers de modelo e tamanho
+            document.getElementById('modelContainer').classList.add('hidden');
+            document.getElementById('sizeContainer').classList.add('hidden');
+            document.getElementById('sizeCheckboxContainer').innerHTML = '';
         }
     }
 }
@@ -438,21 +497,26 @@ window.handleProductTypeChange = function() {
     
     if (productType && productCatalog[productType]) {
         const models = Object.keys(productCatalog[productType]);
+        let hasVisibleModel = false;
+        
         models.forEach(model => {
-            // Verifica se algum item deste modelo está permitido
-            const hasAllowedItem = productCatalog[productType][model].some(size => 
-                isItemAllowed(`${productType} > ${model} > ${size.name}`)
-            );
-            
-            if (hasAllowedItem || currentUserData.role === 'admin') {
+            // Verifica se o modelo está permitido para o cliente
+            if (currentUserData.role === 'admin' || isModelAllowed(productType, model)) {
                 const option = document.createElement('option');
                 option.value = model;
                 option.textContent = model;
                 option.className = 'text-gray-900';
                 modelSelect.appendChild(option);
+                hasVisibleModel = true;
             }
         });
-        modelContainer.classList.remove('hidden');
+        
+        if (hasVisibleModel) {
+            modelContainer.classList.remove('hidden');
+        } else {
+            modelSelect.innerHTML = '<option value="" disabled selected class="text-gray-900">Nenhum modelo disponível</option>';
+            modelContainer.classList.remove('hidden');
+        }
     }
 };
 
@@ -466,48 +530,48 @@ window.handleModelChange = function() {
     selectedSizes = {};
     document.getElementById('totalDisplayContainer').classList.add('hidden');
     
-    if (productType && model && productCatalog[productType][model]) {
+    if (productType && model && productCatalog[productType] && productCatalog[productType][model]) {
         const sizes = productCatalog[productType][model];
         
         // Filtra tamanhos permitidos para clientes
         const allowedSizes = sizes.filter(size => {
             if (currentUserData.role === 'admin') return true;
-            return isItemAllowed(`${productType} > ${model} > ${size.name}`);
+            return isItemAllowed(`${productType} > ${model} > ${size.name}`, productType, model);
         });
         
-        // Cria os checkboxes para cada tamanho permitido
-        allowedSizes.forEach((size, index) => {
-            const div = document.createElement('div');
-            div.className = 'size-checkbox-item';
-            div.id = `size-item-${index}`;
+        if (allowedSizes.length > 0) {
+            allowedSizes.forEach((size, index) => {
+                const div = document.createElement('div');
+                div.className = 'size-checkbox-item';
+                div.id = `size-item-${index}`;
+                
+                div.innerHTML = `
+                    <input type="checkbox" id="size-check-${index}" class="size-checkbox" onchange="handleSizeCheckboxChange(${index})">
+                    <label for="size-check-${index}" class="size-checkbox-label">${size.name} - R$ ${size.price.toFixed(2)}</label>
+                    <select id="size-quantity-${index}" class="size-quantity-input" disabled onchange="updateTotalDisplayCheckbox()">
+                        <option value="500">500 unidades</option>
+                        <option value="1000">1.000 unidades</option>
+                        <option value="2000">2.000 unidades</option>
+                        <option value="3000">3.000 unidades</option>
+                        <option value="4000">4.000 unidades</option>
+                        <option value="5000">5.000 unidades</option>
+                        <option value="Outra">Outra quantidade</option>
+                    </select>
+                    <input type="number" id="size-custom-quantity-${index}" class="size-quantity-input hidden" min="1" placeholder="Qtd" style="width: 100px;" oninput="updateTotalDisplayCheckbox()">
+                `;
+                
+                sizeCheckboxContainer.appendChild(div);
+                
+                selectedSizes[index] = {
+                    name: size.name,
+                    price: size.price,
+                    checked: false,
+                    quantity: 0
+                };
+            });
             
-            div.innerHTML = `
-                <input type="checkbox" id="size-check-${index}" class="size-checkbox" onchange="handleSizeCheckboxChange(${index})">
-                <label for="size-check-${index}" class="size-checkbox-label">${size.name} - R$ ${size.price.toFixed(2)}</label>
-                <select id="size-quantity-${index}" class="size-quantity-input" disabled onchange="updateTotalDisplayCheckbox()">
-                    <option value="500">500 unidades</option>
-                    <option value="1000">1.000 unidades</option>
-                    <option value="2000">2.000 unidades</option>
-                    <option value="3000">3.000 unidades</option>
-                    <option value="4000">4.000 unidades</option>
-                    <option value="5000">5.000 unidades</option>
-                    <option value="Outra">Outra quantidade</option>
-                </select>
-                <input type="number" id="size-custom-quantity-${index}" class="size-quantity-input hidden" min="1" placeholder="Qtd" style="width: 100px;" oninput="updateTotalDisplayCheckbox()">
-            `;
-            
-            sizeCheckboxContainer.appendChild(div);
-            
-            // Armazena os dados do tamanho
-            selectedSizes[index] = {
-                name: size.name,
-                price: size.price,
-                checked: false,
-                quantity: 0
-            };
-        });
-        
-        sizeContainer.classList.remove('hidden');
+            sizeContainer.classList.remove('hidden');
+        }
     }
 };
 
@@ -522,7 +586,6 @@ window.handleSizeCheckboxChange = function(index) {
         itemDiv.classList.add('checked');
         selectedSizes[index].checked = true;
         
-        // Se a quantidade não foi definida, define como 1000 por padrão
         if (!selectedSizes[index].quantity) {
             quantitySelect.value = '1000';
             selectedSizes[index].quantity = 1000;
@@ -619,7 +682,6 @@ window.adicionarAoCarrinho = function() {
     const obs = document.getElementById('orderObs').value.trim();
     let totalEstimated = 0;
     
-    // Adiciona cada tamanho selecionado como um item no carrinho
     selectedSizeItems.forEach(sizeItem => {
         const itemTotal = sizeItem.price * sizeItem.quantity;
         totalEstimated += itemTotal;
@@ -639,7 +701,6 @@ window.adicionarAoCarrinho = function() {
     
     renderCart();
     
-    // Resetar campos
     document.getElementById('sizeCheckboxContainer').innerHTML = '';
     selectedSizes = {};
     document.getElementById('modelSelect').selectedIndex = 0;
@@ -690,7 +751,6 @@ window.submitOrder = async function(e) {
     e.preventDefault();
     if (!currentUserData) return;
     
-    // Se o cliente preencheu algo e clicou em Enviar direto, captura o item para o carrinho antes.
     const selectedSizeItems = getSelectedSizes();
     if (selectedSizeItems.length > 0) {
         window.adicionarAoCarrinho();
@@ -710,7 +770,6 @@ window.submitOrder = async function(e) {
     
     try {
         if (editingOrderId) {
-            // Editando um pedido existente a partir da home
             const orderRef = ref(db, `orders/${editingOrderId}`);
             await update(orderRef, {
                 items: currentCart,
@@ -724,7 +783,6 @@ window.submitOrder = async function(e) {
             btn.innerHTML = '<i class="fas fa-paper-plane"></i> Finalizar Pedido Completo';
             editingOrderId = null;
         } else {
-            // Criando pedido novo
             const newOrder = {
                 userId: currentUserData.uid,
                 clientName: currentUserData.name,
@@ -750,7 +808,6 @@ window.submitOrder = async function(e) {
             }
         }
         
-        // Limpar tudo
         document.getElementById('orderForm').reset();
         document.getElementById('modelContainer').classList.add('hidden');
         document.getElementById('sizeContainer').classList.add('hidden');
@@ -859,23 +916,19 @@ window.abrirModalCliente = function(orderId) {
     document.getElementById('clientModalOrderId').value = order.id;
     document.getElementById('clientModalStatus').textContent = (order.status === 'novo' ? 'Pendente' : order.status === 'producao' ? 'Em Produção' : order.status === 'finalizado' ? 'Finalizado' : 'Entregue');
     
-    // Exibir mensagens de status de alteração
     const alterationPendingMessage = document.getElementById('alterationPendingMessage');
     const alterationApprovedMessage = document.getElementById('alterationApprovedMessage');
     const alterationSentDate = document.getElementById('alterationSentDate');
     const approvalSentDate = document.getElementById('approvalSentDate');
     const approvalDate = document.getElementById('approvalDate');
     
-    // Verifica se há alteração pendente
     if (order.alterationStatus === 'pending') {
         alterationPendingMessage.classList.remove('hidden');
         alterationApprovedMessage.classList.add('hidden');
         if (order.alterationSentAt) {
             alterationSentDate.textContent = window.formatDateTime(order.alterationSentAt);
         }
-    } 
-    // Verifica se há alteração aprovada
-    else if (order.alterationStatus === 'approved') {
+    } else if (order.alterationStatus === 'approved') {
         alterationPendingMessage.classList.add('hidden');
         alterationApprovedMessage.classList.remove('hidden');
         if (order.alterationSentAt) {
@@ -884,14 +937,11 @@ window.abrirModalCliente = function(orderId) {
         if (order.alterationApprovedAt) {
             approvalDate.textContent = window.formatDateTime(order.alterationApprovedAt);
         }
-    }
-    // Sem alterações
-    else {
+    } else {
         alterationPendingMessage.classList.add('hidden');
         alterationApprovedMessage.classList.add('hidden');
     }
     
-    // VERIFICA SE O CLIENTE PODE EDITAR O PEDIDO
     const podeEditar = order.status === 'novo';
     
     const btnSalvar = document.querySelector('button[onclick="salvarEdicaoPedidoCliente()"]');
@@ -1135,7 +1185,6 @@ window.salvarEdicaoPedidoCliente = async function() {
         const legacyQty = newItems.length === 1 ? newItems[0].quantity : 'Diversas';
         const legacyObs = newItems.length === 1 ? newItems[0].obs : '';
         
-        // Marca o pedido como "alteração pendente de aprovação"
         await update(orderRef, {
             items: newItems,
             totalEstimated: newTotal,
@@ -1148,7 +1197,6 @@ window.salvarEdicaoPedidoCliente = async function() {
             alterationApprovedAt: null
         });
         
-        // NOTIFICAÇÃO DE EDIÇÃO PELO CLIENTE
         const clientName = currentUserData.name || 'Cliente';
         
         const itemsSummary = newItems.map(i => `${i.quantityNumber}x ${i.product}`).join(', ');
@@ -1169,7 +1217,6 @@ window.salvarEdicaoPedidoCliente = async function() {
     }
 };
 
-// Função para aprovar alteração (chamada pelo admin)
 window.aprovarAlteracaoPedido = async function(orderId) {
     try {
         const orderRef = ref(db, `orders/${orderId}`);
@@ -1255,7 +1302,7 @@ window.prepararAdicaoItemExistente = function() {
 };
 
 // -----------------------------------------------------------------------------
-// RESTANTE DO CÓDIGO ADMIN MASTER (Mantido igual ao original)
+// RESTANTE DO CÓDIGO ADMIN MASTER
 // -----------------------------------------------------------------------------
 window.switchAdminTab = function(tab) {
     document.getElementById('adminPedidosView').classList.add('hidden');
@@ -2056,10 +2103,31 @@ function renderClientsList() {
         const displayName = client.name && client.name !== 'undefined' ? client.name : 'Cliente sem nome';
         const displayEmail = client.email && client.email !== 'undefined' && client.email !== 'N/A' ? client.email : 'N/A';
         
-        // Obtém as categorias permitidas
         const allowedConfig = client.itemsConfig?.allowedItems || ['todos'];
-        const allowedText = allowedConfig.includes('todos') ? 'Todos os itens' : allowedConfig.join(', ');
-        const allowedColor = allowedConfig.includes('todos') ? 'text-green-400' : 'text-yellow-400';
+        let allowedText = '';
+        let allowedColor = '';
+        
+        if (allowedConfig.includes('todos')) {
+            allowedText = 'Todos os itens';
+            allowedColor = 'text-green-400';
+        } else if (allowedConfig.length === 0) {
+            allowedText = 'Nenhum item';
+            allowedColor = 'text-red-400';
+        } else {
+            const categories = allowedConfig.filter(item => !item.includes(' > '));
+            const specificModels = allowedConfig.filter(item => item.includes(' > '));
+            
+            const parts = [];
+            if (categories.length > 0) {
+                parts.push(categories.join(', '));
+            }
+            if (specificModels.length > 0) {
+                parts.push(`${specificModels.length} modelo(s) específico(s)`);
+            }
+            
+            allowedText = parts.join(' + ');
+            allowedColor = 'text-yellow-400';
+        }
         
         return `
         <tr class="hover:bg-white/5 transition cursor-pointer" onclick="openClientModal('${client.uid}')">
@@ -2082,7 +2150,7 @@ function renderClientsList() {
             <td class="px-6 py-5 text-right text-white/70 text-sm">
                 ${client.lastOrderDate ? window.formatDateTime(client.lastOrderDate).split(' às')[0] : 'Nunca comprou'}
             </td>
-            <td class="px-6 py-5 text-white/70">
+            <td class="px-6 py-5 text-right">
                 <span class="text-xs ${allowedColor}">
                     ${allowedText}
                 </span>
@@ -2091,12 +2159,10 @@ function renderClientsList() {
     `}).join('');
 }
 
-// Função para abrir modal de cliente com configuração de itens
 window.openClientModal = function(clientUid) {
     isViewingFromClientList = true;
     updateDeleteButtonVisibility();
     
-    // Carrega configuração de itens do cliente
     loadClientItemsConfigForEdit(clientUid);
     
     const clientOrders = Object.values(globalOrders)
@@ -2181,7 +2247,6 @@ window.openClientModal = function(clientUid) {
     }
 };
 
-// Função para carregar configuração de itens no modal de edição
 function loadClientItemsConfigForEdit(clientUid) {
     const configRef = ref(db, `users/${clientUid}/itemsConfig`);
     get(configRef).then((snapshot) => {
@@ -2190,14 +2255,11 @@ function loadClientItemsConfigForEdit(clientUid) {
             config = snapshot.val();
         }
         
-        // Salva a configuração atual em edição
         editingClientItemsConfig = { ...config };
         
-        // Atualiza os checkboxes no modal
         updateItemsConfigCheckboxes(config);
         updateItemsConfigDisplay(config);
         
-        // Esconde a lista de itens individuais
         const itemsListContainer = document.getElementById('allItemsList');
         if (itemsListContainer) itemsListContainer.classList.add('hidden');
         
@@ -2206,7 +2268,6 @@ function loadClientItemsConfigForEdit(clientUid) {
     });
 }
 
-// Função para atualizar checkboxes principais
 function updateItemsConfigCheckboxes(config) {
     const allowTodos = document.getElementById('itemsAllowedTodos');
     const allowPizza = document.getElementById('itemsAllowedPizza');
@@ -2219,28 +2280,49 @@ function updateItemsConfigCheckboxes(config) {
     if (allowCorreio) allowCorreio.checked = config.allowedItems?.includes('Caixa correio') || false;
 }
 
-// Função para atualizar display da configuração de itens
 function updateItemsConfigDisplay(config) {
     const allowedItemsContainer = document.getElementById('allowedItemsDisplay');
     const excludedItemsContainer = document.getElementById('excludedItemsDisplay');
     
     if (!allowedItemsContainer || !excludedItemsContainer) return;
     
-    if (config.allowedItems?.includes('todos')) {
+    const allowedItems = config.allowedItems || ['todos'];
+    
+    if (allowedItems.includes('todos')) {
         allowedItemsContainer.innerHTML = '<span class="text-green-600 font-bold">Todos os itens permitidos</span>';
         excludedItemsContainer.innerHTML = '<span class="text-gray-500">Nenhum item excluído</span>';
-    } else if (config.allowedItems && config.allowedItems.length > 0) {
-        allowedItemsContainer.innerHTML = config.allowedItems.map(item => 
-            `<span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold mr-2 mb-2 inline-block">${item}</span>`
-        ).join('');
+    } else if (allowedItems.length > 0) {
+        const categories = allowedItems.filter(item => Object.keys(productCatalog).includes(item));
+        const specificModels = allowedItems.filter(item => item.includes(' > '));
         
-        // Calcula itens excluídos (todos menos os permitidos)
-        const allCategories = Object.keys(productCatalog);
-        const excludedCategories = allCategories.filter(cat => !config.allowedItems.includes(cat));
+        let allowedHtml = '';
         
-        excludedItemsContainer.innerHTML = excludedCategories.map(item => 
-            `<span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold mr-2 mb-2 inline-block">${item}</span>`
-        ).join('') || '<span class="text-gray-500">Nenhum item excluído</span>';
+        categories.forEach(category => {
+            allowedHtml += `<span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold mr-2 mb-2 inline-block">${category} (todos)</span>`;
+        });
+        
+        specificModels.forEach(modelKey => {
+            allowedHtml += `<span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-bold mr-2 mb-2 inline-block">${modelKey}</span>`;
+        });
+        
+        allowedItemsContainer.innerHTML = allowedHtml || '<span class="text-gray-500">Nenhum item permitido</span>';
+        
+        const excludedHtml = [];
+        Object.keys(productCatalog).forEach(category => {
+            const isCategoryAllowed = categories.includes(category);
+            const modelsInCategory = Object.keys(productCatalog[category]);
+            
+            modelsInCategory.forEach(model => {
+                const modelKey = `${category} > ${model}`;
+                const isModelAllowed = specificModels.includes(modelKey);
+                
+                if (!isCategoryAllowed && !isModelAllowed) {
+                    excludedHtml.push(`<span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold mr-2 mb-2 inline-block">${modelKey}</span>`);
+                }
+            });
+        });
+        
+        excludedItemsContainer.innerHTML = excludedHtml.join('') || '<span class="text-gray-500">Nenhum item excluído</span>';
     } else {
         allowedItemsContainer.innerHTML = '<span class="text-gray-500">Nenhum item permitido</span>';
         
@@ -2251,7 +2333,6 @@ function updateItemsConfigDisplay(config) {
     }
 }
 
-// Função para salvar configuração de itens do cliente
 window.saveClientItemsConfig = async function() {
     const clientUid = document.getElementById('editClientUid').value;
     
@@ -2288,7 +2369,6 @@ window.saveClientItemsConfig = async function() {
     try {
         await update(ref(db, `users/${clientUid}/itemsConfig`), itemsConfig);
         
-        // Atualiza também na lista global
         if (globalUsers[clientUid]) {
             globalUsers[clientUid].itemsConfig = itemsConfig;
         }
@@ -2296,7 +2376,6 @@ window.saveClientItemsConfig = async function() {
         updateItemsConfigDisplay(itemsConfig);
         showToast('Configuração de itens salva com sucesso!', 'success');
         
-        // Recarrega lista de clientes se estiver visível
         if(!document.getElementById('adminClientsView').classList.contains('hidden')){
             renderClientsList();
         }
@@ -2307,20 +2386,17 @@ window.saveClientItemsConfig = async function() {
     }
 };
 
-// Função para marcar todos os itens específicos
 window.marcarTodosItens = function() {
     const allowPizza = document.getElementById('itemsAllowedPizza');
     const allowTorta = document.getElementById('itemsAllowedTorta');
     const allowCorreio = document.getElementById('itemsAllowedCorreio');
     const allowTodos = document.getElementById('itemsAllowedTodos');
     
-    // Desmarca "todos" e marca todas as categorias específicas
     if (allowTodos) allowTodos.checked = false;
     if (allowPizza) allowPizza.checked = true;
     if (allowTorta) allowTorta.checked = true;
     if (allowCorreio) allowCorreio.checked = true;
     
-    // Atualiza visualização
     const config = {
         allowedItems: ['Caixa de pizza', 'Caixa de torta', 'Caixa correio'],
         excludedItems: []
@@ -2329,7 +2405,6 @@ window.marcarTodosItens = function() {
     updateItemsConfigDisplay(config);
 };
 
-// Função para exibir todos os itens com checkboxes
 window.exibirTodosItens = function() {
     const itemsListContainer = document.getElementById('allItemsList');
     const allItemsCheckboxList = document.getElementById('allItemsCheckboxList');
@@ -2338,33 +2413,47 @@ window.exibirTodosItens = function() {
     
     const allItems = getAllCatalogItems();
     
-    // Obtém configuração atual dos checkboxes
     const allowTodos = document.getElementById('itemsAllowedTodos')?.checked || false;
     const allowPizza = document.getElementById('itemsAllowedPizza')?.checked || false;
     const allowTorta = document.getElementById('itemsAllowedTorta')?.checked || false;
     const allowCorreio = document.getElementById('itemsAllowedCorreio')?.checked || false;
     
-    // Agrupa itens por categoria para melhor visualização
-    const itemsByCategory = {};
+    const savedConfig = editingClientItemsConfig || { allowedItems: ['todos'], excludedItems: [] };
+    
+    // Agrupa itens por categoria e modelo
+    const itemsByCategoryAndModel = {};
     allItems.forEach(item => {
-        if (!itemsByCategory[item.category]) {
-            itemsByCategory[item.category] = [];
+        const categoryKey = item.category;
+        const modelKey = `${item.category} > ${item.model}`;
+        
+        if (!itemsByCategoryAndModel[categoryKey]) {
+            itemsByCategoryAndModel[categoryKey] = {};
         }
-        itemsByCategory[item.category].push(item);
+        
+        if (!itemsByCategoryAndModel[categoryKey][modelKey]) {
+            itemsByCategoryAndModel[categoryKey][modelKey] = [];
+        }
+        
+        itemsByCategoryAndModel[categoryKey][modelKey].push(item);
     });
     
     let html = '';
     let globalIndex = 0;
     
-    Object.keys(itemsByCategory).forEach(category => {
-        // Verifica se a categoria está permitida
+    Object.keys(itemsByCategoryAndModel).forEach(category => {
         let categoryAllowed = false;
-        if (allowTodos) {
+        if (allowTodos || savedConfig.allowedItems?.includes('todos')) {
             categoryAllowed = true;
         } else {
             if (allowPizza && category === 'Caixa de pizza') categoryAllowed = true;
             if (allowTorta && category === 'Caixa de torta') categoryAllowed = true;
             if (allowCorreio && category === 'Caixa correio') categoryAllowed = true;
+            
+            if (!categoryAllowed && savedConfig.allowedItems) {
+                categoryAllowed = savedConfig.allowedItems.some(allowed => 
+                    allowed.startsWith(category + ' > ')
+                );
+            }
         }
         
         html += `
@@ -2379,29 +2468,60 @@ window.exibirTodosItens = function() {
             </div>
             <div class="pl-6 space-y-1">`;
         
-        itemsByCategory[category].forEach(item => {
-            const isChecked = allowTodos || 
-                (allowPizza && item.category === 'Caixa de pizza') ||
-                (allowTorta && item.category === 'Caixa de torta') ||
-                (allowCorreio && item.category === 'Caixa correio');
+        Object.keys(itemsByCategoryAndModel[category]).forEach(modelKey => {
+            const modelName = modelKey.split(' > ')[1];
+            const modelItems = itemsByCategoryAndModel[category][modelKey];
+            
+            let modelAllowed = categoryAllowed;
+            if (!modelAllowed && savedConfig.allowedItems) {
+                modelAllowed = savedConfig.allowedItems.some(allowed => 
+                    allowed === modelKey || 
+                    allowed === modelName || 
+                    allowed.toLowerCase() === modelName.toLowerCase()
+                );
+            }
             
             html += `
-            <div class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg item-searchable" 
-                 data-item-name="${item.name.toLowerCase()}" 
-                 data-item-category="${item.category.toLowerCase()}" 
-                 data-item-model="${item.model.toLowerCase()}"
-                 data-category="${item.category}">
-                <input type="checkbox" id="item-check-${globalIndex}" 
-                       class="w-4 h-4 text-green-600 rounded item-individual-check" 
-                       data-category="${item.category}"
-                       ${isChecked ? 'checked' : ''}>
-                <label for="item-check-${globalIndex}" class="flex-1 cursor-pointer">
-                    <p class="text-sm font-medium text-gray-900">${item.name}</p>
-                    <p class="text-xs text-gray-500">${item.category} > ${item.model}</p>
-                </label>
-                <span class="text-sm font-bold text-gray-700">R$ ${item.price.toFixed(2)}</span>
+            <div class="mb-2">
+                <div class="flex items-center gap-2 mb-1">
+                    <input type="checkbox" id="model-check-${modelKey.replace(/[^a-zA-Z0-9]/g, '-')}" 
+                           class="w-4 h-4 text-indigo-600 rounded model-check" 
+                           data-category="${category}"
+                           data-model="${modelName}"
+                           ${modelAllowed ? 'checked' : ''}
+                           onchange="toggleModelItems('${category}', '${modelName}', this.checked)">
+                    <label for="model-check-${modelKey.replace(/[^a-zA-Z0-9]/g, '-')}" 
+                           class="font-semibold text-gray-800 cursor-pointer text-sm">${modelName}</label>
+                </div>
+                <div class="pl-6 space-y-1">`;
+            
+            modelItems.forEach(item => {
+                const isChecked = modelAllowed;
+                
+                html += `
+                <div class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg item-searchable" 
+                     data-item-name="${item.name.toLowerCase()}" 
+                     data-item-category="${item.category.toLowerCase()}" 
+                     data-item-model="${item.model.toLowerCase()}"
+                     data-category="${item.category}"
+                     data-model="${item.model}">
+                    <input type="checkbox" id="item-check-${globalIndex}" 
+                           class="w-4 h-4 text-green-600 rounded item-individual-check" 
+                           data-category="${item.category}"
+                           data-model="${item.model}"
+                           ${isChecked ? 'checked' : ''}>
+                    <label for="item-check-${globalIndex}" class="flex-1 cursor-pointer">
+                        <p class="text-sm font-medium text-gray-900">${item.name}</p>
+                        <p class="text-xs text-gray-500">${item.category} > ${item.model}</p>
+                    </label>
+                    <span class="text-sm font-bold text-gray-700">R$ ${item.price.toFixed(2)}</span>
+                </div>`;
+                globalIndex++;
+            });
+            
+            html += `
+                </div>
             </div>`;
-            globalIndex++;
         });
         
         html += `
@@ -2412,11 +2532,9 @@ window.exibirTodosItens = function() {
     allItemsCheckboxList.innerHTML = html;
     itemsListContainer.classList.remove('hidden');
     
-    // Limpa o campo de busca
     const searchInput = document.getElementById('searchItemsInput');
     if (searchInput) searchInput.value = '';
     
-    // Adiciona botão de excluir selecionados
     const existingButton = document.getElementById('addToExcludedButton');
     if (!existingButton) {
         const buttonContainer = document.createElement('div');
@@ -2425,26 +2543,33 @@ window.exibirTodosItens = function() {
         buttonContainer.innerHTML = `
             <button type="button" onclick="adicionarItensSelecionadosAExcluidos()" 
                     class="flex-1 bg-red-500 text-white px-4 py-3 rounded-lg font-bold hover:bg-red-600 transition flex items-center justify-center gap-2">
-                <i class="fas fa-ban"></i> Adicionar itens selecionados a lista de excluídos
+                <i class="fas fa-ban"></i> Excluir Selecionados
             </button>
             <button type="button" onclick="salvarItensSelecionadosIndividualmente()" 
                     class="flex-1 bg-green-500 text-white px-4 py-3 rounded-lg font-bold hover:bg-green-600 transition flex items-center justify-center gap-2">
-                <i class="fas fa-save"></i> Salvar itens permitidos
+                <i class="fas fa-save"></i> Salvar Itens Permitidos
             </button>
         `;
         itemsListContainer.appendChild(buttonContainer);
     }
 };
 
-// Função para alternar categoria inteira
 window.toggleCategoryItems = function(category, isChecked) {
-    const items = document.querySelectorAll(`.item-individual-check[data-category="${category}"]`);
+    const modelChecks = document.querySelectorAll(`.model-check[data-category="${category}"]`);
+    modelChecks.forEach(modelCheck => {
+        modelCheck.checked = isChecked;
+        const model = modelCheck.getAttribute('data-model');
+        toggleModelItems(category, model, isChecked);
+    });
+};
+
+window.toggleModelItems = function(category, model, isChecked) {
+    const items = document.querySelectorAll(`.item-individual-check[data-category="${category}"][data-model="${model}"]`);
     items.forEach(item => {
         item.checked = isChecked;
     });
 };
 
-// Função para filtrar itens na lista
 window.filterItemsList = function() {
     const searchTerm = document.getElementById('searchItemsInput').value.toLowerCase().trim();
     const items = document.querySelectorAll('.item-searchable');
@@ -2465,45 +2590,56 @@ window.filterItemsList = function() {
     });
 };
 
-// Função para adicionar itens selecionados à lista de excluídos
 window.adicionarItensSelecionadosAExcluidos = function() {
     const checkedItems = document.querySelectorAll('.item-individual-check');
-    const allItems = getAllCatalogItems();
-    const itemsToExclude = new Set();
+    const allowedCategories = new Set();
+    const allowedModels = new Set();
     
-    // Itens não marcados serão excluídos
-    checkedItems.forEach((checkbox, index) => {
-        if (!checkbox.checked && index < allItems.length) {
-            itemsToExclude.add(allItems[index].category);
+    checkedItems.forEach(checkbox => {
+        if (checkbox.checked) {
+            const category = checkbox.getAttribute('data-category');
+            const model = checkbox.getAttribute('data-model');
+            
+            if (category) allowedCategories.add(category);
+            if (category && model) allowedModels.add(`${category} > ${model}`);
         }
     });
     
-    // Atualiza os checkboxes principais baseado nos itens não excluídos
     const allCategories = Object.keys(productCatalog);
-    const allowedCategories = allCategories.filter(cat => !itemsToExclude.has(cat));
+    const completeCategories = allCategories.filter(category => {
+        const allModels = Object.keys(productCatalog[category]);
+        const checkedModelsInCategory = Array.from(allowedModels)
+            .filter(m => m.startsWith(category + ' > '))
+            .map(m => m.split(' > ')[1]);
+        
+        return allModels.every(model => checkedModelsInCategory.includes(model));
+    });
     
-    // Atualiza checkboxes
     const allowTodos = document.getElementById('itemsAllowedTodos');
     const allowPizza = document.getElementById('itemsAllowedPizza');
     const allowTorta = document.getElementById('itemsAllowedTorta');
     const allowCorreio = document.getElementById('itemsAllowedCorreio');
     
-    if (allowTodos) allowTodos.checked = false;
-    if (allowPizza) allowPizza.checked = allowedCategories.includes('Caixa de pizza');
-    if (allowTorta) allowTorta.checked = allowedCategories.includes('Caixa de torta');
-    if (allowCorreio) allowCorreio.checked = allowedCategories.includes('Caixa correio');
+    const allItems = getAllCatalogItems();
+    const checkedCount = checkedItems.length;
     
-    // Atualiza display
+    if (allowTodos) allowTodos.checked = (checkedCount === allItems.length);
+    if (allowPizza) allowPizza.checked = completeCategories.includes('Caixa de pizza');
+    if (allowTorta) allowTorta.checked = completeCategories.includes('Caixa de torta');
+    if (allowCorreio) allowCorreio.checked = completeCategories.includes('Caixa correio');
+    
     const config = {
-        allowedItems: allowedCategories,
-        excludedItems: Array.from(itemsToExclude)
+        allowedItems: Array.from(new Set([...completeCategories, ...Array.from(allowedModels).filter(m => {
+            const category = m.split(' > ')[0];
+            return !completeCategories.includes(category);
+        })])),
+        excludedItems: []
     };
     
     updateItemsConfigDisplay(config);
     showToast('Itens selecionados adicionados à lista de excluídos!', 'success');
 };
 
-// Função para salvar itens selecionados individualmente
 window.salvarItensSelecionadosIndividualmente = async function() {
     const clientUid = document.getElementById('editClientUid').value;
     
@@ -2520,9 +2656,7 @@ window.salvarItensSelecionadosIndividualmente = async function() {
         return;
     }
     
-    // Verifica se todos os itens estão marcados
     if (checkedItems.length === allItems.length) {
-        // Se todos estão marcados, salva como "todos"
         const itemsConfig = {
             allowedItems: ['todos'],
             excludedItems: []
@@ -2531,17 +2665,14 @@ window.salvarItensSelecionadosIndividualmente = async function() {
         try {
             await update(ref(db, `users/${clientUid}/itemsConfig`), itemsConfig);
             
-            // Atualiza checkboxes principais
             updateItemsConfigCheckboxes(itemsConfig);
             updateItemsConfigDisplay(itemsConfig);
             showToast('Configuração de itens salva com sucesso!', 'success');
             
-            // Recarrega lista de clientes se estiver visível
             if(!document.getElementById('adminClientsView').classList.contains('hidden')){
                 renderClientsList();
             }
             
-            // Esconde a lista de itens
             document.getElementById('allItemsList').classList.add('hidden');
             
         } catch(err) {
@@ -2551,16 +2682,43 @@ window.salvarItensSelecionadosIndividualmente = async function() {
         return;
     }
     
-    // Coleta categorias únicas dos itens marcados
-    const selectedCategories = new Set();
+    const allowedCategories = new Set();
+    const allowedModels = new Set();
+    
     checkedItems.forEach(checkbox => {
         const category = checkbox.getAttribute('data-category');
-        if (category) {
-            selectedCategories.add(category);
-        }
+        const model = checkbox.getAttribute('data-model');
+        
+        if (category) allowedCategories.add(category);
+        if (category && model) allowedModels.add(`${category} > ${model}`);
     });
     
-    const allowedItems = Array.from(selectedCategories);
+    const allCategories = Object.keys(productCatalog);
+    const completeCategories = allCategories.filter(category => {
+        const allModels = Object.keys(productCatalog[category]);
+        const checkedModelsInCategory = Array.from(allowedModels)
+            .filter(m => m.startsWith(category + ' > '))
+            .map(m => m.split(' > ')[1]);
+        
+        return allModels.every(model => checkedModelsInCategory.includes(model));
+    });
+    
+    let allowedItems = [];
+    
+    completeCategories.forEach(category => {
+        allowedItems.push(category);
+    });
+    
+    const incompleteCategories = allCategories.filter(cat => !completeCategories.includes(cat));
+    incompleteCategories.forEach(category => {
+        const modelsInCategory = Array.from(allowedModels)
+            .filter(m => m.startsWith(category + ' > '))
+            .map(m => m.split(' > ')[1]);
+        
+        modelsInCategory.forEach(model => {
+            allowedItems.push(`${category} > ${model}`);
+        });
+    });
     
     if (allowedItems.length === 0) {
         showToast('Erro ao identificar itens selecionados.', 'error');
@@ -2569,23 +2727,20 @@ window.salvarItensSelecionadosIndividualmente = async function() {
     
     const itemsConfig = {
         allowedItems: allowedItems,
-        excludedItems: Object.keys(productCatalog).filter(cat => !allowedItems.includes(cat))
+        excludedItems: []
     };
     
     try {
         await update(ref(db, `users/${clientUid}/itemsConfig`), itemsConfig);
         
-        // Atualiza checkboxes principais
         updateItemsConfigCheckboxes(itemsConfig);
         updateItemsConfigDisplay(itemsConfig);
         showToast('Configuração de itens salva com sucesso!', 'success');
         
-        // Recarrega lista de clientes se estiver visível
         if(!document.getElementById('adminClientsView').classList.contains('hidden')){
             renderClientsList();
         }
         
-        // Esconde a lista de itens
         document.getElementById('allItemsList').classList.add('hidden');
         
     } catch(err) {
