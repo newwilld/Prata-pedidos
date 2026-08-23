@@ -33,14 +33,14 @@ let currentUserData = null;
 let globalOrders = {}; 
 let globalUsers = {};
 let globalNotifications = {};
-let globalClientOrders = {}; // Cache dos pedidos do cliente logado
-let currentCart = []; // Carrinho de compras atual
-let editingOrderId = null; // ID de um pedido existente sendo editado no form principal
+let globalClientOrders = {};
+let currentCart = [];
+let editingOrderId = null;
 let listenersInitialized = false;
-let isViewingFromClientList = false; // Flag para identificar origem do modal admin
-let selectedSizes = {}; // Para armazenar os tamanhos selecionados com checkboxes
-let currentClientItemsConfig = { allowedItems: ['todos'], excludedItems: [] }; // Configuração de itens do cliente atual
-let editingClientItemsConfig = { allowedItems: ['todos'], excludedItems: [] }; // Configuração em edição no modal
+let isViewingFromClientList = false;
+let selectedSizes = {};
+let currentClientItemsConfig = { allowedItems: ['todos'], excludedItems: [] };
+let editingClientItemsConfig = { allowedItems: ['todos'], excludedItems: [] };
 
 // Dados dos produtos em cascata (Categoria > Modelo > Tamanho/Especificação)
 const productCatalog = {
@@ -159,7 +159,7 @@ function getAllCatalogItems() {
 }
 
 // Função para verificar se um item está permitido para o cliente
-function isItemAllowed(itemName) {
+function isItemAllowed(itemName, category = null, model = null) {
     if (!currentUserData || currentUserData.role === 'admin') return true;
     
     const config = currentClientItemsConfig;
@@ -167,11 +167,23 @@ function isItemAllowed(itemName) {
     
     if (config.allowedItems.includes('todos')) return true;
     
-    // Verifica se o item está na lista de permitidos
     return config.allowedItems.some(allowed => {
+        // Verifica categoria completa
         if (allowed === 'Caixa de pizza' && itemName.includes('Caixa de pizza')) return true;
         if (allowed === 'Caixa de torta' && itemName.includes('Caixa de torta')) return true;
         if (allowed === 'Caixa correio' && itemName.includes('Caixa correio')) return true;
+        
+        // Verifica modelo específico (ex: "Caixa de pizza > Oitavada")
+        if (allowed.includes(' > ')) {
+            const [allowedCategory, allowedModel] = allowed.split(' > ');
+            if (category === allowedCategory && model === allowedModel) return true;
+            if (itemName.includes(allowedModel)) return true;
+        }
+        
+        // Verifica apenas o nome do modelo
+        if (model && allowed.toLowerCase() === model.toLowerCase()) return true;
+        if (category && allowed.toLowerCase() === category.toLowerCase()) return true;
+        
         return itemName.includes(allowed);
     });
 }
@@ -185,7 +197,67 @@ function isCategoryAllowed(category) {
     
     if (config.allowedItems.includes('todos')) return true;
     
-    return config.allowedItems.includes(category);
+    // Verifica se a categoria completa está permitida
+    if (config.allowedItems.includes(category)) return true;
+    
+    // Verifica se algum modelo desta categoria está permitido
+    const categoryModels = Object.keys(productCatalog[category] || {});
+    return categoryModels.some(model => {
+        const modelKey = `${category} > ${model}`;
+        return config.allowedItems.some(allowed => 
+            allowed === modelKey || 
+            allowed === model ||
+            allowed.toLowerCase() === model.toLowerCase()
+        );
+    });
+}
+
+// Função para verificar se um modelo específico está permitido
+function isModelAllowed(category, model) {
+    if (!currentUserData || currentUserData.role === 'admin') return true;
+    
+    const config = currentClientItemsConfig;
+    if (!config || !config.allowedItems || config.allowedItems.length === 0) return true;
+    
+    if (config.allowedItems.includes('todos')) return true;
+    
+    // Verifica se a categoria inteira está permitida
+    if (config.allowedItems.includes(category)) return true;
+    
+    // Verifica se o modelo específico está permitido
+    const modelKey = `${category} > ${model}`;
+    return config.allowedItems.some(allowed => 
+        allowed === modelKey || 
+        allowed === model ||
+        allowed.toLowerCase() === model.toLowerCase()
+    );
+}
+
+// NOVA FUNÇÃO: Obter modelos permitidos para uma categoria
+function getAllowedModelsForCategory(category) {
+    if (!currentUserData || currentUserData.role === 'admin') {
+        return Object.keys(productCatalog[category] || {});
+    }
+    
+    const config = currentClientItemsConfig;
+    if (!config || !config.allowedItems || config.allowedItems.length === 0) {
+        return Object.keys(productCatalog[category] || {});
+    }
+    
+    if (config.allowedItems.includes('todos')) {
+        return Object.keys(productCatalog[category] || {});
+    }
+    
+    // Se a categoria inteira está permitida
+    if (config.allowedItems.includes(category)) {
+        return Object.keys(productCatalog[category] || {});
+    }
+    
+    // Filtra apenas os modelos específicos permitidos
+    const allModels = Object.keys(productCatalog[category] || {});
+    return allModels.filter(model => {
+        return isModelAllowed(category, model);
+    });
 }
 
 // Funções de UI Auxiliares
@@ -307,7 +379,6 @@ onAuthStateChanged(auth, async (user) => {
                     currentUserData.role = 'admin';
                 }
                 
-                // Carrega configuração de itens do cliente
                 if (currentUserData.role === 'client') {
                     loadClientItemsConfig(user.uid);
                 }
@@ -342,6 +413,10 @@ function loadClientItemsConfig(userId) {
             currentClientItemsConfig = snapshot.val();
         } else {
             currentClientItemsConfig = { allowedItems: ['todos'], excludedItems: [] };
+        }
+        // Reaplica o filtro após carregar a configuração
+        if (currentUserData && currentUserData.role === 'client') {
+            applyItemsFilter();
         }
     }).catch(err => {
         console.error("Erro ao carregar configuração de itens:", err);
@@ -394,7 +469,6 @@ function setupUIForUser() {
             listenersInitialized = true;
         }
         
-        // Aplica filtro de itens no catálogo
         applyItemsFilter();
     }
 }
@@ -417,9 +491,20 @@ function applyItemsFilter() {
             option.style.display = '';
         }
     }
+    
+    // Se a opção selecionada atual estiver oculta, limpa a seleção
+    if (productTypeSelect.selectedIndex > -1) {
+        const selectedOption = productTypeSelect.options[productTypeSelect.selectedIndex];
+        if (selectedOption && selectedOption.style.display === 'none') {
+            productTypeSelect.selectedIndex = 0;
+            document.getElementById('modelContainer').classList.add('hidden');
+            document.getElementById('sizeContainer').classList.add('hidden');
+            document.getElementById('sizeCheckboxContainer').innerHTML = '';
+        }
+    }
 }
 
-// Lógica de Formulário em Cascata
+// Lógica de Formulário em Cascata - CORRIGIDA
 window.handleProductTypeChange = function() {
     const productType = document.getElementById('productTypeSelect').value;
     const modelContainer = document.getElementById('modelContainer');
@@ -437,22 +522,22 @@ window.handleProductTypeChange = function() {
     document.getElementById('totalDisplayContainer').classList.add('hidden');
     
     if (productType && productCatalog[productType]) {
-        const models = Object.keys(productCatalog[productType]);
-        models.forEach(model => {
-            // Verifica se algum item deste modelo está permitido
-            const hasAllowedItem = productCatalog[productType][model].some(size => 
-                isItemAllowed(`${productType} > ${model} > ${size.name}`)
-            );
-            
-            if (hasAllowedItem || currentUserData.role === 'admin') {
+        // Obtém apenas os modelos permitidos para esta categoria
+        const allowedModels = getAllowedModelsForCategory(productType);
+        
+        if (allowedModels.length > 0) {
+            allowedModels.forEach(model => {
                 const option = document.createElement('option');
                 option.value = model;
                 option.textContent = model;
                 option.className = 'text-gray-900';
                 modelSelect.appendChild(option);
-            }
-        });
-        modelContainer.classList.remove('hidden');
+            });
+            modelContainer.classList.remove('hidden');
+        } else {
+            modelSelect.innerHTML = '<option value="" disabled selected class="text-gray-900">Nenhum modelo disponível</option>';
+            modelContainer.classList.add('hidden');
+        }
     }
 };
 
@@ -466,48 +551,48 @@ window.handleModelChange = function() {
     selectedSizes = {};
     document.getElementById('totalDisplayContainer').classList.add('hidden');
     
-    if (productType && model && productCatalog[productType][model]) {
+    if (productType && model && productCatalog[productType] && productCatalog[productType][model]) {
         const sizes = productCatalog[productType][model];
         
         // Filtra tamanhos permitidos para clientes
         const allowedSizes = sizes.filter(size => {
             if (currentUserData.role === 'admin') return true;
-            return isItemAllowed(`${productType} > ${model} > ${size.name}`);
+            return isItemAllowed(`${productType} > ${model} > ${size.name}`, productType, model);
         });
         
-        // Cria os checkboxes para cada tamanho permitido
-        allowedSizes.forEach((size, index) => {
-            const div = document.createElement('div');
-            div.className = 'size-checkbox-item';
-            div.id = `size-item-${index}`;
+        if (allowedSizes.length > 0) {
+            allowedSizes.forEach((size, index) => {
+                const div = document.createElement('div');
+                div.className = 'size-checkbox-item';
+                div.id = `size-item-${index}`;
+                
+                div.innerHTML = `
+                    <input type="checkbox" id="size-check-${index}" class="size-checkbox" onchange="handleSizeCheckboxChange(${index})">
+                    <label for="size-check-${index}" class="size-checkbox-label">${size.name} - R$ ${size.price.toFixed(2)}</label>
+                    <select id="size-quantity-${index}" class="size-quantity-input" disabled onchange="updateTotalDisplayCheckbox()">
+                        <option value="500">500 unidades</option>
+                        <option value="1000">1.000 unidades</option>
+                        <option value="2000">2.000 unidades</option>
+                        <option value="3000">3.000 unidades</option>
+                        <option value="4000">4.000 unidades</option>
+                        <option value="5000">5.000 unidades</option>
+                        <option value="Outra">Outra quantidade</option>
+                    </select>
+                    <input type="number" id="size-custom-quantity-${index}" class="size-quantity-input hidden" min="1" placeholder="Qtd" style="width: 100px;" oninput="updateTotalDisplayCheckbox()">
+                `;
+                
+                sizeCheckboxContainer.appendChild(div);
+                
+                selectedSizes[index] = {
+                    name: size.name,
+                    price: size.price,
+                    checked: false,
+                    quantity: 0
+                };
+            });
             
-            div.innerHTML = `
-                <input type="checkbox" id="size-check-${index}" class="size-checkbox" onchange="handleSizeCheckboxChange(${index})">
-                <label for="size-check-${index}" class="size-checkbox-label">${size.name} - R$ ${size.price.toFixed(2)}</label>
-                <select id="size-quantity-${index}" class="size-quantity-input" disabled onchange="updateTotalDisplayCheckbox()">
-                    <option value="500">500 unidades</option>
-                    <option value="1000">1.000 unidades</option>
-                    <option value="2000">2.000 unidades</option>
-                    <option value="3000">3.000 unidades</option>
-                    <option value="4000">4.000 unidades</option>
-                    <option value="5000">5.000 unidades</option>
-                    <option value="Outra">Outra quantidade</option>
-                </select>
-                <input type="number" id="size-custom-quantity-${index}" class="size-quantity-input hidden" min="1" placeholder="Qtd" style="width: 100px;" oninput="updateTotalDisplayCheckbox()">
-            `;
-            
-            sizeCheckboxContainer.appendChild(div);
-            
-            // Armazena os dados do tamanho
-            selectedSizes[index] = {
-                name: size.name,
-                price: size.price,
-                checked: false,
-                quantity: 0
-            };
-        });
-        
-        sizeContainer.classList.remove('hidden');
+            sizeContainer.classList.remove('hidden');
+        }
     }
 };
 
@@ -522,7 +607,6 @@ window.handleSizeCheckboxChange = function(index) {
         itemDiv.classList.add('checked');
         selectedSizes[index].checked = true;
         
-        // Se a quantidade não foi definida, define como 1000 por padrão
         if (!selectedSizes[index].quantity) {
             quantitySelect.value = '1000';
             selectedSizes[index].quantity = 1000;
@@ -619,7 +703,6 @@ window.adicionarAoCarrinho = function() {
     const obs = document.getElementById('orderObs').value.trim();
     let totalEstimated = 0;
     
-    // Adiciona cada tamanho selecionado como um item no carrinho
     selectedSizeItems.forEach(sizeItem => {
         const itemTotal = sizeItem.price * sizeItem.quantity;
         totalEstimated += itemTotal;
@@ -639,7 +722,6 @@ window.adicionarAoCarrinho = function() {
     
     renderCart();
     
-    // Resetar campos
     document.getElementById('sizeCheckboxContainer').innerHTML = '';
     selectedSizes = {};
     document.getElementById('modelSelect').selectedIndex = 0;
@@ -690,7 +772,6 @@ window.submitOrder = async function(e) {
     e.preventDefault();
     if (!currentUserData) return;
     
-    // Se o cliente preencheu algo e clicou em Enviar direto, captura o item para o carrinho antes.
     const selectedSizeItems = getSelectedSizes();
     if (selectedSizeItems.length > 0) {
         window.adicionarAoCarrinho();
@@ -710,7 +791,6 @@ window.submitOrder = async function(e) {
     
     try {
         if (editingOrderId) {
-            // Editando um pedido existente a partir da home
             const orderRef = ref(db, `orders/${editingOrderId}`);
             await update(orderRef, {
                 items: currentCart,
@@ -724,7 +804,6 @@ window.submitOrder = async function(e) {
             btn.innerHTML = '<i class="fas fa-paper-plane"></i> Finalizar Pedido Completo';
             editingOrderId = null;
         } else {
-            // Criando pedido novo
             const newOrder = {
                 userId: currentUserData.uid,
                 clientName: currentUserData.name,
@@ -750,7 +829,6 @@ window.submitOrder = async function(e) {
             }
         }
         
-        // Limpar tudo
         document.getElementById('orderForm').reset();
         document.getElementById('modelContainer').classList.add('hidden');
         document.getElementById('sizeContainer').classList.add('hidden');
@@ -859,23 +937,19 @@ window.abrirModalCliente = function(orderId) {
     document.getElementById('clientModalOrderId').value = order.id;
     document.getElementById('clientModalStatus').textContent = (order.status === 'novo' ? 'Pendente' : order.status === 'producao' ? 'Em Produção' : order.status === 'finalizado' ? 'Finalizado' : 'Entregue');
     
-    // Exibir mensagens de status de alteração
     const alterationPendingMessage = document.getElementById('alterationPendingMessage');
     const alterationApprovedMessage = document.getElementById('alterationApprovedMessage');
     const alterationSentDate = document.getElementById('alterationSentDate');
     const approvalSentDate = document.getElementById('approvalSentDate');
     const approvalDate = document.getElementById('approvalDate');
     
-    // Verifica se há alteração pendente
     if (order.alterationStatus === 'pending') {
         alterationPendingMessage.classList.remove('hidden');
         alterationApprovedMessage.classList.add('hidden');
         if (order.alterationSentAt) {
             alterationSentDate.textContent = window.formatDateTime(order.alterationSentAt);
         }
-    } 
-    // Verifica se há alteração aprovada
-    else if (order.alterationStatus === 'approved') {
+    } else if (order.alterationStatus === 'approved') {
         alterationPendingMessage.classList.add('hidden');
         alterationApprovedMessage.classList.remove('hidden');
         if (order.alterationSentAt) {
@@ -884,14 +958,11 @@ window.abrirModalCliente = function(orderId) {
         if (order.alterationApprovedAt) {
             approvalDate.textContent = window.formatDateTime(order.alterationApprovedAt);
         }
-    }
-    // Sem alterações
-    else {
+    } else {
         alterationPendingMessage.classList.add('hidden');
         alterationApprovedMessage.classList.add('hidden');
     }
     
-    // VERIFICA SE O CLIENTE PODE EDITAR O PEDIDO
     const podeEditar = order.status === 'novo';
     
     const btnSalvar = document.querySelector('button[onclick="salvarEdicaoPedidoCliente()"]');
@@ -1135,7 +1206,6 @@ window.salvarEdicaoPedidoCliente = async function() {
         const legacyQty = newItems.length === 1 ? newItems[0].quantity : 'Diversas';
         const legacyObs = newItems.length === 1 ? newItems[0].obs : '';
         
-        // Marca o pedido como "alteração pendente de aprovação"
         await update(orderRef, {
             items: newItems,
             totalEstimated: newTotal,
@@ -1148,7 +1218,6 @@ window.salvarEdicaoPedidoCliente = async function() {
             alterationApprovedAt: null
         });
         
-        // NOTIFICAÇÃO DE EDIÇÃO PELO CLIENTE
         const clientName = currentUserData.name || 'Cliente';
         
         const itemsSummary = newItems.map(i => `${i.quantityNumber}x ${i.product}`).join(', ');
@@ -1169,7 +1238,6 @@ window.salvarEdicaoPedidoCliente = async function() {
     }
 };
 
-// Função para aprovar alteração (chamada pelo admin)
 window.aprovarAlteracaoPedido = async function(orderId) {
     try {
         const orderRef = ref(db, `orders/${orderId}`);
