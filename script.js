@@ -884,15 +884,33 @@ window.excluirPedidoCliente = async function() {
     }
     
     try {
+        // Captura informações antes de excluir
+        const clientName = currentUserData.name || 'Cliente';
+        const clientEmail = currentUserData.email || 'N/A';
+        
+        // Prepara informações dos itens
+        let itemsInfo = '';
+        if (order.items && order.items.length > 0) {
+            itemsInfo = order.items.map(item => 
+                `${item.quantityNumber || item.quantity} x ${item.product}`
+            ).join(', ');
+        } else {
+            itemsInfo = order.product || 'Produto não especificado';
+        }
+        
+        const totalValue = order.totalEstimated ? `R$ ${order.totalEstimated.toFixed(2)}` : 'N/A';
+        
+        // Remove o pedido
         await remove(ref(db, `orders/${orderId}`));
         
-        // Cria notificação de exclusão
-        const clientName = currentUserData.name || 'Cliente';
-        const productInfo = order.items && order.items.length > 0 
-            ? (order.items.length === 1 ? order.items[0].product : `${order.items.length} itens`)
-            : order.product || 'Produto não especificado';
-        
-        await createNotification(`@${clientName} excluiu o pedido: ${productInfo}`);
+        // Cria notificação detalhada de exclusão
+        await createNotification(
+            `🗑️ PEDIDO EXCLUÍDO POR CLIENTE\n` +
+            `👤 Cliente: ${clientName} (${clientEmail})\n` +
+            `📦 Pedido: ${itemsInfo}\n` +
+            `💰 Valor Total: ${totalValue}\n` +
+            `📅 Data: ${window.formatDateTime(Date.now())}`
+        );
         
         showToast('Pedido excluído com sucesso!', 'success');
         closeClientOrderModal();
@@ -1648,43 +1666,59 @@ window.deleteOrder = async function() {
 window.deleteClient = async function() {
     const clientUid = document.getElementById('editClientUid').value;
     const clientName = document.getElementById('editClientName').value;
+    const currentOrderId = document.getElementById('editOrderId').value;
     
     const displayNome = (clientName && clientName !== 'undefined') ? clientName : 'Sem Nome / Undefined';
 
-    if (!confirm(`Tem certeza que deseja excluir o cliente ${displayNome}? Todos os pedidos deste cliente também serão excluídos. Esta ação não pode ser desfeita.`)) {
+    if (!confirm(`Tem certeza que deseja excluir o pedido do cliente ${displayNome}? Esta ação não pode ser desfeita.`)) {
         return;
     }
     
     try {
-        // Exclui todos os pedidos do cliente
         const ordersToDelete = Object.keys(globalOrders).filter(key => {
             const order = globalOrders[key];
-            return clientUid && clientUid !== 'undefined' && order.userId === clientUid;
+            
+            if (clientUid && clientUid !== 'undefined' && order.userId === clientUid) return true;
+            if (currentOrderId && key === currentOrderId) return true;
+            if ((!clientUid || clientUid === 'undefined') && order.userId === clientUid) return true;
+            
+            return false;
         });
         
+        // Captura informações dos pedidos antes de excluir
+        const adminName = currentUserData.name || 'AdminMaster';
+        const adminEmail = currentUserData.email || 'N/A';
+        
         for (const orderId of ordersToDelete) {
-            await remove(ref(db, `orders/${orderId}`));
-        }
-        
-        // Exclui o usuário/cliente
-        if (clientUid && clientUid !== 'undefined') {
-            await remove(ref(db, `users/${clientUid}`));
-        }
-        
-        // Remove notificações relacionadas ao cliente
-        if (clientName && clientName !== 'undefined') {
-            const notificationKeys = Object.keys(globalNotifications);
-            for (const notifKey of notificationKeys) {
-                const notif = globalNotifications[notifKey];
-                if (notif.message && notif.message.includes(clientName)) {
-                    await remove(ref(db, `notifications/${notifKey}`));
-                }
+            const order = globalOrders[orderId];
+            
+            // Prepara informações dos itens
+            let itemsInfo = '';
+            if (order.items && order.items.length > 0) {
+                itemsInfo = order.items.map(item => 
+                    `${item.quantityNumber || item.quantity} x ${item.product}`
+                ).join(', ');
+            } else {
+                itemsInfo = order.product || 'Produto não especificado';
             }
+            
+            const totalValue = order.totalEstimated ? `R$ ${order.totalEstimated.toFixed(2)}` : 'N/A';
+            
+            // Remove o pedido
+            await remove(ref(db, `orders/${orderId}`));
+            
+            // Cria notificação detalhada de exclusão para cada pedido
+            await createNotification(
+                `🗑️ PEDIDO EXCLUÍDO POR ADMIN\n` +
+                `👤 Admin: ${adminName} (${adminEmail})\n` +
+                `👥 Cliente: ${displayNome}\n` +
+                `📦 Pedido: ${itemsInfo}\n` +
+                `💰 Valor Total: ${totalValue}\n` +
+                `📅 Data: ${window.formatDateTime(Date.now())}`
+            );
         }
         
-        await createNotification(`Cliente ${displayNome} foi excluído por @${currentUserData.name}`);
-        
-        showToast(`Cliente e todos os pedidos foram removidos com sucesso!`, 'success');
+        showToast(`Pedido removido do sistema com sucesso!`, 'success');
         closeEditModal();
         
         setTimeout(() => {
@@ -1695,8 +1729,8 @@ window.deleteClient = async function() {
         }, 500);
         
     } catch(err) {
-        console.error("Erro ao excluir cliente:", err);
-        showToast('Erro ao excluir cliente. Verifique o console para mais detalhes.', 'error');
+        console.error("Erro ao excluir pedido:", err);
+        showToast('Erro ao excluir pedido. Verifique o console para mais detalhes.', 'error');
     }
 };
 
