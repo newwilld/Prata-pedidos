@@ -39,6 +39,7 @@ let editingOrderId = null; // ID de um pedido existente sendo editado no form pr
 let listenersInitialized = false;
 let isViewingFromClientList = false; // Flag para identificar origem do modal admin
 let selectedSizes = {}; // Para armazenar os tamanhos selecionados com checkboxes
+let currentClientItemsConfig = { allowedItems: [], excludedItems: [] }; // Configuração de itens do cliente atual
 
 // Dados dos produtos em cascata (Categoria > Modelo > Tamanho/Especificação)
 const productCatalog = {
@@ -136,6 +137,44 @@ const productCatalog = {
         ]
     }
 };
+
+// Função para obter todos os itens do catálogo
+function getAllCatalogItems() {
+    const allItems = [];
+    Object.keys(productCatalog).forEach(category => {
+        Object.keys(productCatalog[category]).forEach(model => {
+            productCatalog[category][model].forEach(size => {
+                allItems.push({
+                    category: category,
+                    model: model,
+                    name: size.name,
+                    price: size.price,
+                    fullName: `${category} > ${model} > ${size.name}`
+                });
+            });
+        });
+    });
+    return allItems;
+}
+
+// Função para verificar se um item está permitido para o cliente
+function isItemAllowed(itemName) {
+    if (!currentUserData || currentUserData.role === 'admin') return true;
+    
+    const config = currentClientItemsConfig;
+    if (!config || !config.allowedItems || config.allowedItems.length === 0) return true;
+    
+    if (config.allowedItems.includes('todos')) return true;
+    
+    // Verifica se o item está na lista de permitidos
+    return config.allowedItems.some(allowed => {
+        if (allowed === 'Caixa de pizza' && itemName.includes('Caixa de pizza')) return true;
+        if (allowed === 'Caixa de torta' && itemName.includes('Caixa de torta')) return true;
+        if (allowed === 'Caixa correio' && itemName.includes('Caixa correio')) return true;
+        return itemName.includes(allowed);
+    });
+}
+
 // Funções de UI Auxiliares
 window.showToast = function(message, type = 'info') {
     const container = document.getElementById('toast-container');
@@ -198,7 +237,11 @@ window.handleAuth = async function(e) {
                 phone: phone,
                 company: company || '',
                 role: role,
-                createdAt: Date.now()
+                createdAt: Date.now(),
+                itemsConfig: {
+                    allowedItems: ['todos'],
+                    excludedItems: []
+                }
             });
             
             currentUserData = {
@@ -251,6 +294,11 @@ onAuthStateChanged(auth, async (user) => {
                     currentUserData.role = 'admin';
                 }
                 
+                // Carrega configuração de itens do cliente
+                if (currentUserData.role === 'client') {
+                    loadClientItemsConfig(user.uid);
+                }
+                
                 setupUIForUser();
             } else {
                 const isMaster = user.email.toLowerCase() === MASTER_ADMIN_EMAIL.toLowerCase();
@@ -272,6 +320,21 @@ onAuthStateChanged(auth, async (user) => {
         resetUI();
     }
 });
+
+// Função para carregar configuração de itens do cliente
+function loadClientItemsConfig(userId) {
+    const configRef = ref(db, `users/${userId}/itemsConfig`);
+    get(configRef).then((snapshot) => {
+        if (snapshot.exists()) {
+            currentClientItemsConfig = snapshot.val();
+        } else {
+            currentClientItemsConfig = { allowedItems: ['todos'], excludedItems: [] };
+        }
+    }).catch(err => {
+        console.error("Erro ao carregar configuração de itens:", err);
+        currentClientItemsConfig = { allowedItems: ['todos'], excludedItems: [] };
+    });
+}
 
 function resetUI() {
     document.getElementById('authScreen').classList.remove('hidden');
@@ -317,6 +380,29 @@ function setupUIForUser() {
             initClientListeners();
             listenersInitialized = true;
         }
+        
+        // Aplica filtro de itens no catálogo
+        applyItemsFilter();
+    }
+}
+
+// Função para aplicar filtro de itens no catálogo
+function applyItemsFilter() {
+    if (!currentUserData || currentUserData.role === 'admin') return;
+    
+    const productTypeSelect = document.getElementById('productTypeSelect');
+    if (!productTypeSelect) return;
+    
+    const allOptions = productTypeSelect.options;
+    for (let i = 0; i < allOptions.length; i++) {
+        const option = allOptions[i];
+        if (option.value && !isItemAllowed(option.value)) {
+            option.disabled = true;
+            option.style.display = 'none';
+        } else {
+            option.disabled = false;
+            option.style.display = '';
+        }
     }
 }
 
@@ -340,11 +426,18 @@ window.handleProductTypeChange = function() {
     if (productType && productCatalog[productType]) {
         const models = Object.keys(productCatalog[productType]);
         models.forEach(model => {
-            const option = document.createElement('option');
-            option.value = model;
-            option.textContent = model;
-            option.className = 'text-gray-900';
-            modelSelect.appendChild(option);
+            // Verifica se algum item deste modelo está permitido
+            const hasAllowedItem = productCatalog[productType][model].some(size => 
+                isItemAllowed(`${productType} > ${model} > ${size.name}`)
+            );
+            
+            if (hasAllowedItem || currentUserData.role === 'admin') {
+                const option = document.createElement('option');
+                option.value = model;
+                option.textContent = model;
+                option.className = 'text-gray-900';
+                modelSelect.appendChild(option);
+            }
         });
         modelContainer.classList.remove('hidden');
     }
@@ -363,8 +456,14 @@ window.handleModelChange = function() {
     if (productType && model && productCatalog[productType][model]) {
         const sizes = productCatalog[productType][model];
         
-        // Cria os checkboxes para cada tamanho
-        sizes.forEach((size, index) => {
+        // Filtra tamanhos permitidos para clientes
+        const allowedSizes = sizes.filter(size => {
+            if (currentUserData.role === 'admin') return true;
+            return isItemAllowed(`${productType} > ${model} > ${size.name}`);
+        });
+        
+        // Cria os checkboxes para cada tamanho permitido
+        allowedSizes.forEach((size, index) => {
             const div = document.createElement('div');
             div.className = 'size-checkbox-item';
             div.id = `size-item-${index}`;
@@ -1881,7 +1980,8 @@ function renderClientsList() {
             phone: user.phone || '',
             company: user.company || '',
             totalOrders: 0,
-            lastOrderDate: null
+            lastOrderDate: null,
+            itemsConfig: user.itemsConfig || { allowedItems: ['todos'], excludedItems: [] }
         };
     });
     
@@ -1899,7 +1999,8 @@ function renderClientsList() {
                     phone: order.clientPhone || '',
                     company: order.clientCompany || '',
                     totalOrders: 0, 
-                    lastOrderDate: null 
+                    lastOrderDate: null,
+                    itemsConfig: { allowedItems: ['todos'], excludedItems: [] }
                 };
             } else {
                 return;
@@ -1941,6 +2042,7 @@ function renderClientsList() {
     tbody.innerHTML = clientArray.map(client => {
         const displayName = client.name && client.name !== 'undefined' ? client.name : 'Cliente sem nome';
         const displayEmail = client.email && client.email !== 'undefined' && client.email !== 'N/A' ? client.email : 'N/A';
+        const allowedItems = client.itemsConfig && client.itemsConfig.allowedItems ? client.itemsConfig.allowedItems.join(', ') : 'todos';
         
         return `
         <tr class="hover:bg-white/5 transition cursor-pointer" onclick="openClientModal('${client.uid}')">
@@ -1963,13 +2065,22 @@ function renderClientsList() {
             <td class="px-6 py-5 text-right text-white/70 text-sm">
                 ${client.lastOrderDate ? window.formatDateTime(client.lastOrderDate).split(' às')[0] : 'Nunca comprou'}
             </td>
+            <td class="px-6 py-5 text-white/70">
+                <span class="text-xs ${allowedItems === 'todos' ? 'text-green-400' : 'text-yellow-400'}">
+                    ${allowedItems}
+                </span>
+            </td>
         </tr>
     `}).join('');
 }
 
+// Função para abrir modal de cliente com configuração de itens
 window.openClientModal = function(clientUid) {
     isViewingFromClientList = true;
     updateDeleteButtonVisibility();
+    
+    // Carrega configuração de itens do cliente
+    loadClientItemsConfigForEdit(clientUid);
     
     const clientOrders = Object.values(globalOrders)
         .filter(order => order.userId === clientUid)
@@ -2051,4 +2162,156 @@ window.openClientModal = function(clientUid) {
             document.getElementById('adminEditModal').classList.remove('hidden');
         }
     }
+};
+
+// Função para carregar configuração de itens no modal de edição
+function loadClientItemsConfigForEdit(clientUid) {
+    const configRef = ref(db, `users/${clientUid}/itemsConfig`);
+    get(configRef).then((snapshot) => {
+        let config = { allowedItems: ['todos'], excludedItems: [] };
+        if (snapshot.exists()) {
+            config = snapshot.val();
+        }
+        
+        // Atualiza os checkboxes no modal
+        document.getElementById('itemsAllowedTodos').checked = config.allowedItems.includes('todos');
+        document.getElementById('itemsAllowedPizza').checked = config.allowedItems.includes('Caixa de pizza');
+        document.getElementById('itemsAllowedTorta').checked = config.allowedItems.includes('Caixa de torta');
+        document.getElementById('itemsAllowedCorreio').checked = config.allowedItems.includes('Caixa correio');
+        
+        updateItemsConfigDisplay(config);
+    }).catch(err => {
+        console.error("Erro ao carregar configuração de itens:", err);
+    });
+}
+
+// Função para atualizar display da configuração de itens
+function updateItemsConfigDisplay(config) {
+    const allowedItemsContainer = document.getElementById('allowedItemsDisplay');
+    const excludedItemsContainer = document.getElementById('excludedItemsDisplay');
+    
+    if (!allowedItemsContainer || !excludedItemsContainer) return;
+    
+    if (config.allowedItems.includes('todos')) {
+        allowedItemsContainer.innerHTML = '<span class="text-green-600 font-bold">Todos os itens permitidos</span>';
+        excludedItemsContainer.innerHTML = '<span class="text-gray-500">Nenhum item excluído</span>';
+    } else {
+        allowedItemsContainer.innerHTML = config.allowedItems.map(item => 
+            `<span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold mr-2 mb-2 inline-block">${item}</span>`
+        ).join('') || '<span class="text-gray-500">Nenhum item permitido</span>';
+        
+        // Calcula itens excluídos (todos menos os permitidos)
+        const allCategories = Object.keys(productCatalog);
+        const excludedCategories = allCategories.filter(cat => !config.allowedItems.includes(cat));
+        
+        excludedItemsContainer.innerHTML = excludedCategories.map(item => 
+            `<span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold mr-2 mb-2 inline-block">${item}</span>`
+        ).join('') || '<span class="text-gray-500">Nenhum item excluído</span>';
+    }
+}
+
+// Função para salvar configuração de itens do cliente
+window.saveClientItemsConfig = async function() {
+    const clientUid = document.getElementById('editClientUid').value;
+    
+    if (!clientUid || clientUid === 'undefined' || clientUid === '') {
+        showToast('Cliente não identificado.', 'error');
+        return;
+    }
+    
+    const allowTodos = document.getElementById('itemsAllowedTodos').checked;
+    const allowPizza = document.getElementById('itemsAllowedPizza').checked;
+    const allowTorta = document.getElementById('itemsAllowedTorta').checked;
+    const allowCorreio = document.getElementById('itemsAllowedCorreio').checked;
+    
+    let allowedItems = [];
+    
+    if (allowTodos) {
+        allowedItems = ['todos'];
+    } else {
+        if (allowPizza) allowedItems.push('Caixa de pizza');
+        if (allowTorta) allowedItems.push('Caixa de torta');
+        if (allowCorreio) allowedItems.push('Caixa correio');
+    }
+    
+    if (allowedItems.length === 0 && !allowTodos) {
+        showToast('Selecione pelo menos um tipo de item para permitir.', 'error');
+        return;
+    }
+    
+    const itemsConfig = {
+        allowedItems: allowedItems,
+        excludedItems: []
+    };
+    
+    try {
+        await update(ref(db, `users/${clientUid}/itemsConfig`), itemsConfig);
+        
+        // Atualiza também na lista global
+        if (globalUsers[clientUid]) {
+            globalUsers[clientUid].itemsConfig = itemsConfig;
+        }
+        
+        updateItemsConfigDisplay(itemsConfig);
+        showToast('Configuração de itens salva com sucesso!', 'success');
+        
+        // Recarrega lista de clientes se estiver visível
+        if(!document.getElementById('adminClientsView').classList.contains('hidden')){
+            renderClientsList();
+        }
+        
+    } catch(err) {
+        console.error("Erro ao salvar configuração de itens:", err);
+        showToast('Erro ao salvar configuração de itens.', 'error');
+    }
+};
+
+// Função para marcar todos os itens (menos os permitidos)
+window.marcarTodosItensExcluidos = function() {
+    const allowTodos = document.getElementById('itemsAllowedTodos');
+    const allowPizza = document.getElementById('itemsAllowedPizza');
+    const allowTorta = document.getElementById('itemsAllowedTorta');
+    const allowCorreio = document.getElementById('itemsAllowedCorreio');
+    
+    // Se "todos" estiver marcado, desmarca e marca apenas os itens específicos
+    if (allowTodos.checked) {
+        allowTodos.checked = false;
+        allowPizza.checked = true;
+        allowTorta.checked = true;
+        allowCorreio.checked = true;
+    } else {
+        // Marca todos os itens
+        allowPizza.checked = true;
+        allowTorta.checked = true;
+        allowCorreio.checked = true;
+    }
+    
+    // Atualiza visualização
+    const config = {
+        allowedItems: allowPizza.checked ? ['Caixa de pizza', 'Caixa de torta', 'Caixa correio'] : [],
+        excludedItems: []
+    };
+    
+    updateItemsConfigDisplay(config);
+};
+
+// Função para exibir todos os itens
+window.exibirTodosItens = function() {
+    const itemsListContainer = document.getElementById('allItemsList');
+    
+    if (!itemsListContainer) return;
+    
+    const allItems = getAllCatalogItems();
+    
+    itemsListContainer.innerHTML = allItems.map((item, index) => `
+        <div class="bg-white border border-gray-200 rounded-lg p-3 flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-900">${item.name}</p>
+                <p class="text-xs text-gray-500">${item.category} > ${item.model}</p>
+            </div>
+            <span class="text-sm font-bold text-gray-700">R$ ${item.price.toFixed(2)}</span>
+        </div>
+    `).join('');
+    
+    itemsListContainer.classList.remove('hidden');
 };
