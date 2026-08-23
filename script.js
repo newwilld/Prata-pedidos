@@ -218,35 +218,6 @@ window.handleAuth = async function(e) {
             setupUIForUser();
             showToast('Conta criada com sucesso!', 'success');
             return;
-            function setupUIForUser() {
-    console.log("Setup UI - Role:", currentUserData.role);
-    console.log("Admin Screen element:", document.getElementById('adminScreen'));
-    
-    document.getElementById('authScreen').classList.add('hidden');
-    document.getElementById('userMenu').classList.remove('hidden');
-    document.getElementById('userMenu').classList.add('flex');
-    
-    document.getElementById('userNameDisplay').innerText = currentUserData.name;
-    const badge = document.getElementById('userRoleBadge');
-    
-    if (currentUserData.role === 'admin') {
-        console.log("Entrando como admin...");
-        badge.innerText = 'Admin Master';
-        badge.className = 'text-xs px-3 py-1 rounded-full font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white';
-        document.getElementById('adminScreen').classList.remove('hidden');
-        document.getElementById('adminScreen').classList.add('flex');
-        document.getElementById('clientScreen').classList.add('hidden');
-        document.getElementById('clientScreen').classList.remove('flex');
-        
-        if (!listenersInitialized) {
-            console.log("Inicializando listeners do admin...");
-            initAdminListeners();
-            listenersInitialized = true;
-        }
-    } else {
-        // ... resto do código para cliente
-    }
-}
         }
         showToast(isLoginMode ? 'Login realizado com sucesso!' : 'Conta criada com sucesso!', 'success');
     } catch (error) {

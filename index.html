@@ -1,60 +1,60 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#667eea">
     <title>Prata Embalagens - Gerenciador de Pedidos</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body class="text-gray-800 min-h-screen flex flex-col">
+<body class="text-gray-800 h-screen flex flex-col overflow-hidden">
 
     <!-- Container de Notificações -->
     <div id="toast-container"></div>
 
     <!-- Barra de Navegação -->
     <header class="bg-white/10 backdrop-blur-lg text-white shadow-lg z-10 flex-shrink-0 border-b border-white/20">
-        <div class="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-            <div class="flex items-center gap-4">
-                <img src="https://raw.githubusercontent.com/newwilld/Prata-pedidos/refs/heads/main/PRATA%20LOGO.webp" alt="Prata Embalagens Logo" class="w-16 h-16 object-contain rounded-2xl shadow-lg">
+        <div class="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3 sm:gap-4">
+                <img src="https://raw.githubusercontent.com/newwilld/Prata-pedidos/refs/heads/main/PRATA%20LOGO.webp" alt="Prata Embalagens Logo" class="w-12 h-12 sm:w-16 sm:h-16 object-contain rounded-2xl shadow-lg">
                 <div>
-                    <h1 class="text-2xl font-bold tracking-tight">Prata Embalagens</h1>
-                    <p class="text-xs text-white/70">Sistema de Gerenciamento</p>
+                    <h1 class="text-lg sm:text-2xl font-bold tracking-tight">Prata Embalagens</h1>
+                    <p class="text-[10px] sm:text-xs text-white/70">Sistema de Gerenciamento</p>
                 </div>
             </div>
             
-            <div id="userMenu" class="hidden items-center gap-4">
+            <div id="userMenu" class="hidden items-center gap-2 sm:gap-4">
                 <div class="text-right hidden sm:block">
                     <span id="userNameDisplay" class="text-sm font-semibold block"></span>
                     <span id="userRoleBadge" class="text-xs px-3 py-1 rounded-full bg-white/20 font-medium"></span>
                 </div>
-                <button onclick="logout()" class="text-white/70 hover:text-white transition p-3 hover:bg-white/10 rounded-xl">
-                    <i class="fas fa-sign-out-alt text-xl"></i>
+                <button onclick="logout()" class="text-white/70 hover:text-white transition p-2 sm:p-3 hover:bg-white/10 rounded-xl">
+                    <i class="fas fa-sign-out-alt text-lg sm:text-xl"></i>
                 </button>
             </div>
         </div>
     </header>
 
     <!-- Conteúdo Principal -->
-<main class="flex-1 relative min-h-screen">
+    <main class="flex-1 overflow-hidden relative">
         
         <!-- Tela de Login / Registro -->
         <div id="authScreen" class="absolute inset-0 z-20 flex items-center justify-center p-4 overflow-y-auto">
-            <div class="bg-white/10 backdrop-blur-xl p-10 rounded-3xl shadow-2xl w-full max-w-md my-auto border border-white/20">
-                <div class="text-center mb-8">
-                    <img src="https://raw.githubusercontent.com/newwilld/Prata-pedidos/refs/heads/main/PRATA%20LOGO.webp" alt="Prata Embalagens Logo" class="w-28 h-28 object-contain mx-auto mb-6 shadow-2xl pulse">
-                    <h2 class="text-3xl font-bold text-white">Bem-vindo(a)</h2>
-                    <p class="text-white/70 mt-2" id="authSubtitle">Faça login para continuar</p>
+            <div class="bg-white/10 backdrop-blur-xl p-6 sm:p-10 rounded-3xl shadow-2xl w-full max-w-md my-auto border border-white/20">
+                <div class="text-center mb-6 sm:mb-8">
+                    <img src="https://raw.githubusercontent.com/newwilld/Prata-pedidos/refs/heads/main/PRATA%20LOGO.webp" alt="Prata Embalagens Logo" class="w-20 h-20 sm:w-28 sm:h-28 object-contain mx-auto mb-4 sm:mb-6 shadow-2xl pulse">
+                    <h2 class="text-2xl sm:text-3xl font-bold text-white">Bem-vindo(a)</h2>
+                    <p class="text-white/70 mt-2 text-sm sm:text-base" id="authSubtitle">Faça login para continuar</p>
                 </div>
 
-                <form id="authForm" onsubmit="handleAuth(event)" class="space-y-5">
+                <form id="authForm" onsubmit="handleAuth(event)" class="space-y-4 sm:space-y-5">
                     <div id="nameField" class="hidden fade-in">
                         <label class="block text-sm font-medium text-white mb-2">Nome Completo</label>
                         <div class="relative">
                             <i class="fas fa-user absolute left-4 top-4 text-white/50"></i>
-                            <input type="text" id="authName" class="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50" placeholder="Seu nome">
+                            <input type="text" id="authName" class="w-full pl-12 pr-4 py-3 sm:py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50 text-sm sm:text-base" placeholder="Seu nome">
                         </div>
                     </div>
                     
@@ -62,7 +62,7 @@
                         <label class="block text-sm font-medium text-white mb-2">Telefone/WhatsApp</label>
                         <div class="relative">
                             <i class="fas fa-phone absolute left-4 top-4 text-white/50"></i>
-                            <input type="tel" id="authPhone" class="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50" placeholder="(00) 00000-0000">
+                            <input type="tel" id="authPhone" class="w-full pl-12 pr-4 py-3 sm:py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50 text-sm sm:text-base" placeholder="(00) 00000-0000">
                         </div>
                     </div>
                     
@@ -70,7 +70,7 @@
                         <label class="block text-sm font-medium text-white mb-2">Empresa (opcional)</label>
                         <div class="relative">
                             <i class="fas fa-building absolute left-4 top-4 text-white/50"></i>
-                            <input type="text" id="authCompany" class="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50" placeholder="Nome da sua empresa">
+                            <input type="text" id="authCompany" class="w-full pl-12 pr-4 py-3 sm:py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50 text-sm sm:text-base" placeholder="Nome da sua empresa">
                         </div>
                     </div>
                     
@@ -78,7 +78,7 @@
                         <label class="block text-sm font-medium text-white mb-2">E-mail</label>
                         <div class="relative">
                             <i class="fas fa-envelope absolute left-4 top-4 text-white/50"></i>
-                            <input type="email" id="authEmail" required class="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50" placeholder="seu@email.com">
+                            <input type="email" id="authEmail" required class="w-full pl-12 pr-4 py-3 sm:py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50 text-sm sm:text-base" placeholder="seu@email.com">
                         </div>
                     </div>
 
@@ -86,16 +86,16 @@
                         <label class="block text-sm font-medium text-white mb-2">Senha</label>
                         <div class="relative">
                             <i class="fas fa-lock absolute left-4 top-4 text-white/50"></i>
-                            <input type="password" id="authPassword" required minlength="6" class="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50" placeholder="••••••••">
+                            <input type="password" id="authPassword" required minlength="6" class="w-full pl-12 pr-4 py-3 sm:py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50 text-sm sm:text-base" placeholder="••••••••">
                         </div>
                     </div>
 
-                    <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-4 rounded-2xl hover:from-blue-600 hover:to-purple-700 transition shadow-2xl transform hover:scale-105" id="authSubmitBtn">
+                    <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 sm:py-4 rounded-2xl hover:from-blue-600 hover:to-purple-700 transition shadow-2xl transform hover:scale-105 text-sm sm:text-base" id="authSubmitBtn">
                         Entrar
                     </button>
                 </form>
 
-                <div class="mt-6 text-center text-sm text-white/70">
+                <div class="mt-4 sm:mt-6 text-center text-sm text-white/70">
                     <span id="authToggleText">Não tem uma conta?</span>
                     <button type="button" onclick="toggleAuthMode()" class="text-white font-bold hover:underline ml-1" id="authToggleBtn">Criar agora</button>
                 </div>
@@ -106,57 +106,57 @@
         <div id="clientScreen" class="hidden h-full flex-col md:flex-row overflow-hidden">
             <!-- Coluna de Fazer Pedido -->
             <div class="w-full md:w-1/3 bg-white/10 backdrop-blur-lg border-r border-white/20 flex flex-col h-full z-10 shadow-2xl relative">
-                <div class="p-6 border-b border-white/20 flex-shrink-0">
-                    <h2 class="text-xl font-bold text-white"><i class="fas fa-plus-circle mr-2 text-blue-400"></i>Novo Pedido</h2>
-                    <p class="text-sm text-white/70 mt-1">Preencha os dados para solicitar.</p>
+                <div class="p-4 sm:p-6 border-b border-white/20 flex-shrink-0">
+                    <h2 class="text-lg sm:text-xl font-bold text-white"><i class="fas fa-plus-circle mr-2 text-blue-400"></i>Novo Pedido</h2>
+                    <p class="text-xs sm:text-sm text-white/70 mt-1">Preencha os dados para solicitar.</p>
                 </div>
                 
-                <div class="p-6 overflow-y-auto flex-1">
-                    <form id="orderForm" onsubmit="submitOrder(event)" class="space-y-5">
+                <div class="p-4 sm:p-6 overflow-y-auto flex-1">
+                    <form id="orderForm" onsubmit="submitOrder(event)" class="space-y-4 sm:space-y-5">
                         
                         <!-- Seletor de Tipo de Produto (Cascata) -->
                         <div>
-                            <label class="block text-sm font-medium text-white mb-2">Produto</label>
+                            <label class="block text-xs sm:text-sm font-medium text-white mb-2">Produto</label>
                             <div class="relative">
-                                <select id="productTypeSelect" required onchange="handleProductTypeChange()" class="w-full appearance-none px-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white">
+                                <select id="productTypeSelect" required onchange="handleProductTypeChange()" class="w-full appearance-none px-4 py-3 sm:py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white text-sm sm:text-base">
                                     <option value="" disabled selected class="text-gray-900">Selecione o tipo de produto...</option>
                                     <option value="Caixa de pizza" class="text-gray-900">Caixa de pizza</option>
                                     <option value="Caixa de torta" class="text-gray-900">Caixa de torta</option>
                                     <option value="Caixa correio" class="text-gray-900">Caixa correio</option>
                                 </select>
-                                <i class="fas fa-chevron-down absolute right-4 top-5 text-white/50 pointer-events-none"></i>
+                                <i class="fas fa-chevron-down absolute right-4 top-4 sm:top-5 text-white/50 pointer-events-none"></i>
                             </div>
                         </div>
 
                         <!-- Seletor de Modelo (Cascata - depende do tipo de produto) -->
                         <div id="modelContainer" class="hidden fade-in">
-                            <label class="block text-sm font-medium text-white mb-2">Modelo</label>
+                            <label class="block text-xs sm:text-sm font-medium text-white mb-2">Modelo</label>
                             <div class="relative">
-                                <select id="modelSelect" required onchange="handleModelChange()" class="w-full appearance-none px-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white">
+                                <select id="modelSelect" required onchange="handleModelChange()" class="w-full appearance-none px-4 py-3 sm:py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white text-sm sm:text-base">
                                     <option value="" disabled selected class="text-gray-900">Selecione o modelo...</option>
                                     <!-- Opções serão carregadas dinamicamente -->
                                 </select>
-                                <i class="fas fa-chevron-down absolute right-4 top-5 text-white/50 pointer-events-none"></i>
+                                <i class="fas fa-chevron-down absolute right-4 top-4 sm:top-5 text-white/50 pointer-events-none"></i>
                             </div>
                         </div>
 
                         <!-- Seletor de Tamanho/Especificação (Cascata - depende do modelo) -->
                         <div id="sizeContainer" class="hidden fade-in">
-                            <label class="block text-sm font-medium text-white mb-2">Tamanho/Especificação</label>
+                            <label class="block text-xs sm:text-sm font-medium text-white mb-2">Tamanho/Especificação</label>
                             <div class="relative">
-                                <select id="sizeSelect" required onchange="handleSizeChange()" class="w-full appearance-none px-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white">
+                                <select id="sizeSelect" required onchange="handleSizeChange()" class="w-full appearance-none px-4 py-3 sm:py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white text-sm sm:text-base">
                                     <option value="" disabled selected class="text-gray-900">Selecione o tamanho...</option>
                                     <!-- Opções serão carregadas dinamicamente -->
                                 </select>
-                                <i class="fas fa-chevron-down absolute right-4 top-5 text-white/50 pointer-events-none"></i>
+                                <i class="fas fa-chevron-down absolute right-4 top-4 sm:top-5 text-white/50 pointer-events-none"></i>
                             </div>
                         </div>
 
                         <!-- Seletor de Quantidade (Cascata) -->
                         <div id="quantityContainer" class="hidden fade-in">
-                            <label class="block text-sm font-medium text-white mb-2">Quantidade</label>
+                            <label class="block text-xs sm:text-sm font-medium text-white mb-2">Quantidade</label>
                             <div class="relative">
-                                <select id="quantitySelect" required onchange="handleQuantityChange()" class="w-full appearance-none px-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white">
+                                <select id="quantitySelect" required onchange="handleQuantityChange()" class="w-full appearance-none px-4 py-3 sm:py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white text-sm sm:text-base">
                                     <option value="" disabled selected class="text-gray-900">Escolha a quantidade...</option>
                                     <option value="500" class="text-gray-900">500 unidades</option>
                                     <option value="1000" class="text-gray-900">1.000 unidades</option>
@@ -166,59 +166,59 @@
                                     <option value="5000" class="text-gray-900">5.000 unidades</option>
                                     <option value="Outra" class="text-gray-900">Outra quantidade (Digitar aqui)</option>
                                 </select>
-                                <i class="fas fa-chevron-down absolute right-4 top-5 text-white/50 pointer-events-none"></i>
+                                <i class="fas fa-chevron-down absolute right-4 top-4 sm:top-5 text-white/50 pointer-events-none"></i>
                             </div>
                         </div>
 
                         <!-- Campo de Quantidade Customizada -->
                         <div id="customQuantityContainer" class="hidden fade-in">
-                            <label class="block text-sm font-medium text-white mb-2">Digite a Quantidade Específica</label>
-                            <input type="number" id="customQuantityInput" min="1" class="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50" placeholder="Ex: 1500" oninput="updateTotalDisplay()">
+                            <label class="block text-xs sm:text-sm font-medium text-white mb-2">Digite a Quantidade Específica</label>
+                            <input type="number" id="customQuantityInput" min="1" class="w-full px-4 py-3 sm:py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50 text-sm sm:text-base" placeholder="Ex: 1500" oninput="updateTotalDisplay()">
                         </div>
 
                         <!-- Campo de Observação -->
                         <div class="fade-in">
-                            <label class="block text-sm font-medium text-white mb-2">Observação (Para o item)</label>
+                            <label class="block text-xs sm:text-sm font-medium text-white mb-2">Observação (Para o item)</label>
                             <div class="relative">
                                 <i class="fas fa-comment-dots absolute left-4 top-4 text-white/50"></i>
-                                <textarea id="orderObs" rows="3" class="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50 resize-none" placeholder="Alguma observação específica deste item? Ex: cor, tipo de material, etc."></textarea>
+                                <textarea id="orderObs" rows="3" class="w-full pl-12 pr-4 py-3 sm:py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/50 resize-none text-sm sm:text-base" placeholder="Alguma observação específica deste item? Ex: cor, tipo de material, etc."></textarea>
                             </div>
                         </div>
 
                         <!-- Display do Valor Total do Item Atual -->
                         <div id="totalDisplayContainer" class="hidden fade-in">
-                            <div class="bg-white/10 border border-white/20 rounded-2xl p-5">
+                            <div class="bg-white/10 border border-white/20 rounded-2xl p-4 sm:p-5">
                                 <div class="flex justify-between items-center">
-                                    <span class="text-sm font-medium text-white/70">Valor Deste Item:</span>
-                                    <span id="totalDisplayValue" class="text-2xl font-bold text-white">R$ 0,00</span>
+                                    <span class="text-xs sm:text-sm font-medium text-white/70">Valor Deste Item:</span>
+                                    <span id="totalDisplayValue" class="text-xl sm:text-2xl font-bold text-white">R$ 0,00</span>
                                 </div>
-                                <div class="text-xs text-white/50 mt-2">
+                                <div class="text-[10px] sm:text-xs text-white/50 mt-2">
                                     <span id="unitPriceDisplay"></span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- NOVO: Container do Carrinho (Exibe itens já adicionados) -->
-                        <div id="cartContainer" class="hidden fade-in bg-white/5 border border-white/20 rounded-2xl p-4">
-                            <h3 class="text-sm font-medium text-white mb-3 flex items-center gap-2">
+                        <!-- Container do Carrinho (Exibe itens já adicionados) -->
+                        <div id="cartContainer" class="hidden fade-in bg-white/5 border border-white/20 rounded-2xl p-3 sm:p-4">
+                            <h3 class="text-xs sm:text-sm font-medium text-white mb-3 flex items-center gap-2">
                                 <i class="fas fa-shopping-basket text-blue-400"></i> Itens no Pedido Atual
                             </h3>
-                            <ul id="cartItemsList" class="space-y-2 mb-3 max-h-40 overflow-y-auto text-sm text-white/80">
+                            <ul id="cartItemsList" class="space-y-2 mb-3 max-h-32 sm:max-h-40 overflow-y-auto text-xs sm:text-sm text-white/80">
                                 <!-- Os itens adicionados aparecerão aqui via JS -->
                             </ul>
                             <div class="pt-3 border-t border-white/20 flex justify-between items-center">
-                                <span class="font-medium text-white text-sm">Total Geral Estimado:</span>
-                                <span id="cartSubtotal" class="font-bold text-green-400 text-lg">R$ 0,00</span>
+                                <span class="font-medium text-white text-xs sm:text-sm">Total Geral Estimado:</span>
+                                <span id="cartSubtotal" class="font-bold text-green-400 text-base sm:text-lg">R$ 0,00</span>
                             </div>
                         </div>
 
                         <!-- Botões Modificados para Carrinho e Envio Único -->
-                        <div class="flex flex-col gap-3">
-                            <button type="button" onclick="adicionarAoCarrinho()" class="w-full bg-white/10 text-white font-bold py-4 rounded-2xl hover:bg-white/20 border border-white/30 transition shadow-lg flex items-center justify-center gap-2">
+                        <div class="flex flex-col gap-2 sm:gap-3">
+                            <button type="button" onclick="adicionarAoCarrinho()" class="w-full bg-white/10 text-white font-bold py-3 sm:py-4 rounded-2xl hover:bg-white/20 border border-white/30 transition shadow-lg flex items-center justify-center gap-2 text-sm sm:text-base">
                                 <i class="fas fa-cart-plus"></i> Adicionar Mais Itens
                             </button>
                             
-                            <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-4 rounded-2xl hover:from-blue-600 hover:to-purple-700 transition shadow-2xl transform hover:scale-105 flex items-center justify-center gap-2">
+                            <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 sm:py-4 rounded-2xl hover:from-blue-600 hover:to-purple-700 transition shadow-2xl transform hover:scale-105 flex items-center justify-center gap-2 text-sm sm:text-base">
                                 <i class="fas fa-paper-plane"></i> Finalizar Pedido Completo
                             </button>
                         </div>
@@ -228,16 +228,16 @@
 
             <!-- Coluna de Histórico do Cliente -->
             <div class="flex-1 flex flex-col h-full">
-                <div class="p-6 border-b border-white/20 bg-white/5 flex-shrink-0 flex justify-between items-center">
+                <div class="p-4 sm:p-6 border-b border-white/20 bg-white/5 flex-shrink-0 flex justify-between items-center">
                     <div>
-                        <h2 class="text-xl font-bold text-white"><i class="fas fa-history mr-2 text-purple-400"></i>Meu Histórico</h2>
-                        <p class="text-sm text-white/70 mt-1">Acompanhe seus pedidos recentes.</p>
+                        <h2 class="text-lg sm:text-xl font-bold text-white"><i class="fas fa-history mr-2 text-purple-400"></i>Meu Histórico</h2>
+                        <p class="text-xs sm:text-sm text-white/70 mt-1">Acompanhe seus pedidos recentes.</p>
                     </div>
                 </div>
                 
-                <div class="p-6 flex-1 overflow-y-auto">
+                <div class="p-4 sm:p-6 flex-1 overflow-y-auto">
                     <!-- O JS deve adicionar 'onclick="abrirModalCliente(pedidoId)"' nos cards gerados aqui -->
-                    <div id="clientOrdersList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div id="clientOrdersList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                         <!-- Pedidos do cliente aparecerão aqui -->
                         <div class="col-span-full text-center text-white/50 py-10">Carregando pedidos...</div>
                     </div>
@@ -246,83 +246,83 @@
         </div>
 
         <!-- Tela do Admin (Master) -->
-<div id="adminScreen" class="hidden h-screen flex-col overflow-hidden">
+        <div id="adminScreen" class="hidden h-full flex-col overflow-hidden">
             <!-- Abas Admin -->
-            <div class="bg-white/10 backdrop-blur-lg border-b border-white/20 px-4 sm:px-6 flex-shrink-0 flex overflow-x-auto">
-                <button onclick="switchAdminTab('pedidos')" id="tabPedidos" class="px-6 py-5 text-sm font-bold border-b-4 border-blue-500 text-white whitespace-nowrap transition">
-                    <i class="fas fa-tasks mr-2"></i>Quadro de Pedidos
+            <div class="bg-white/10 backdrop-blur-lg border-b border-white/20 px-2 sm:px-6 flex-shrink-0 flex overflow-x-auto">
+                <button onclick="switchAdminTab('pedidos')" id="tabPedidos" class="px-4 sm:px-6 py-4 sm:py-5 text-xs sm:text-sm font-bold border-b-4 border-blue-500 text-white whitespace-nowrap transition">
+                    <i class="fas fa-tasks mr-1 sm:mr-2"></i>Quadro de Pedidos
                 </button>
-                <button onclick="switchAdminTab('clients')" id="tabClients" class="px-6 py-5 text-sm font-bold border-b-4 border-transparent text-white/70 hover:text-white whitespace-nowrap transition">
-                    <i class="fas fa-users mr-2"></i>Lista de Clientes
+                <button onclick="switchAdminTab('clients')" id="tabClients" class="px-4 sm:px-6 py-4 sm:py-5 text-xs sm:text-sm font-bold border-b-4 border-transparent text-white/70 hover:text-white whitespace-nowrap transition">
+                    <i class="fas fa-users mr-1 sm:mr-2"></i>Lista de Clientes
                 </button>
-                <button onclick="switchAdminTab('notifications')" id="tabNotifications" class="px-6 py-5 text-sm font-bold border-b-4 border-transparent text-white/70 hover:text-white whitespace-nowrap transition">
-                    <i class="fas fa-bell mr-2"></i>Notificações
-                    <span id="notificationBadge" class="hidden ml-2 bg-red-500 text-white text-xs px-3 py-1 rounded-full">0</span>
+                <button onclick="switchAdminTab('notifications')" id="tabNotifications" class="px-4 sm:px-6 py-4 sm:py-5 text-xs sm:text-sm font-bold border-b-4 border-transparent text-white/70 hover:text-white whitespace-nowrap transition">
+                    <i class="fas fa-bell mr-1 sm:mr-2"></i>Notificações
+                    <span id="notificationBadge" class="hidden ml-1 sm:ml-2 bg-red-500 text-white text-[10px] sm:text-xs px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">0</span>
                 </button>
             </div>
 
             <!-- Conteúdo Abas Admin -->
-            <div class="flex-1 overflow-hidden relative p-4 sm:p-6">
+            <div class="flex-1 overflow-hidden relative p-2 sm:p-4 md:p-6">
                 
                 <!-- Aba Quadro de Pedidos -->
-               <div id="adminPedidosView" class="relative p-4 sm:p-6 overflow-x-auto flex flex-col sm:flex-row gap-4 lg:gap-6" style="min-height: 800px;">
+                <div id="adminPedidosView" class="absolute inset-0 p-2 sm:p-4 md:p-6 overflow-y-auto sm:overflow-x-auto flex flex-col gap-3 sm:gap-4 lg:gap-6 sm:flex-row">
                     
                     <!-- Coluna: Novos -->
-                    <div class="flex-1 min-w-[280px] lg:min-w-[350px] flex flex-col bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 shadow-2xl max-h-full">
-                        <div class="p-5 border-b border-white/20 rounded-t-3xl flex items-center justify-between bg-gradient-to-r from-purple-600 to-indigo-600">
-                            <h3 class="font-bold text-white text-lg flex items-center gap-3">
-                                <span class="w-4 h-4 rounded-full bg-white pulse"></span> Pendentes
+                    <div class="flex-1 min-h-[200px] sm:min-h-0 min-w-[280px] lg:min-w-[350px] flex flex-col bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl border border-white/20 shadow-2xl max-h-full">
+                        <div class="p-3 sm:p-5 border-b border-white/20 rounded-t-2xl sm:rounded-t-3xl flex items-center justify-between bg-gradient-to-r from-purple-600 to-indigo-600">
+                            <h3 class="font-bold text-white text-base sm:text-lg flex items-center gap-2 sm:gap-3">
+                                <span class="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-white pulse"></span> Pendentes
                             </h3>
-                            <span id="countNovos" class="bg-white/20 text-white text-sm font-bold px-4 py-2 rounded-full">0</span>
+                            <span id="countNovos" class="bg-white/20 text-white text-xs sm:text-sm font-bold px-3 sm:px-4 py-1 sm:py-2 rounded-full">0</span>
                         </div>
-                        <div id="kanban-novo" class="kanban-column flex-1 overflow-y-auto p-4 space-y-4 transition-colors border-2 border-transparent rounded-b-3xl" ondragover="allowDrop(event)" ondrop="drop(event, 'novo')" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                        <div id="kanban-novo" class="kanban-column flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 transition-colors border-2 border-transparent rounded-b-2xl sm:rounded-b-3xl" ondragover="allowDrop(event)" ondrop="drop(event, 'novo')" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
                             <!-- Cards -->
                         </div>
                     </div>
 
                     <!-- Coluna: Produção -->
-                    <div class="flex-1 min-w-[280px] lg:min-w-[350px] flex flex-col bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 shadow-2xl max-h-full">
-                        <div class="p-5 border-b border-white/20 rounded-t-3xl flex items-center justify-between bg-gradient-to-r from-pink-600 to-rose-600">
-                            <h3 class="font-bold text-white text-lg flex items-center gap-3">
-                                <span class="w-4 h-4 rounded-full bg-white pulse"></span> Em Produção
+                    <div class="flex-1 min-h-[200px] sm:min-h-0 min-w-[280px] lg:min-w-[350px] flex flex-col bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl border border-white/20 shadow-2xl max-h-full">
+                        <div class="p-3 sm:p-5 border-b border-white/20 rounded-t-2xl sm:rounded-t-3xl flex items-center justify-between bg-gradient-to-r from-pink-600 to-rose-600">
+                            <h3 class="font-bold text-white text-base sm:text-lg flex items-center gap-2 sm:gap-3">
+                                <span class="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-white pulse"></span> Em Produção
                             </h3>
-                            <span id="countProducao" class="bg-white/20 text-white text-sm font-bold px-4 py-2 rounded-full">0</span>
+                            <span id="countProducao" class="bg-white/20 text-white text-xs sm:text-sm font-bold px-3 sm:px-4 py-1 sm:py-2 rounded-full">0</span>
                         </div>
-                        <div id="kanban-producao" class="kanban-column flex-1 overflow-y-auto p-4 space-y-4 transition-colors border-2 border-transparent rounded-b-3xl" ondragover="allowDrop(event)" ondrop="drop(event, 'producao')" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                        <div id="kanban-producao" class="kanban-column flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 transition-colors border-2 border-transparent rounded-b-2xl sm:rounded-b-3xl" ondragover="allowDrop(event)" ondrop="drop(event, 'producao')" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
                              <!-- Cards -->
                         </div>
                     </div>
 
                     <!-- Coluna: Finalizado -->
-                    <div class="flex-1 min-w-[280px] lg:min-w-[350px] flex flex-col bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 shadow-2xl max-h-full">
-                        <div class="p-5 border-b border-white/20 rounded-t-3xl flex items-center justify-between bg-gradient-to-r from-cyan-600 to-blue-600">
-                            <h3 class="font-bold text-white text-lg flex items-center gap-3">
-                                <span class="w-4 h-4 rounded-full bg-white pulse"></span> Finalizados
+                    <div class="flex-1 min-h-[200px] sm:min-h-0 min-w-[280px] lg:min-w-[350px] flex flex-col bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl border border-white/20 shadow-2xl max-h-full">
+                        <div class="p-3 sm:p-5 border-b border-white/20 rounded-t-2xl sm:rounded-t-3xl flex items-center justify-between bg-gradient-to-r from-cyan-600 to-blue-600">
+                            <h3 class="font-bold text-white text-base sm:text-lg flex items-center gap-2 sm:gap-3">
+                                <span class="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-white pulse"></span> Finalizados
                             </h3>
-                            <span id="countFinalizado" class="bg-white/20 text-white text-sm font-bold px-4 py-2 rounded-full">0</span>
+                            <span id="countFinalizado" class="bg-white/20 text-white text-xs sm:text-sm font-bold px-3 sm:px-4 py-1 sm:py-2 rounded-full">0</span>
                         </div>
-                        <div id="kanban-finalizado" class="kanban-column flex-1 overflow-y-auto p-4 space-y-4 transition-colors border-2 border-transparent rounded-b-3xl" ondragover="allowDrop(event)" ondrop="drop(event, 'finalizado')" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                        <div id="kanban-finalizado" class="kanban-column flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 transition-colors border-2 border-transparent rounded-b-2xl sm:rounded-b-3xl" ondragover="allowDrop(event)" ondrop="drop(event, 'finalizado')" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
                              <!-- Cards -->
                         </div>
                     </div>
                 </div>
 
                 <!-- Aba Clientes -->
-                <div id="adminClientsView" class="hidden absolute inset-0 p-4 sm:p-6 overflow-y-auto">
-                    <div class="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
-                        <div class="p-6 border-b border-white/20 flex justify-between items-center bg-white/5">
-                            <h2 class="text-xl font-bold text-white">Carteira de Clientes</h2>
-                            <div class="text-white/70">Total: <span id="totalClientsCount" class="font-bold text-white">0</span></div>
+                <div id="adminClientsView" class="hidden absolute inset-0 p-2 sm:p-4 md:p-6 overflow-y-auto">
+                    <div class="bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+                        <div class="p-4 sm:p-6 border-b border-white/20 flex justify-between items-center bg-white/5">
+                            <h2 class="text-lg sm:text-xl font-bold text-white">Carteira de Clientes</h2>
+                            <div class="text-white/70 text-xs sm:text-sm">Total: <span id="totalClientsCount" class="font-bold text-white">0</span></div>
                         </div>
                         <div class="overflow-x-auto">
-                            <table class="w-full text-left text-sm text-white">
-                                <thead class="bg-white/10 text-white text-xs uppercase font-semibold">
+                            <table class="w-full text-left text-xs sm:text-sm text-white">
+                                <thead class="bg-white/10 text-white text-[10px] sm:text-xs uppercase font-semibold">
                                     <tr>
-                                        <th class="px-6 py-5">Cliente</th>
-                                        <th class="px-6 py-5">Contato</th>
-                                        <th class="px-6 py-5">Empresa</th>
-                                        <th class="px-6 py-5 text-center">Total de Pedidos</th>
-                                        <th class="px-6 py-5 text-right">Último Pedido</th>
+                                        <th class="px-3 sm:px-6 py-3 sm:py-5">Cliente</th>
+                                        <th class="px-3 sm:px-6 py-3 sm:py-5">Contato</th>
+                                        <th class="px-3 sm:px-6 py-3 sm:py-5 hidden sm:table-cell">Empresa</th>
+                                        <th class="px-3 sm:px-6 py-3 sm:py-5 text-center">Total de Pedidos</th>
+                                        <th class="px-3 sm:px-6 py-3 sm:py-5 text-right">Último Pedido</th>
                                     </tr>
                                 </thead>
                                 <tbody id="clientsTableBody" class="divide-y divide-white/20">
@@ -335,10 +335,10 @@
                 </div>
 
                 <!-- Aba Notificações -->
-                <div id="adminNotificationsView" class="hidden absolute inset-0 p-4 sm:p-6 overflow-y-auto">
-                    <div class="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20">
-                        <div class="p-6 border-b border-white/20 bg-white/5">
-                            <h2 class="text-xl font-bold text-white">
+                <div id="adminNotificationsView" class="hidden absolute inset-0 p-2 sm:p-4 md:p-6 overflow-y-auto">
+                    <div class="bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl shadow-2xl border border-white/20">
+                        <div class="p-4 sm:p-6 border-b border-white/20 bg-white/5">
+                            <h2 class="text-lg sm:text-xl font-bold text-white">
                                 <i class="fas fa-bell mr-2 text-yellow-400"></i>Notificações do Sistema
                             </h2>
                         </div>
@@ -355,70 +355,70 @@
     </main>
 
     <!-- Modal Admin Edição de Cliente/Pedido -->
-    <div id="adminEditModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all max-h-[90vh] flex flex-col">
-            <div class="p-6 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-blue-600 to-purple-600">
-                <h3 class="font-bold text-white text-xl">Gerenciar Cliente e Pedidos</h3>
+    <div id="adminEditModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/50 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all max-h-[95vh] sm:max-h-[90vh] flex flex-col">
+            <div class="p-4 sm:p-6 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-blue-600 to-purple-600">
+                <h3 class="font-bold text-white text-lg sm:text-xl">Gerenciar Cliente e Pedidos</h3>
                 <button onclick="closeEditModal()" class="text-white/70 hover:text-white transition">
-                    <i class="fas fa-times text-2xl"></i>
+                    <i class="fas fa-times text-xl sm:text-2xl"></i>
                 </button>
             </div>
-            <div class="p-6 space-y-5 overflow-y-auto flex-1">
+            <div class="p-4 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto flex-1">
                 <input type="hidden" id="editOrderId">
                 <input type="hidden" id="editClientUid">
                 
                 <!-- Informações do Cliente (Editáveis) -->
-                <div class="bg-gray-50 p-5 rounded-2xl border border-gray-200 space-y-4">
-                    <h4 class="font-bold text-gray-900 text-sm uppercase">Informações do Cliente</h4>
-                    <div class="grid grid-cols-2 gap-4">
+                <div class="bg-gray-50 p-4 sm:p-5 rounded-2xl border border-gray-200 space-y-3 sm:space-y-4">
+                    <h4 class="font-bold text-gray-900 text-xs sm:text-sm uppercase">Informações do Cliente</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                         <div>
                             <label class="block text-xs font-medium text-gray-700 mb-1">Nome</label>
-                            <input type="text" id="editClientName" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                            <input type="text" id="editClientName" class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-gray-700 mb-1">Telefone</label>
-                            <input type="text" id="editClientPhone" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                            <input type="text" id="editClientPhone" class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                         </div>
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">E-mail</label>
-                        <input type="email" id="editClientEmail" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                        <input type="email" id="editClientEmail" class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">Empresa</label>
-                        <input type="text" id="editClientCompany" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                        <input type="text" id="editClientCompany" class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                     </div>
                 </div>
                 
                 <!-- Informações do Pedido -->
-                <div class="grid grid-cols-2 gap-4 bg-gray-50 p-5 rounded-2xl border border-gray-200">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 bg-gray-50 p-4 sm:p-5 rounded-2xl border border-gray-200">
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">Produto</label>
-                        <input type="text" id="editProduct" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white">
+                        <input type="text" id="editProduct" class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white">
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">Quantidade</label>
-                        <input type="text" id="editQuantity" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white">
+                        <input type="text" id="editQuantity" class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white">
                     </div>
                 </div>
 
                 <!-- Campo de Observação no Modal de Edição -->
-                <div class="bg-gray-50 p-5 rounded-2xl border border-gray-200">
+                <div class="bg-gray-50 p-4 sm:p-5 rounded-2xl border border-gray-200">
                     <label class="block text-xs font-medium text-gray-700 mb-1">Observação</label>
-                    <textarea id="editObs" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white resize-none" placeholder="Observação do pedido..."></textarea>
+                    <textarea id="editObs" rows="3" class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white resize-none" placeholder="Observação do pedido..."></textarea>
                 </div>
 
                 <!-- Valor Total do Pedido -->
-                <div class="bg-blue-50 p-5 rounded-2xl border border-blue-200">
+                <div class="bg-blue-50 p-4 sm:p-5 rounded-2xl border border-blue-200">
                     <div class="flex justify-between items-center">
-                        <span class="text-sm font-semibold text-gray-700">Valor Total do Pedido:</span>
-                        <span id="editTotalValue" class="text-xl font-bold text-blue-600">R$ 0,00</span>
+                        <span class="text-xs sm:text-sm font-semibold text-gray-700">Valor Total do Pedido:</span>
+                        <span id="editTotalValue" class="text-lg sm:text-xl font-bold text-blue-600">R$ 0,00</span>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Status do Pedido</label>
-                    <select id="editStatus" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                    <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">Status do Pedido</label>
+                    <select id="editStatus" class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white text-sm">
                         <option value="novo">Pendente</option>
                         <option value="producao">Em Produção</option>
                         <option value="finalizado">Finalizado</option>
@@ -426,8 +426,8 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Prioridade (Interna)</label>
-                    <select id="editPriority" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                    <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">Prioridade (Interna)</label>
+                    <select id="editPriority" class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white text-sm">
                         <option value="Baixa">Baixa</option>
                         <option value="Média">Média</option>
                         <option value="Alta">Alta</option>
@@ -435,89 +435,77 @@
                 </div>
 
                 <!-- Histórico de Pedidos do Cliente -->
-                <div class="mt-4">
-                    <h4 class="font-bold text-gray-900 text-sm uppercase mb-3">Histórico de Pedidos do Cliente</h4>
-                    <div id="clientOrderHistory" class="space-y-3 max-h-60 overflow-y-auto">
+                <div class="mt-3 sm:mt-4">
+                    <h4 class="font-bold text-gray-900 text-xs sm:text-sm uppercase mb-2 sm:mb-3">Histórico de Pedidos do Cliente</h4>
+                    <div id="clientOrderHistory" class="space-y-2 sm:space-y-3 max-h-48 sm:max-h-60 overflow-y-auto">
                         <!-- Histórico carregado dinamicamente -->
                     </div>
                 </div>
 
                 <!-- Botão Excluir Cliente -->
-                <div class="mt-4 border-t border-gray-200 pt-4">
-                    <button onclick="deleteClient()" class="w-full bg-red-50 text-red-600 font-bold py-4 rounded-2xl hover:bg-red-100 transition flex items-center justify-center gap-2">
+                <div class="mt-3 sm:mt-4 border-t border-gray-200 pt-3 sm:pt-4">
+                    <button onclick="deleteClient()" class="w-full bg-red-50 text-red-600 font-bold py-3 sm:py-4 rounded-2xl hover:bg-red-100 transition flex items-center justify-center gap-2 text-sm sm:text-base">
                         <i class="fas fa-trash"></i> Excluir Cliente
                     </button>
                 </div>
             </div>
-            <div class="p-6 border-t border-gray-200 bg-gray-50 flex justify-end gap-3">
+            <div class="p-4 sm:p-6 border-t border-gray-200 bg-gray-50 flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
                 <button onclick="closeEditModal()" class="px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 transition">Cancelar</button>
                 <button onclick="saveClientEdit()" class="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-bold rounded-2xl hover:from-blue-700 hover:to-purple-700 transition shadow-lg">Salvar Alterações</button>
             </div>
         </div>
     </div>
 
-    <!-- NOVO: Modal do Cliente (Visualizar e Editar Pedido) -->
-    <div id="clientOrderModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-        <div class="bg-gray-900/95 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all max-h-[90vh] flex flex-col">
-            <div class="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
-                <h3 class="font-bold text-white text-xl">Detalhes do Meu Pedido</h3>
-                <button type="button" onclick="closeClientOrderModal()" class="text-white/50 hover:text-white transition">
-                    <i class="fas fa-times text-2xl"></i>
+    <!-- Modal do Cliente (Visualizar e Editar Pedido) -->
+    <div id="clientOrderModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm">
+        <div class="bg-gray-900/95 backdrop-blur-xl border border-white/20 rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all max-h-[95vh] sm:max-h-[90vh] flex flex-col">
+            <div class="p-4 sm:p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
+                <h3 class="font-bold text-white text-lg sm:text-xl">Detalhes do Meu Pedido</h3>
+                <button type="button" onclick="closeClientOrderModal()" class="text-white/50 hover:text-white transition p-2">
+                    <i class="fas fa-times text-xl sm:text-2xl"></i>
                 </button>
             </div>
             
-            <div class="p-6 space-y-5 overflow-y-auto flex-1">
+            <div class="p-4 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto flex-1">
                 <input type="hidden" id="clientModalOrderId">
                 
                 <!-- Ações de Topo do Modal -->
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-white/10 pb-4 gap-3">
-                    <span class="text-white/70 text-sm">Status: <span id="clientModalStatus" class="font-bold text-blue-400">Pendente</span></span>
+                    <span class="text-white/70 text-xs sm:text-sm">Status: <span id="clientModalStatus" class="font-bold text-blue-400">Pendente</span></span>
                     
                     <!-- Botão Repetir Pedido (1 clique) -->
-                    <button type="button" onclick="repetirPedidoCliente()" class="bg-green-500/20 text-green-400 hover:bg-green-500/30 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition border border-green-500/30 w-full sm:w-auto justify-center">
+                    <button type="button" onclick="repetirPedidoCliente()" class="bg-green-500/20 text-green-400 hover:bg-green-500/30 px-4 py-2 sm:py-3 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition border border-green-500/30 w-full sm:w-auto justify-center">
                         <i class="fas fa-copy"></i> Repetir Pedido no Sistema
                     </button>
                 </div>
 
-                <div class="space-y-4">
-                    <h4 class="font-semibold text-white/90 text-sm uppercase tracking-wider">Itens do Pedido</h4>
+                <div class="space-y-3 sm:space-y-4">
+                    <h4 class="font-semibold text-white/90 text-xs sm:text-sm uppercase tracking-wider">Itens do Pedido</h4>
                     
                     <!-- Lista de Itens para Edição (O JS injetará os itens aqui) -->
-                    <div id="clientModalItemsList" class="space-y-3">
-                        <!-- Exemplo de estrutura gerada via JS:
-                        <div class="flex flex-col sm:flex-row justify-between sm:items-center bg-white/5 p-4 rounded-xl border border-white/10 gap-3">
-                            <div>
-                                <p class="font-medium text-white text-sm">Caixa de Pizza (Modelo Tradicional)</p>
-                                <p class="text-xs text-white/50 mt-1">35cm</p>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <label class="text-xs text-white/50">Qtd:</label>
-                                <input type="number" value="500" class="w-24 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-400">
-                                <button type="button" class="text-red-400 hover:text-red-300 bg-red-400/10 p-2 rounded-lg transition"><i class="fas fa-trash"></i></button>
-                            </div>
-                        </div>
-                        -->
+                    <div id="clientModalItemsList" class="space-y-2 sm:space-y-3">
+                        <!-- Itens serão injetados via JS -->
                     </div>
                     
                     <!-- Botão Adicionar Mais Itens na Edição -->
-                    <button type="button" onclick="closeClientOrderModal(); document.getElementById('productTypeSelect').focus();" class="w-full border border-dashed border-white/20 text-white/70 hover:text-white hover:border-white/50 hover:bg-white/5 py-4 rounded-xl transition flex items-center justify-center gap-2 text-sm font-medium">
+                    <button type="button" onclick="prepararAdicaoItemExistente()" class="w-full border border-dashed border-white/20 text-white/70 hover:text-white hover:border-white/50 hover:bg-white/5 py-3 sm:py-4 rounded-xl transition flex items-center justify-center gap-2 text-xs sm:text-sm font-medium">
                         <i class="fas fa-plus-circle"></i> Adicionar Mais Itens a Este Pedido
                     </button>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-white/70 mb-2">Observações Gerais do Pedido</label>
-                    <textarea id="clientModalObs" rows="3" class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm text-white resize-none" placeholder="Atualize suas observações aqui..."></textarea>
+                    <label class="block text-xs sm:text-sm font-medium text-white/70 mb-2">Observações Gerais do Pedido</label>
+                    <textarea id="clientModalObs" rows="3" class="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-xs sm:text-sm text-white resize-none" placeholder="Atualize suas observações aqui..."></textarea>
                 </div>
             </div>
             
-            <div class="p-6 border-t border-white/10 bg-white/5 flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div class="text-lg font-bold text-white w-full sm:w-auto text-center sm:text-left">
+            <div class="p-4 sm:p-6 border-t border-white/10 bg-white/5 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
+                <div class="text-base sm:text-lg font-bold text-white w-full sm:w-auto text-center sm:text-left">
                     Total: <span id="clientModalTotalValue" class="text-green-400">R$ 0,00</span>
                 </div>
-                <div class="flex w-full sm:w-auto gap-3">
-                    <button type="button" onclick="closeClientOrderModal()" class="flex-1 sm:flex-none px-6 py-3 text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition">Cancelar</button>
-                    <button type="button" onclick="salvarEdicaoPedidoCliente()" class="flex-1 sm:flex-none px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm font-bold rounded-xl hover:from-blue-600 hover:to-purple-700 transition shadow-lg">Salvar Modificações</button>
+                <div class="flex w-full sm:w-auto gap-2 sm:gap-3">
+                    <button type="button" onclick="closeClientOrderModal()" class="flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition">Cancelar</button>
+                    <button type="button" onclick="salvarEdicaoPedidoCliente()" class="flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs sm:text-sm font-bold rounded-xl hover:from-blue-600 hover:to-purple-700 transition shadow-lg">Salvar Modificações</button>
                 </div>
             </div>
         </div>

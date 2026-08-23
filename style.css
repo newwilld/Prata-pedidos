@@ -24,20 +24,15 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
 }
 
 body { 
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
-    min-height: -webkit-fill-available;
     overflow: hidden;
-    overscroll-behavior: none;
-    touch-action: manipulation;
-    -webkit-overflow-scrolling: touch;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
 }
 
 /* Animações */
@@ -74,8 +69,6 @@ body {
     transition: all 0.3s ease;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 1.5rem;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: contain;
 }
 
 .draggable-card {
@@ -117,6 +110,7 @@ body {
     display: flex; 
     flex-direction: column; 
     gap: 10px;
+    max-width: calc(100vw - 40px);
 }
 
 .toast { 
@@ -188,7 +182,7 @@ body {
     -moz-appearance: textfield;
 }
 
-/* NOVO: Estilos para o Carrinho de Itens */
+/* Estilos para o Carrinho de Itens */
 #cartContainer {
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.25);
@@ -226,9 +220,10 @@ body {
     letter-spacing: -0.5px;
 }
 
-/* NOVO: Estilos para o Modal do Cliente */
+/* Estilos para o Modal do Cliente */
 #clientOrderModal {
     backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
 }
 
 #clientOrderModal .modal-cart-item {
@@ -463,7 +458,7 @@ select::-webkit-scrollbar-thumb:hover {
     border-color: #3b82f6;
 }
 
-/* NOVO: Estilos para o campo de observação no modal do cliente */
+/* Estilos para o campo de observação no modal do cliente */
 #clientModalObs {
     resize: none;
     min-height: 60px;
@@ -531,429 +526,377 @@ select::-webkit-scrollbar-thumb:hover {
     }
 }
 
-/* ============ OTIMIZAÇÕES MOBILE - CORRIGIDAS ============ */
+/* =============================================
+   MOBILE OTIMIZADO - CORREÇÃO CARDS KANBAN
+   ============================================= */
 @media (max-width: 768px) {
-    /* Manter body com overflow hidden mas permitir scroll no main */
     body {
+        overflow: hidden;
         position: fixed;
         width: 100%;
         height: 100%;
+    }
+    
+    .draggable-card.dragging-touch { 
+        opacity: 0.7; 
+        transform: scale(0.95); 
+    }
+    
+    /* Container do kanban */
+    #adminPedidosView {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+    
+    /* Colunas do kanban */
+    #adminPedidosView > div {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        flex: none !important;
+        margin-bottom: 0.5rem;
+        border-radius: 0.75rem !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* Header da coluna */
+    #adminPedidosView > div > div:first-child {
+        padding: 0.5rem 0.75rem !important;
+        border-radius: 0.75rem 0.75rem 0 0 !important;
+    }
+    
+    #adminPedidosView h3 {
+        font-size: 0.85rem !important;
+        white-space: nowrap;
         overflow: hidden;
-    }
-    
-    /* Main com rolagem vertical */
-    main {
-        height: 100%;
-        overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch !important;
-        overscroll-behavior-y: contain;
-    }
-    
-    /* Header compacto */
-    header {
-        flex-shrink: 0;
-    }
-    
-    header .max-w-\[1920px\] {
-        height: 4rem !important;
-        padding-left: 0.75rem !important;
-        padding-right: 0.75rem !important;
-    }
-    
-    header img {
-        width: 2.75rem !important;
-        height: 2.75rem !important;
-    }
-    
-    header h1 {
-        font-size: 1.1rem !important;
-    }
-    
-    header p {
-        font-size: 0.65rem !important;
-    }
-    
-    /* TELA DO CLIENTE - LAYOUT EMPILHADO COM ROLAGEM CORRETA */
-    #clientScreen {
-        display: flex !important;
-        flex-direction: column !important;
-        height: auto !important;
-        min-height: 100% !important;
-        overflow: visible !important;
-    }
-    
-    /* Formulário */
-    #clientScreen > div:first-child {
-        width: 100% !important;
-        height: auto !important;
-        max-height: none !important;
-        overflow: visible !important;
-        border-right: none !important;
-        border-bottom: 2px solid rgba(255, 255, 255, 0.2) !important;
-        flex-shrink: 0 !important;
-        position: relative !important;
-        z-index: 1 !important;
-    }
-    
-    #clientScreen > div:first-child .p-6 {
-        padding: 0.75rem !important;
-        overflow: visible !important;
-    }
-    
-    /* Histórico */
-    #clientScreen > div:last-child {
-        width: 100% !important;
-        height: auto !important;
-        min-height: 70vh !important;
-        flex: 1 !important;
-        overflow: visible !important;
-        position: relative !important;
-        z-index: 1 !important;
-        background: transparent !important;
-    }
-    
-    /* Header do histórico */
-    #clientScreen > div:last-child .p-6:first-child {
-        padding: 0.75rem !important;
-        position: sticky !important;
-        top: 0 !important;
-        background: rgba(30, 41, 59, 0.95) !important;
-        backdrop-filter: blur(10px) !important;
-        -webkit-backdrop-filter: blur(10px) !important;
-        z-index: 10 !important;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        text-overflow: ellipsis;
     }
     
     /* Container dos cards */
-    #clientScreen > div:last-child .p-6:last-child {
-        padding: 0.75rem !important;
-        overflow: visible !important;
-    }
-    
-    /* Grid de pedidos */
-    #clientOrdersList {
-        display: grid !important;
-        grid-template-columns: 1fr !important;
-        gap: 0.75rem !important;
-        overflow: visible !important;
-    }
-    
-    /* Cards de pedido */
-    #clientOrdersList > div {
-        padding: 0.875rem !important;
-        border-radius: 0.875rem !important;
-        margin-bottom: 0 !important;
-        cursor: pointer !important;
+    .kanban-column {
         min-height: 80px !important;
-        background: rgba(255, 255, 255, 0.1) !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    }
-    
-    #clientOrdersList > div:active {
-        transform: scale(0.98) !important;
-        background: rgba(255, 255, 255, 0.15) !important;
-    }
-    
-    /* Formulário compacto */
-    #orderForm {
-        max-height: none !important;
-        overflow: visible !important;
-    }
-    
-    #orderForm .space-y-5 > * + * {
-        margin-top: 0.625rem !important;
-    }
-    
-    #orderForm input,
-    #orderForm select,
-    #orderForm textarea {
-        padding-top: 0.75rem !important;
-        padding-bottom: 0.75rem !important;
-        font-size: 16px !important;
-        border-radius: 0.875rem !important;
-    }
-    
-    /* Botões */
-    button {
-        min-height: 48px !important;
-        touch-action: manipulation !important;
-    }
-    
-    /* Carrinho */
-    #cartContainer {
-        padding: 0.75rem !important;
-        border-radius: 0.875rem !important;
-        max-height: 200px !important;
+        max-height: 300px !important;
         overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch !important;
+        overflow-x: hidden !important;
+        padding: 0.5rem !important;
+        border-radius: 0 0 0.75rem 0.75rem !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* CARDS - CORREÇÃO PRINCIPAL */
+    .draggable-card {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 0 0.5rem 0 !important;
+        padding: 0.6rem !important;
+        border-radius: 0.6rem !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+    }
+    
+    /* Conteúdo interno dos cards */
+    .draggable-card .flex.justify-between {
+        flex-wrap: wrap !important;
+        gap: 0.25rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+    
+    .draggable-card h4 {
+        font-size: 0.8rem !important;
+        line-height: 1.2 !important;
+        margin-bottom: 0.25rem !important;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+        max-width: 100% !important;
+    }
+    
+    .draggable-card ul {
+        padding-left: 0.75rem !important;
+        margin: 0.25rem 0 !important;
+        list-style-position: inside !important;
+    }
+    
+    .draggable-card ul li {
+        font-size: 0.7rem !important;
+        line-height: 1.3 !important;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+    }
+    
+    .draggable-card .text-sm {
+        font-size: 0.7rem !important;
+        line-height: 1.3 !important;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+    }
+    
+    .draggable-card .text-xs {
+        font-size: 0.65rem !important;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+    }
+    
+    .draggable-card .text-\[10px\] {
+        font-size: 0.6rem !important;
+        word-break: break-word !important;
+    }
+    
+    /* Badge de prioridade */
+    .draggable-card .px-3.py-1 {
+        padding: 0.15rem 0.4rem !important;
+        font-size: 0.6rem !important;
+        white-space: nowrap !important;
+    }
+    
+    /* Botão dentro do card */
+    .draggable-card .pt-4.border-t {
+        padding-top: 0.5rem !important;
+        margin-top: 0.25rem !important;
+    }
+    
+    .draggable-card button {
+        padding: 0.4rem !important;
+        font-size: 0.7rem !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        gap: 0.25rem !important;
+    }
+    
+    .draggable-card button span {
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        flex: 1 !important;
+        min-width: 0 !important;
+    }
+    
+    .draggable-card button i {
+        font-size: 0.8rem !important;
+        flex-shrink: 0 !important;
+    }
+    
+    /* Garantir que nada dentro do card estoure */
+    .draggable-card *,
+    .draggable-card *::before,
+    .draggable-card *::after {
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* Forçar quebra de texto */
+    .draggable-card,
+    .draggable-card p,
+    .draggable-card h4,
+    .draggable-card li,
+    .draggable-card span {
+        overflow-wrap: break-word !important;
+        word-wrap: break-word !important;
+        word-break: break-word !important;
+    }
+    
+    /* Ícones dentro dos cards */
+    .draggable-card i,
+    .draggable-card svg,
+    .draggable-card img {
+        max-width: 16px !important;
+        flex-shrink: 0 !important;
+    }
+    
+    /* Outros elementos mobile */
+    #productTypeSelect,
+    #modelSelect,
+    #sizeSelect,
+    #productSelect {
+        max-height: 250px;
+        font-size: 0.85em;
+        padding: 0.75rem !important;
+    }
+    
+    #productTypeSelect option,
+    #modelSelect option,
+    #sizeSelect option,
+    #productSelect option {
+        padding: 8px 10px;
+        font-size: 0.9em;
+    }
+    
+    #productTypeSelect optgroup,
+    #modelSelect optgroup,
+    #sizeSelect optgroup,
+    #productSelect optgroup {
+        font-size: 0.8em;
+        padding: 6px 0;
+    }
+    
+    #totalDisplayValue {
+        font-size: 1.25rem;
+    }
+    
+    #totalDisplayContainer {
+        padding: 0.75rem;
+        border-radius: 1rem;
+    }
+    
+    #orderObs {
+        min-height: 50px;
+        font-size: 0.85em;
+        padding: 0.75rem 0.75rem 0.75rem 2.5rem !important;
+    }
+    
+    #cartContainer {
+        padding: 0.6rem !important;
+        border-radius: 1rem;
     }
     
     #cartItemsList {
-        max-height: 120px !important;
-        overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch !important;
-        font-size: 0.8rem !important;
+        max-height: 100px !important;
+        font-size: 0.8em;
     }
     
-    /* TELA ADMIN */
-    #adminScreen {
-        height: auto !important;
-        min-height: 100% !important;
-        overflow: visible !important;
-        display: flex !important;
-        flex-direction: column !important;
+    #clientOrderModal .modal-cart-item {
+        padding: 0.6rem !important;
+        border-radius: 0.75rem;
     }
     
-    /* Abas admin */
-    #adminScreen > div:first-child {
-        position: sticky !important;
-        top: 0 !important;
-        z-index: 20 !important;
-        background: rgba(30, 41, 59, 0.95) !important;
-        backdrop-filter: blur(10px) !important;
-        -webkit-backdrop-filter: blur(10px) !important;
-        overflow-x: auto !important;
-        -webkit-overflow-scrolling: touch !important;
-        scrollbar-width: none !important;
-        -ms-overflow-style: none !important;
-        flex-shrink: 0 !important;
+    #clientOrderModal .item-qty-input {
+        width: 60px !important;
+        padding: 0.4rem 0.5rem !important;
+        font-size: 0.85em;
     }
     
-    #adminScreen > div:first-child::-webkit-scrollbar {
-        display: none !important;
+    #clientModalTotalValue {
+        font-size: 1.1rem !important;
     }
     
-    #adminScreen > div:first-child button {
-        padding: 0.875rem 1rem !important;
-        font-size: 0.8rem !important;
-        white-space: nowrap !important;
-        flex-shrink: 0 !important;
-        min-height: 48px !important;
+    button[onclick="repetirPedidoCliente()"] {
+        font-size: 0.75rem !important;
+        padding: 0.5rem 0.75rem !important;
     }
     
-    /* Conteúdo admin */
-    #adminScreen > div:nth-child(2) {
-        flex: 1 !important;
-        overflow: visible !important;
-        padding: 0.75rem !important;
-        position: relative !important;
-        height: auto !important;
-    }
-    
-    /* Kanban empilhado */
-    #adminPedidosView {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 0.75rem !important;
-        padding: 0 !important;
-        position: relative !important;
-        overflow: visible !important;
-        height: auto !important;
-    }
-    
-    #adminPedidosView > div {
-        width: 100% !important;
-        min-width: 100% !important;
-        max-height: none !important;
-        flex: none !important;
-        margin-bottom: 0.5rem !important;
-        border-radius: 1rem !important;
-        background: rgba(255, 255, 255, 0.1) !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    }
-    
-    /* Headers kanban */
-    #adminPedidosView > div > div:first-child {
-        padding: 0.75rem !important;
-        border-radius: 1rem 1rem 0 0 !important;
-    }
-    
-    #adminPedidosView > div > div:first-child h3 {
-        font-size: 0.9rem !important;
-    }
-    
-    /* Cards kanban */
-    .kanban-column {
-        min-height: 100px !important;
-        max-height: 300px !important;
-        overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch !important;
-        overscroll-behavior-y: contain;
+    /* Modais no mobile */
+    #clientOrderModal,
+    #adminEditModal {
         padding: 0.5rem !important;
-        border-radius: 0 0 1rem 1rem !important;
-        background: transparent !important;
     }
     
-    .kanban-column .draggable-card,
-    .kanban-column > div {
+    #clientOrderModal > div,
+    #adminEditModal > div {
+        border-radius: 1rem !important;
+        max-height: 98vh !important;
+    }
+    
+    #clientOrderModal .p-6,
+    #adminEditModal .p-6 {
+        padding: 1rem !important;
+    }
+    
+    #clientOrderModal .p-6.space-y-5,
+    #adminEditModal .p-6.space-y-5 {
+        padding: 1rem !important;
+        gap: 0.75rem !important;
+    }
+    
+    #clientOrderModal .border-t,
+    #adminEditModal .border-t {
         padding: 0.75rem !important;
-        border-radius: 0.75rem !important;
-        font-size: 0.8rem !important;
-        margin-bottom: 0.5rem !important;
     }
     
-    /* Modais */
-    #adminEditModal,
-    #clientOrderModal {
-        align-items: flex-end !important;
-        padding: 0 !important;
+    #clientOrderModal button,
+    #adminEditModal button {
+        padding: 0.6rem 0.75rem !important;
+        font-size: 0.85em !important;
     }
     
-    #adminEditModal > div,
-    #clientOrderModal > div {
-        max-height: 95vh !important;
-        width: 100% !important;
-        border-radius: 1.25rem 1.25rem 0 0 !important;
-        margin: 0 !important;
-        overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch !important;
+    /* Toast no mobile */
+    #toast-container {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
     }
     
-    #adminEditModal .p-6,
-    #clientOrderModal .p-6 {
-        padding: 0.875rem !important;
+    .toast {
+        padding: 12px 16px;
+        font-size: 0.85em;
+        border-radius: 12px;
     }
     
-    /* Scrollbar fina */
-    ::-webkit-scrollbar {
-        width: 4px;
-        height: 4px;
+    /* Tabela de clientes */
+    #clientsTableBody td,
+    #clientsTableBody th {
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.8em;
     }
     
-    ::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.3);
-        border-radius: 2px;
+    select {
+        font-size: 0.85em !important;
     }
     
-    /* Prevenir scroll horizontal */
-    body, main, #clientScreen, #adminScreen {
-        overflow-x: hidden !important;
-        max-width: 100vw !important;
+    #orderForm button {
+        padding: 0.7rem 1rem !important;
+        font-size: 0.9em !important;
+    }
+    
+    #orderForm input,
+    #orderForm textarea,
+    #orderForm select {
+        font-size: 0.85em !important;
     }
 }
 
-/* ============ TELAS MUITO PEQUENAS ============ */
-@media (max-width: 375px) {
-    header h1 {
-        font-size: 1rem !important;
-    }
-    
-    header img {
-        width: 2.5rem !important;
-        height: 2.5rem !important;
-    }
-    
-    #clientScreen > div:last-child {
-        min-height: 60vh !important;
+/* Telas muito pequenas (iPhone SE, etc) */
+@media (max-width: 380px) {
+    #adminPedidosView {
+        padding: 0.25rem;
+        gap: 0.5rem;
     }
     
     .kanban-column {
         max-height: 250px !important;
-    }
-    
-    #clientOrdersList > div {
-        padding: 0.75rem !important;
-    }
-}
-
-/* ============ OTIMIZAÇÕES iOS ============ */
-@supports (-webkit-touch-callout: none) {
-    @media (max-width: 768px) {
-        main,
-        #clientScreen > div:last-child,
-        .kanban-column,
-        #cartContainer,
-        #cartItemsList {
-            -webkit-overflow-scrolling: touch !important;
-        }
-    }
-}
-
-/* ============ ACESSIBILIDADE TOUCH ============ */
-@media (hover: none) and (pointer: coarse) {
-    button, 
-    select, 
-    input[type="submit"],
-    #clientOrdersList > div {
-        cursor: default !important;
-    }
-    
-    button:active,
-    #clientOrdersList > div:active {
-        opacity: 0.8 !important;
-    }
-}
-
-/* ============ MODO TV ============ */
-@media (min-width: 1920px) {
-    body {
-        font-size: 18px;
+        padding: 0.35rem !important;
     }
     
     .draggable-card {
-        padding: 24px !important;
-        border-radius: 20px !important;
+        padding: 0.45rem !important;
+        margin-bottom: 0.35rem !important;
+        border-radius: 0.5rem !important;
+        font-size: 0.8em;
     }
     
-    .kanban-column {
-        min-height: 500px;
+    .draggable-card h4 {
+        font-size: 0.75rem !important;
     }
     
-    #totalDisplayValue {
-        font-size: 2.5rem;
+    .draggable-card ul li,
+    .draggable-card .text-sm {
+        font-size: 0.65rem !important;
     }
-}
-
-/* Animações para o carrinho */
-#cartContainer.fade-in {
-    animation: cartSlideIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-}
-
-@keyframes cartSlideIn {
-    from {
-        opacity: 0;
-        transform: translateY(-20px) scale(0.95);
+    
+    .draggable-card .text-xs {
+        font-size: 0.6rem !important;
     }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
+    
+    .draggable-card button {
+        padding: 0.35rem !important;
+        font-size: 0.65rem !important;
     }
-}
-
-/* Estilo para itens do carrinho */
-#cartItemsList li {
-    animation: itemSlideIn 0.3s ease;
-}
-
-@keyframes itemSlideIn {
-    from {
-        opacity: 0;
-        transform: translateX(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-/* Botão de remover item */
-#cartItemsList button,
-#clientModalItemsList button[onclick="removerItemModalCliente(this)"] {
-    transition: all 0.2s ease;
-}
-
-#cartItemsList button:hover,
-#clientModalItemsList button[onclick="removerItemModalCliente(this)"]:hover {
-    transform: scale(1.2);
-    background: rgba(239, 68, 68, 0.2);
-    border-radius: 0.5rem;
-}
-
-/* Responsividade modal */
-@media (max-width: 640px) {
+    
     #clientOrderModal .modal-cart-item {
         flex-direction: column !important;
         align-items: flex-start !important;
+        gap: 0.5rem !important;
     }
     
     #clientOrderModal .modal-cart-item > div:last-child {
@@ -962,29 +905,126 @@ select::-webkit-scrollbar-thumb:hover {
     }
     
     #clientModalObs {
-        font-size: 0.9rem !important;
+        font-size: 0.8rem !important;
+        min-height: 40px !important;
+    }
+    
+    button[onclick="repetirPedidoCliente()"] {
+        font-size: 0.7rem !important;
+        padding: 0.4rem 0.6rem !important;
     }
 }
 
-/* Melhorias de performance */
-.draggable-card,
-.kanban-column,
-#totalDisplayContainer,
-#modelContainer,
-#sizeContainer,
-#cartContainer,
-.modal-cart-item {
-    will-change: transform, opacity;
-    backface-visibility: hidden;
+/* Prevenir overflow horizontal */
+@media (max-width: 768px) {
+    #adminScreen,
+    #adminPedidosView,
+    .kanban-column,
+    .draggable-card,
+    body {
+        overflow-x: hidden !important;
+    }
 }
 
-/* Selects */
+/* Efeitos de brilho */
+.glow-effect {
+    position: relative;
+}
+
+.glow-effect::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: glow 3s infinite;
+}
+
+@keyframes glow {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(10%, 10%); }
+}
+
+/* Ajustes para o select em telas maiores */
+@media (min-width: 1024px) {
+    #productTypeSelect,
+    #modelSelect,
+    #sizeSelect,
+    #productSelect {
+        font-size: 0.95em;
+    }
+    
+    #productTypeSelect optgroup,
+    #modelSelect optgroup,
+    #sizeSelect optgroup,
+    #productSelect optgroup {
+        font-size: 0.88em;
+    }
+    
+    #totalDisplayValue {
+        font-size: 2.25rem;
+    }
+}
+
+/* Hover states para os grupos */
+#productTypeSelect optgroup:hover,
+#modelSelect optgroup:hover,
+#sizeSelect optgroup:hover,
+#productSelect optgroup:hover {
+    background-color: #e2e8f0;
+    cursor: pointer;
+}
+
+/* Estilo para quando os selects estão focados */
+#productTypeSelect:focus,
+#modelSelect:focus,
+#sizeSelect:focus,
+#productSelect:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+#productTypeSelect:focus-visible,
+#modelSelect:focus-visible,
+#sizeSelect:focus-visible,
+#productSelect:focus-visible {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+/* Animação especial para o valor total */
+@keyframes valueUpdate {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+#totalDisplayValue.value-updated {
+    animation: valueUpdate 0.3s ease;
+}
+
+#orderForm #totalDisplayContainer {
+    margin-top: 0.5rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#orderForm #totalDisplayContainer.hidden {
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+}
+
+/* Estilos adicionais para os campos de cascata */
 #productTypeSelect,
 #modelSelect,
 #sizeSelect {
     width: 100%;
     appearance: none;
-    padding: 1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 1rem;
@@ -1006,6 +1046,7 @@ select::-webkit-scrollbar-thumb:hover {
     outline: none;
     box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
     border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.15);
 }
 
 #productTypeSelect option,
@@ -1017,9 +1058,136 @@ select::-webkit-scrollbar-thumb:hover {
     font-weight: 500;
 }
 
-/* Ajustes finais */
+#productTypeSelect option:hover,
+#modelSelect option:hover,
+#sizeSelect option:hover {
+    background-color: #e0e7ff;
+}
+
+#productTypeSelect {
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+#productTypeSelect option {
+    font-weight: 500;
+    padding: 12px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+#productTypeSelect option:last-child {
+    border-bottom: none;
+}
+
+#modelSelect {
+    font-weight: 500;
+}
+
+#modelSelect option {
+    padding: 10px 12px;
+    font-size: 0.95em;
+}
+
+#sizeSelect {
+    font-weight: 500;
+}
+
+#sizeSelect option {
+    padding: 10px 12px;
+    font-size: 0.9em;
+    color: #475569;
+}
+
+#sizeSelect option:hover {
+    background-color: #f0f9ff;
+    color: #0369a1;
+}
+
+#productTypeSelect:focus-visible,
+#modelSelect:focus-visible,
+#sizeSelect:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+#orderForm {
+    position: relative;
+}
+
+#orderForm > div {
+    position: relative;
+    z-index: 1;
+}
+
+#productTypeSelect + i,
+#modelSelect + i,
+#sizeSelect + i {
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* Melhorias de performance */
+.draggable-card,
+.kanban-column,
+#totalDisplayContainer,
+#modelContainer,
+#sizeContainer,
+#cartContainer,
+.modal-cart-item {
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+}
+
+/* Suporte para modo escuro */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-main: #0f172a;
+        --bg-card: #1e293b;
+        --text-primary: #f8fafc;
+        --text-secondary: #cbd5e1;
+        --text-muted: #64748b;
+        --border-color: #334155;
+    }
+}
+
+#productTypeSelect option:disabled,
+#modelSelect option:disabled,
+#sizeSelect option:disabled {
+    color: #94a3b8;
+    font-style: italic;
+}
+
+#modelSelect option:only-child,
+#sizeSelect option:only-child {
+    color: #94a3b8;
+    font-style: italic;
+}
+
+#productTypeSelect option,
+#modelSelect option,
+#sizeSelect option {
+    text-shadow: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
 .hidden {
     display: none !important;
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 select:focus option:checked {
@@ -1029,4 +1197,121 @@ select:focus option:checked {
 
 select:invalid {
     color: rgba(255, 255, 255, 0.6);
+}
+
+@media (min-width: 1920px) and (max-width: 2560px) {
+    #productTypeSelect,
+    #modelSelect,
+    #sizeSelect {
+        font-size: 1.2em;
+    }
+    
+    #productTypeSelect option,
+    #modelSelect option,
+    #sizeSelect option {
+        padding: 15px 18px;
+    }
+    
+    #totalDisplayValue {
+        font-size: 3rem;
+    }
+    
+    #unitPriceDisplay {
+        font-size: 1.1rem;
+    }
+}
+
+#cartContainer.fade-in {
+    animation: cartSlideIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes cartSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+#cartItemsList li {
+    animation: itemSlideIn 0.3s ease;
+}
+
+@keyframes itemSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+#cartItemsList button {
+    transition: all 0.2s ease;
+}
+
+#cartItemsList button:hover {
+    transform: scale(1.2);
+    background: rgba(239, 68, 68, 0.2);
+    border-radius: 0.5rem;
+}
+
+#clientModalItemsList button[onclick="removerItemModalCliente(this)"] {
+    transition: all 0.2s ease;
+}
+
+#clientModalItemsList button[onclick="removerItemModalCliente(this)"]:hover {
+    transform: scale(1.1);
+    background: rgba(239, 68, 68, 0.2);
+}
+
+@media (max-width: 380px) {
+    #clientOrderModal .modal-cart-item {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+    }
+    
+    #clientOrderModal .modal-cart-item > div:last-child {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    #clientModalObs {
+        font-size: 0.8rem !important;
+        min-height: 40px !important;
+    }
+    
+    button[onclick="repetirPedidoCliente()"] {
+        font-size: 0.7rem !important;
+        padding: 0.4rem 0.6rem !important;
+    }
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .kanban-column {
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+        overscroll-behavior: contain;
+    }
+    
+    #cartItemsList,
+    #clientModalItemsList,
+    #clientOrderHistory {
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+    }
+    
+    .kanban-column::-webkit-scrollbar {
+        width: 4px;
+    }
+    
+    .kanban-column::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 2px;
+    }
 }
