@@ -381,8 +381,8 @@ function setupUIForUser() {
             listenersInitialized = true;
         }
         
-        // Aplica filtro de itens no catálogo
-        applyItemsFilter();
+        // APLICA FILTRO DE ITENS PERMITIDOS
+        filterProductTypeOptions();
     }
 }
 
@@ -424,14 +424,24 @@ window.handleProductTypeChange = function() {
     document.getElementById('totalDisplayContainer').classList.add('hidden');
     
     if (productType && productCatalog[productType]) {
+        // VERIFICA SE O CLIENTE TEM PERMISSÃO PARA ESTA CATEGORIA
+        if (currentUserData && currentUserData.role === 'client') {
+            const isAllowed = isItemAllowed(productType);
+            if (!isAllowed) {
+                showToast('Este tipo de produto não está disponível para você.', 'error');
+                return;
+            }
+        }
+        
         const models = Object.keys(productCatalog[productType]);
         models.forEach(model => {
             // Verifica se algum item deste modelo está permitido
-            const hasAllowedItem = productCatalog[productType][model].some(size => 
-                isItemAllowed(`${productType} > ${model} > ${size.name}`)
-            );
+            const hasAllowedItem = productCatalog[productType][model].some(size => {
+                if (!currentUserData || currentUserData.role === 'admin') return true;
+                return isItemAllowed(`${productType} > ${model} > ${size.name}`);
+            });
             
-            if (hasAllowedItem || currentUserData.role === 'admin') {
+            if (hasAllowedItem) {
                 const option = document.createElement('option');
                 option.value = model;
                 option.textContent = model;
@@ -458,9 +468,14 @@ window.handleModelChange = function() {
         
         // Filtra tamanhos permitidos para clientes
         const allowedSizes = sizes.filter(size => {
-            if (currentUserData.role === 'admin') return true;
+            if (!currentUserData || currentUserData.role === 'admin') return true;
             return isItemAllowed(`${productType} > ${model} > ${size.name}`);
         });
+        
+        if (allowedSizes.length === 0) {
+            showToast('Nenhum item disponível para este modelo.', 'error');
+            return;
+        }
         
         // Cria os checkboxes para cada tamanho permitido
         allowedSizes.forEach((size, index) => {
@@ -497,6 +512,46 @@ window.handleModelChange = function() {
         sizeContainer.classList.remove('hidden');
     }
 };
+// Função para filtrar as opções do select de tipo de produto para clientes
+function filterProductTypeOptions() {
+    if (!currentUserData || currentUserData.role === 'admin') return;
+    
+    const productTypeSelect = document.getElementById('productTypeSelect');
+    if (!productTypeSelect) return;
+    
+    const options = productTypeSelect.options;
+    
+    // Começa do índice 1 para pular o placeholder
+    for (let i = 1; i < options.length; i++) {
+        const optionValue = options[i].value;
+        
+        if (optionValue && !isItemAllowed(optionValue)) {
+            options[i].disabled = true;
+            options[i].style.display = 'none';
+        } else {
+            options[i].disabled = false;
+            options[i].style.display = '';
+        }
+    }
+}
+
+// Função para verificar se um item está permitido para o cliente
+function isItemAllowed(itemName) {
+    if (!currentUserData || currentUserData.role === 'admin') return true;
+    
+    const config = currentClientItemsConfig;
+    if (!config || !config.allowedItems || config.allowedItems.length === 0) return true;
+    
+    if (config.allowedItems.includes('todos')) return true;
+    
+    // Verifica se o item está na lista de permitidos
+    return config.allowedItems.some(allowed => {
+        if (allowed === 'Caixa de pizza' && itemName.includes('Caixa de pizza')) return true;
+        if (allowed === 'Caixa de torta' && itemName.includes('Caixa de torta')) return true;
+        if (allowed === 'Caixa correio' && itemName.includes('Caixa correio')) return true;
+        return itemName.includes(allowed);
+    });
+}
 
 window.handleSizeCheckboxChange = function(index) {
     const checkbox = document.getElementById(`size-check-${index}`);
