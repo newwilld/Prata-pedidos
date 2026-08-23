@@ -200,15 +200,10 @@ function isCategoryAllowed(category) {
     // Verifica se a categoria completa está permitida
     if (config.allowedItems.includes(category)) return true;
     
-    // Verifica se algum modelo desta categoria está permitido
+    // Verifica se algum modelo específico desta categoria está permitido
     const categoryModels = Object.keys(productCatalog[category] || {});
     return categoryModels.some(model => {
-        const modelKey = `${category} > ${model}`;
-        return config.allowedItems.some(allowed => 
-            allowed === modelKey || 
-            allowed === model ||
-            allowed.toLowerCase() === model.toLowerCase()
-        );
+        return isModelAllowed(category, model);
     });
 }
 
@@ -224,16 +219,24 @@ function isModelAllowed(category, model) {
     // Verifica se a categoria inteira está permitida
     if (config.allowedItems.includes(category)) return true;
     
-    // Verifica se o modelo específico está permitido
+    // Verifica se o modelo específico está permitido (ex: "Caixa de pizza > Oitavada")
     const modelKey = `${category} > ${model}`;
-    return config.allowedItems.some(allowed => 
-        allowed === modelKey || 
-        allowed === model ||
-        allowed.toLowerCase() === model.toLowerCase()
-    );
+    
+    return config.allowedItems.some(allowed => {
+        // Verifica se é exatamente "Categoria > Modelo"
+        if (allowed === modelKey) return true;
+        
+        // Verifica se é apenas o nome do modelo
+        if (allowed === model) return true;
+        
+        // Verifica comparação case-insensitive
+        if (allowed.toLowerCase() === model.toLowerCase()) return true;
+        
+        return false;
+    });
 }
 
-// NOVA FUNÇÃO: Obter modelos permitidos para uma categoria
+// Função para obter modelos permitidos para uma categoria
 function getAllowedModelsForCategory(category) {
     if (!currentUserData || currentUserData.role === 'admin') {
         return Object.keys(productCatalog[category] || {});
@@ -255,9 +258,11 @@ function getAllowedModelsForCategory(category) {
     
     // Filtra apenas os modelos específicos permitidos
     const allModels = Object.keys(productCatalog[category] || {});
-    return allModels.filter(model => {
+    const allowedModels = allModels.filter(model => {
         return isModelAllowed(category, model);
     });
+    
+    return allowedModels;
 }
 
 // Funções de UI Auxiliares
