@@ -1901,11 +1901,12 @@ window.deleteClient = async function() {
         displayNome = globalUsers[clientUid].name || displayNome;
     }
     
-    if (!confirm(`Tem certeza que deseja excluir TODOS OS PEDIDOS do cliente ${displayNome}? Esta ação não pode ser desfeita.`)) {
+    if (!confirm(`Tem certeza que deseja excluir COMPLETAMENTE o cliente ${displayNome} e TODOS os seus pedidos? Esta ação não pode ser desfeita.`)) {
         return;
     }
     
     try {
+        // 1. Remove todos os pedidos do cliente
         const ordersToDelete = Object.keys(globalOrders).filter(key => {
             const order = globalOrders[key];
             if (clientUid && clientUid !== 'undefined' && order.userId === clientUid) return true;
@@ -1917,7 +1918,12 @@ window.deleteClient = async function() {
             await remove(ref(db, `orders/${orderId}`));
         }
         
-        showToast(`Pedidos removidos do sistema com sucesso!`, 'success');
+        // 2. Remove o registro do cliente no nó users/
+        if (clientUid && clientUid !== 'undefined' && clientUid !== '') {
+            await remove(ref(db, `users/${clientUid}`));
+        }
+        
+        showToast(`Cliente ${displayNome} e todos os pedidos foram removidos do sistema!`, 'success');
         closeEditModal();
         
         setTimeout(() => {
@@ -1928,8 +1934,8 @@ window.deleteClient = async function() {
         }, 500);
         
     } catch(err) {
-        console.error("Erro ao excluir pedido:", err);
-        showToast('Erro ao excluir pedidos. Verifique o console para mais detalhes.', 'error');
+        console.error("Erro ao excluir cliente:", err);
+        showToast('Erro ao excluir cliente. Verifique o console para mais detalhes.', 'error');
     }
 };
 
