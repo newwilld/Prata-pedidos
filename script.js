@@ -436,7 +436,7 @@ function setupUIForUser() {
         }
     } else {
         // Se for cliente, mostra @Empresa e @Nome
-               if (headerTitulo) {
+                if (headerTitulo) {
             const empresaNome = currentUserData.company ? currentUserData.company : 'Área do Cliente';
             headerTitulo.innerText = empresaNome;
         }
@@ -782,9 +782,12 @@ window.submitOrder = async function(e) {
     btn.disabled = true;
     
     const totalOrderValue = currentCart.reduce((acc, item) => acc + item.totalEstimated, 0);
+    const initials = currentUserData.email ? currentUserData.email.substring(0, 2).toUpperCase() : 'NA';
     
     try {
         if (editingOrderId) {
+            const originalOrder = globalClientOrders[editingOrderId] || globalOrders[editingOrderId];
+            const oldTotal = originalOrder ? originalOrder.totalEstimated || 0 : 0;
             const orderRef = ref(db, `orders/${editingOrderId}`);
             await update(orderRef, {
                 items: currentCart,
@@ -793,8 +796,15 @@ window.submitOrder = async function(e) {
                 quantity: currentCart.length === 1 ? currentCart[0].quantity : `Diversas`,
                 obs: currentCart.length === 1 ? currentCart[0].obs : ''
             });
-            showToast('Pedido atualizado com os novos itens!', 'success');
             
+            // NOTIFICAÇÃO: Pedido Editado
+            await createNotification(
+                `📝 Pedido atualizado por @${currentUserData.name} [${initials}]\n` +
+                `📦 Itens: ${currentCart.length === 1 ? currentCart[0].product : currentCart.length + ' itens'}\n` +
+                `💰 Valor editado de: R$ ${oldTotal.toFixed(2)} para: R$ ${totalOrderValue.toFixed(2)}`
+            );
+            
+            showToast('Pedido atualizado com os novos itens!', 'success');
             btn.innerHTML = '<i class="fas fa-paper-plane"></i> Finalizar Pedido Completo';
             editingOrderId = null;
         } else {
@@ -816,6 +826,14 @@ window.submitOrder = async function(e) {
             
             const ordersListRef = ref(db, 'orders');
             await push(ordersListRef, newOrder);
+            
+            // NOTIFICAÇÃO: Novo Pedido
+            await createNotification(
+                `🎉 Novo pedido recebido!\n` +
+                `👤 Cliente: @${currentUserData.name} [${initials}]\n` +
+                `📦 Resumo: ${currentCart.length === 1 ? currentCart[0].product : currentCart.length + ' itens'}\n` +
+                `💰 Valor Total: R$ ${totalOrderValue.toFixed(2)}`
+            );
             
             showToast('Pedido completo enviado com sucesso!', 'success');
             if (totalOrderValue) {
@@ -1114,6 +1132,7 @@ window.excluirPedidoCliente = async function() {
     try {
         const clientName = currentUserData.name || order.clientName || 'Cliente sem nome';
         const clientEmail = currentUserData.email || order.clientEmail || 'N/A';
+        const initials = clientEmail !== 'N/A' ? clientEmail.substring(0, 2).toUpperCase() : 'NA';
         
         let itemsInfo = '';
         if (order.items && order.items.length > 0) {
@@ -1128,10 +1147,12 @@ window.excluirPedidoCliente = async function() {
         
         await remove(ref(db, `orders/${orderId}`));
         
+        // NOTIFICAÇÃO: Pedido excluído pelo Cliente
         await createNotification(
-            `Pedido do cliente ${clientName} foi excluído por @${clientName} (${clientEmail})\n` +
-            `📦 Pedido: ${itemsInfo}\n` +
-            `💰 Valor Total: ${totalValue}\n` +
+            `🗑️ Pedido excluído por @${clientName} [${initials}]\n` +
+            `👤 Cliente Afetado: ${clientName}\n` +
+            `📦 Itens: ${itemsInfo}\n` +
+            `💰 Valor: ${totalValue}\n` +
             `📅 Data: ${window.formatDateTime(Date.now())}`
         );
         
@@ -1188,6 +1209,7 @@ window.salvarEdicaoPedidoCliente = async function() {
     });
     
     const generalObs = document.getElementById('clientModalObs').value;
+    const oldTotal = order.totalEstimated || 0;
     
     try {
         const orderRef = ref(db, `orders/${orderId}`);
@@ -1209,14 +1231,14 @@ window.salvarEdicaoPedidoCliente = async function() {
         });
         
         const clientName = currentUserData.name || 'Cliente';
-        
+        const initials = currentUserData.email ? currentUserData.email.substring(0, 2).toUpperCase() : 'NA';
         const itemsSummary = newItems.map(i => `${i.quantityNumber}x ${i.product}`).join(', ');
-        const totalDisplay = `R$ ${newTotal.toFixed(2)}`;
         
+        // NOTIFICAÇÃO: Pedido Editado Pelo Cliente (Aguardando Aprovação)
         await createNotification(
-            `@${clientName} solicitou alterações no pedido\n` +
+            `📝 Alteração solicitada por @${clientName} [${initials}]\n` +
             `📦 Novos itens: ${itemsSummary}\n` +
-            `💰 Novo total: ${totalDisplay}\n` +
+            `💰 Valor editado de: R$ ${oldTotal.toFixed(2)} para: R$ ${newTotal.toFixed(2)}\n` +
             `⏰ Aguardando aprovação do Admin`
         );
         
@@ -1235,6 +1257,13 @@ window.aprovarAlteracaoPedido = async function(orderId) {
             alterationStatus: 'approved',
             alterationApprovedAt: Date.now()
         });
+        
+        const order = globalOrders[orderId];
+        const clientName = order ? order.clientName : 'Cliente';
+        const initials = currentUserData.email ? currentUserData.email.substring(0, 2).toUpperCase() : 'NA';
+        
+        // NOTIFICAÇÃO: Admin aprova alteração
+        await createNotification(`✅ Alteração do pedido de ${clientName} foi APROVADA por @${currentUserData.name} [${initials}]`);
         
         showToast('Alteração aprovada com sucesso!', 'success');
     } catch (error) {
@@ -1264,6 +1293,17 @@ window.repetirPedidoCliente = async function() {
     try {
         const ordersListRef = ref(db, 'orders');
         await push(ordersListRef, clonedOrder);
+        
+        const initials = currentUserData.email ? currentUserData.email.substring(0, 2).toUpperCase() : 'NA';
+        const totalValue = clonedOrder.totalEstimated ? `R$ ${clonedOrder.totalEstimated.toFixed(2)}` : 'N/A';
+        
+        // NOTIFICAÇÃO: Pedido Repetido (Novo Pedido)
+        await createNotification(
+            `🔄 Pedido Repetido por @${currentUserData.name} [${initials}]\n` +
+            `📦 O cliente duplicou um pedido anterior.\n` +
+            `💰 Valor: ${totalValue}`
+        );
+        
         showToast('Pedido repetido e enviado com sucesso!', 'success');
         closeClientOrderModal();
     } catch (error) {
@@ -1622,6 +1662,16 @@ async function handleDrop(rawId, targetStatus) {
         try {
             const orderRef = ref(db, `orders/${rawId}`);
             await update(orderRef, { status: targetStatus });
+            
+            // NOTIFICAÇÃO: Status Atualizado Kanban
+            const initials = currentUserData.email ? currentUserData.email.substring(0, 2).toUpperCase() : 'NA';
+            const statusText = { 'novo': 'Pendente', 'producao': 'Em Produção', 'finalizado': 'Finalizado', 'entregue': 'Entregue' };
+            await createNotification(
+                `📋 Status atualizado por @${currentUserData.name} [${initials}]\n` +
+                `👤 Cliente: ${order.clientName}\n` +
+                `➡️ De: ${statusText[order.status]} Para: ${statusText[targetStatus]}`
+            );
+            
             showToast(`Pedido movido para ${targetStatus.toUpperCase()}`, 'success');
         } catch(err) {
             showToast('Erro ao atualizar status', 'error');
@@ -1819,13 +1869,30 @@ window.saveClientEdit = async function() {
             });
         }
         
+        // NOTIFICAÇÃO: Edição de pedido rica pelo Admin
         const adminName = currentUserData.name || 'AdminMaster';
+        const initials = currentUserData.email ? currentUserData.email.substring(0, 2).toUpperCase() : 'NA';
         const targetClientName = newClientName || 'Cliente';
         const notifications = [];
         
-        if (originalOrder && originalOrder.status !== newStatus) {
-            const statusText = { 'novo': 'Pendente', 'producao': 'Em Produção', 'finalizado': 'Finalizado', 'entregue': 'Entregue' };
-            notifications.push(`@${adminName} editou o status de @${targetClientName}: ${statusText[originalOrder.status]} → ${statusText[newStatus]}`);
+        if (originalOrder) {
+            let editDetails = [];
+            if (originalOrder.status !== newStatus) {
+                const statusText = { 'novo': 'Pendente', 'producao': 'Em Produção', 'finalizado': 'Finalizado', 'entregue': 'Entregue' };
+                editDetails.push(`Status: ${statusText[originalOrder.status]} ➡️ ${statusText[newStatus]}`);
+            }
+            if (originalOrder.priority !== newPriority) {
+                editDetails.push(`Prioridade: ${originalOrder.priority || 'Média'} ➡️ ${newPriority}`);
+            }
+            if (prodInput && !prodInput.readOnly && !isViewingFromClientList) {
+                if (originalOrder.product !== newProduct) editDetails.push(`Produto: ${originalOrder.product} ➡️ ${newProduct}`);
+                if (originalOrder.quantity !== newQuantity) editDetails.push(`Qtd: ${originalOrder.quantity} ➡️ ${newQuantity}`);
+            }
+            
+            if (editDetails.length > 0) {
+                const valStr = originalOrder.totalEstimated ? `\n💰 Valor atual: R$ ${originalOrder.totalEstimated.toFixed(2)}` : '';
+                notifications.push(`📝 Pedido editado por @${adminName} [${initials}]\n👤 Cliente: ${targetClientName}${valStr}\nAlterações:\n- ${editDetails.join('\n- ')}`);
+            }
         }
         
         for (const notificationMessage of notifications) {
@@ -1866,12 +1933,20 @@ window.deleteOrder = async function() {
     }
     
     try {
-        await remove(ref(db, `orders/${orderId}`));
-        
         const order = globalOrders[orderId];
         const clientName = order ? order.clientName : 'Cliente';
+        const initials = currentUserData.email ? currentUserData.email.substring(0, 2).toUpperCase() : 'NA';
+        const valorInfo = order && order.totalEstimated ? `R$ ${order.totalEstimated.toFixed(2)}` : 'R$ 0.00';
+        const itemsInfo = order && order.items ? `${order.items.length} itens` : (order ? order.product : 'N/A');
         
-        await createNotification(`Pedido de ${clientName} foi excluído por @${currentUserData.name}`);
+        await remove(ref(db, `orders/${orderId}`));
+        
+        // NOTIFICAÇÃO: Pedido excluído pelo Admin
+        await createNotification(
+            `🗑️ Pedido excluído por @${currentUserData.name} [${initials}]\n` +
+            `👤 Cliente Afetado: ${clientName}\n` +
+            `📦 Resumo: ${itemsInfo} | 💰 Valor: ${valorInfo}`
+        );
         
         showToast('Pedido excluído com sucesso!', 'success');
         closeEditModal();
@@ -1906,6 +1981,14 @@ window.deleteClient = async function() {
     }
     
     try {
+        // NOTIFICAÇÃO: Cliente completamente excluído
+        const initials = currentUserData.email ? currentUserData.email.substring(0, 2).toUpperCase() : 'NA';
+        await createNotification(
+            `🚨 CLIENTE EXCLUÍDO por @${currentUserData.name} [${initials}]\n` +
+            `👤 Cliente Afetado: ${displayNome}\n` +
+            `ℹ️ Todos os dados e pedidos vinculados a este cliente foram apagados.`
+        );
+
         // 1. Remove todos os pedidos do cliente
         const ordersToDelete = Object.keys(globalOrders).filter(key => {
             const order = globalOrders[key];
@@ -1969,7 +2052,7 @@ function renderNotifications() {
         <div class="p-5 hover:bg-white/5 transition flex items-start gap-4">
             <i class="fas fa-info-circle text-yellow-400 text-xl mt-1"></i>
             <div class="flex-1">
-                <p class="text-sm text-white">${notif.message}</p>
+                <p class="text-sm text-white whitespace-pre-line">${notif.message}</p>
                 <p class="text-xs text-white/50 mt-2">${window.formatDateTime(notif.createdAt)}</p>
             </div>
         </div>
@@ -2240,6 +2323,11 @@ window.saveClientItemsConfig = async function() {
             globalUsers[clientUid].itemsConfig = itemsConfig;
         }
         
+        // NOTIFICAÇÃO: Edição de permissões
+        const initials = currentUserData.email ? currentUserData.email.substring(0, 2).toUpperCase() : 'NA';
+        const clientName = globalUsers[clientUid] ? globalUsers[clientUid].name : 'Cliente';
+        await createNotification(`⚙️ Permissões de itens editadas por @${currentUserData.name} [${initials}]\n👤 Cliente: ${clientName}`);
+        
         updateItemsConfigDisplay(itemsConfig);
         showToast('Configuração rápida salva!', 'success');
         
@@ -2434,6 +2522,12 @@ window.salvarItensSelecionadosIndividualmente = async function() {
         
         try {
             await update(ref(db, `users/${clientUid}/itemsConfig`), itemsConfig);
+            
+            // NOTIFICAÇÃO: Itens liberados
+            const initials = currentUserData.email ? currentUserData.email.substring(0, 2).toUpperCase() : 'NA';
+            const clientName = globalUsers[clientUid] ? globalUsers[clientUid].name : 'Cliente';
+            await createNotification(`⚙️ Permissões avançadas editadas por @${currentUserData.name} [${initials}]\n👤 Cliente: ${clientName}\n📦 Todos os itens foram liberados.`);
+            
             updateItemsConfigCheckboxes(itemsConfig);
             updateItemsConfigDisplay(itemsConfig);
             showToast('Todos os itens liberados com sucesso!', 'success');
@@ -2466,6 +2560,11 @@ window.salvarItensSelecionadosIndividualmente = async function() {
     
     try {
         await update(ref(db, `users/${clientUid}/itemsConfig`), itemsConfig);
+        
+        // NOTIFICAÇÃO: Restrições aplicadas
+        const initials = currentUserData.email ? currentUserData.email.substring(0, 2).toUpperCase() : 'NA';
+        const clientName = globalUsers[clientUid] ? globalUsers[clientUid].name : 'Cliente';
+        await createNotification(`⚙️ Permissões avançadas restritas por @${currentUserData.name} [${initials}]\n👤 Cliente: ${clientName}\n📦 Itens permitidos: ${allowedItems.length} específicos.`);
         
         updateItemsConfigCheckboxes(itemsConfig);
         updateItemsConfigDisplay(itemsConfig);
