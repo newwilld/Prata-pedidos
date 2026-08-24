@@ -1875,8 +1875,9 @@ window.saveClientEdit = async function() {
         const targetClientName = newClientName || 'Cliente';
         const notifications = [];
         
+        let editDetails = [];
+        
         if (originalOrder) {
-            let editDetails = [];
             if (originalOrder.status !== newStatus) {
                 const statusText = { 'novo': 'Pendente', 'producao': 'Em Produção', 'finalizado': 'Finalizado', 'entregue': 'Entregue' };
                 editDetails.push(`Status: ${statusText[originalOrder.status]} ➡️ ${statusText[newStatus]}`);
@@ -1888,11 +1889,17 @@ window.saveClientEdit = async function() {
                 if (originalOrder.product !== newProduct) editDetails.push(`Produto: ${originalOrder.product} ➡️ ${newProduct}`);
                 if (originalOrder.quantity !== newQuantity) editDetails.push(`Qtd: ${originalOrder.quantity} ➡️ ${newQuantity}`);
             }
-            
-            if (editDetails.length > 0) {
-                const valStr = originalOrder.totalEstimated ? `\n💰 Valor atual: R$ ${originalOrder.totalEstimated.toFixed(2)}` : '';
-                notifications.push(`📝 Pedido editado por @${adminName} [${initials}]\n👤 Cliente: ${targetClientName}${valStr}\nAlterações:\n- ${editDetails.join('\n- ')}`);
-            }
+        }
+
+        // NOVO AJUSTE: Verificação de alteração de telefone (funciona direto no cliente ou pelo pedido)
+        const oldPhone = originalOrder ? originalOrder.clientPhone : (globalUsers[clientUid] ? globalUsers[clientUid].phone : null);
+        if (oldPhone !== null && oldPhone !== newClientPhone) {
+            editDetails.push(`Telefone: ${oldPhone || 'Vazio'} ➡️ ${newClientPhone || 'Vazio'}`);
+        }
+        
+        if (editDetails.length > 0) {
+            const valStr = (originalOrder && originalOrder.totalEstimated) ? `\n💰 Valor atual: R$ ${originalOrder.totalEstimated.toFixed(2)}` : '';
+            notifications.push(`📝 Dados atualizados por @${adminName} [${initials}]\n👤 Cliente: ${targetClientName}${valStr}\nAlterações:\n- ${editDetails.join('\n- ')}`);
         }
         
         for (const notificationMessage of notifications) {
